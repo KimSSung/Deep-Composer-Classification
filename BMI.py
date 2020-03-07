@@ -50,6 +50,10 @@ class BMI(PreTrainedBertModel):
 		self.apply(self.init_bert_weights)
 
 	def forward(self, input_ids, token_type_ids=None, attention_mask=None, labels=None):
+		# BertModel output: (sequence_output, pooled_output, (option: hidden_states), (option: attention))
+		# 1. sequence_output: [batch_size, seq_len, dim]
+		# 2. pooled_output: get CLS([batch_size, dim]) then * [dim, dim] = [batch_size, dim]
+		# we use pooled_out rather than sequence_output
 		_, pooled_output = self.bert(input_ids, token_type_ids, attention_mask, output_all_encoded_layers=False)
 		pooled_output = self.dropout(pooled_output)
 		logits = self.classifier(pooled_output)

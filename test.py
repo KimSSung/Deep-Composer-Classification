@@ -51,7 +51,7 @@ print(output_tensor.shape) # (4052, 5)
 print(input_tensor.isnull().any())
 
 '''
-
+'''
 import random
 import torch
 import numpy as np
@@ -92,7 +92,7 @@ print(tensor2)
 
 print(tensor1[:2])
 print(tensor2[0])
-
+'''
 '''
 trainset = data[:train_len]
 validset = data[train_len:]
@@ -114,3 +114,30 @@ valid_input_ids, valid_token_type_ids, valid_attention_mask, valid_labels =
 
 
 '''
+from os.path import *
+from os import *
+from tqdm import tqdm # show status bar of for
+
+
+
+WAV_PATH = './midi820/'
+
+files = []
+genres = ['Classical', 'Jazz', 'Pop', 'Rock', 'Country']
+genre_num = 0
+for genre in genres:
+	dir_genre = WAV_PATH + genre
+	for f in listdir(dir_genre):
+		if isfile(join(dir_genre, f)) :
+			new_path = dir_genre + '/' + f
+			files.append((new_path, genre_num))
+
+	genre_num += 1
+
+for file in tqdm(files):
+	wave, sr = librosa.load(file[0], sr=SAMPLING_RATE, mono=True, duration=30.0)
+	# wave = wave[::3] # audio downsampling
+	datasetXy(file[1], wave)
+
+X = np.array(X)
+y = np.array(y)

@@ -1,0 +1,11 @@
+# Directories #
+onehotvectors/
+midi820/
+wav820/
+model/
+pickles/
+before_drop_pickles/
+melfmodel/
+
+# files #
+.wav
