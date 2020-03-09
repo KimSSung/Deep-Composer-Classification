@@ -117,11 +117,14 @@ valid_input_ids, valid_token_type_ids, valid_attention_mask, valid_labels =
 from os.path import *
 from os import *
 from tqdm import tqdm # show status bar of for
+import librosa
+import numpy as np
 
 
+wav_file = './wav820/Classical/Winter wind etude.wav'
+wav_file2 = './wav820/Rock/Yes - Cinema.wav'
 
-WAV_PATH = './midi820/'
-
+'''
 files = []
 genres = ['Classical', 'Jazz', 'Pop', 'Rock', 'Country']
 genre_num = 0
@@ -141,3 +144,25 @@ for file in tqdm(files):
 
 X = np.array(X)
 y = np.array(y)
+'''
+
+frame_length = 0.025
+frame_stride = 0.010
+
+def Mel_S(wav_file):
+	# mel-spectrogram
+	y, sr = librosa.load(wav_file, mono=True, duration=20.0)
+
+	# wav_length = len(y)/sr
+	input_nfft = int(round(sr*frame_length))
+	input_stride = int(round(sr*frame_stride))
+
+	S = librosa.feature.melspectrogram(y=y, sr=16000)
+	print(S.shape)
+	print("Wav length: {}, Mel_S shape:{}".format(len(y)/sr,np.shape(S)))
+
+	P = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=128)
+	print(P.shape)
+
+Mel_S(wav_file)
+Mel_S(wav_file2)
