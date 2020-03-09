@@ -19,8 +19,8 @@ from keras import optimizers, regularizers
 
 WAV_PATH = './wav820/'
 SAMPLING_RATE = 16000
-melspec_NUM = 0 # init
-melspec_MAX_LEN = 0 # init
+MFCC_NUM = -1
+MFCC_MAX_LEN = -1
 
 
 MODEL_SAVE_FOLDER_PATH = './melfmodel/'
@@ -38,40 +38,30 @@ cb_checkpoint = ModelCheckpoint(filepath=model_path, monitor='val_loss',
 # cb_early_stopping = EarlyStopping(monitor='val_loss', patience=10)
 
 
-# def wav2mfcc(wave, max_len=MFCC_MAX_LEN):
-# 	mfcc = librosa.feature.mfcc(wave, n_mfcc=MFCC_NUM, sr=SAMPLING_RATE)
-
-# 	# if max length exceeds mfcc lengths then pad the remaining ones
-# 	if (max_len > mfcc.shape[1]):
-# 		pad_width = max_len - mfcc.shape[1]
-# 		# mode=constant : init by 0
-# 		# ((0,0), (0,pad_width)) -> 0 row 0 , 0 column pad_width : only add to column
-# 		mfcc = np.pad(mfcc, pad_width = ((0,0), (0,pad_width)), mode='constant')
-
-# 	# else cutoff the remaining parts
-# 	else:
-# 		mfcc = mfcc[:,:max_len]
-
-# 	return mfcc
-
-def wav2melspec(wave, max_len=melspec_MAX_LEN):
+def wav2mfcc(wave, max_len=MFCC_MAX_LEN):
 	# mfcc = librosa.feature.mfcc(wave, n_mfcc=MFCC_NUM, sr=SAMPLING_RATE)
+	mfcc = librosa.feature.mfcc(wave, n_mfcc=MFCC_NUM, sr=SAMPLING_RATE)
+	# print(mfcc.shape)
+
+	# if max length exceeds mfcc lengths then pad the remaining ones
+	if (max_len > mfcc.shape[1]):
+		pad_width = max_len - mfcc.shape[1]
+		# mode=constant : init by 0
+		# ((0,0), (0,pad_width)) -> 0 row 0 , 0 column pad_width : only add to column
+		mfcc = np.pad(mfcc, pad_width = ((0,0), (0,pad_width)), mode='constant')
+
+	# else cutoff the remaining parts
+	else:
+		mfcc = mfcc[:,:max_len]
+
+	return mfcc
+
+def wav2melspec(wave, max_len=MFCC_MAX_LEN):
+	
 	melspec = librosa.feature.melspectrogram(y=wave, sr=SAMPLING_RATE)
-	# print(melspec.shape)
-
-	melspec_MAX_LEN = melspec.shape[1]
-	melspec_NUM = melspec.shape[0]
-
-	# # if max length exceeds mfcc lengths then pad the remaining ones
-	# if (max_len > mfcc.shape[1]):
-	# 	pad_width = max_len - mfcc.shape[1]
-	# 	# mode=constant : init by 0
-	# 	# ((0,0), (0,pad_width)) -> 0 row 0 , 0 column pad_width : only add to column
-	# 	mfcc = np.pad(mfcc, pad_width = ((0,0), (0,pad_width)), mode='constant')
-
-	# # else cutoff the remaining parts
-	# else:
-	# 	mfcc = mfcc[:,:max_len]
+	
+	if MELSPEC_MAX_LEN == -1: MELSPEC_MAX_LEN = melspec.shape[1]
+	if MELSPEC_NUM == -1: MELSPEC_NUM = melspec.shape[0]
 
 	return melspec
 
@@ -102,16 +92,16 @@ for file in tqdm(files):
 	# wave = wave[::3] # audio downsampling
 	datasetXy(file[1], wave)
 
-X = np.ndarray(X)
-y = np.ndarray(y)
+X = np.asarray(X)
+y = np.asarray(y)
 y_hot = to_categorical(y) # not train label 5, but train [0,0,0,0,1] (prob of label 5 to 1)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y_hot, test_size=0.2, random_state=True, shuffle=True)
 # print(X_train.shape)
 
 # Feature dimension & other options
-feature_dim_1 = melspec_NUM
-feature_dim_2 = melspec_MAX_LEN
+feature_dim_1 = MELSPEC_NUM # 128
+feature_dim_2 = MELSPEC_MAX_LEN # 
 channel = 1 # each pixel has only db . ex) if each has RGB, channel = 3
 # epochs = 100
 # batch_size = 80

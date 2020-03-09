@@ -17,8 +17,8 @@ from keras import optimizers
 
 WAV_PATH = './wav820/'
 SAMPLING_RATE = 16000
-melspec_NUM = 0 # init
-melspec_MAX_LEN = 0 # init
+MFCC_NUM = -1
+MFCC_MAX_LEN = -1
 
 
 MODEL_SAVE_FOLDER_PATH = './melfmodel/'
@@ -36,24 +36,30 @@ cb_checkpoint = ModelCheckpoint(filepath=model_path, monitor='val_loss',
 # cb_early_stopping = EarlyStopping(monitor='val_loss', patience=10)
 
 
-def wav2melspec(wave, max_len=melspec_MAX_LEN):
+def wav2mfcc(wave, max_len=MFCC_MAX_LEN):
 	# mfcc = librosa.feature.mfcc(wave, n_mfcc=MFCC_NUM, sr=SAMPLING_RATE)
+	mfcc = librosa.feature.mfcc(wave, n_mfcc=MFCC_NUM, sr=SAMPLING_RATE)
+	# print(mfcc.shape)
+
+	# if max length exceeds mfcc lengths then pad the remaining ones
+	if (max_len > mfcc.shape[1]):
+		pad_width = max_len - mfcc.shape[1]
+		# mode=constant : init by 0
+		# ((0,0), (0,pad_width)) -> 0 row 0 , 0 column pad_width : only add to column
+		mfcc = np.pad(mfcc, pad_width = ((0,0), (0,pad_width)), mode='constant')
+
+	# else cutoff the remaining parts
+	else:
+		mfcc = mfcc[:,:max_len]
+
+	return mfcc
+
+def wav2melspec(wave, max_len=MFCC_MAX_LEN):
+	
 	melspec = librosa.feature.melspectrogram(y=wave, sr=SAMPLING_RATE)
-	# print(melspec.shape)
-
-	melspec_MAX_LEN = melspec.shape[1]
-	melspec_NUM = melspec.shape[0]
-
-	# # if max length exceeds mfcc lengths then pad the remaining ones
-	# if (max_len > mfcc.shape[1]):
-	# 	pad_width = max_len - mfcc.shape[1]
-	# 	# mode=constant : init by 0
-	# 	# ((0,0), (0,pad_width)) -> 0 row 0 , 0 column pad_width : only add to column
-	# 	mfcc = np.pad(mfcc, pad_width = ((0,0), (0,pad_width)), mode='constant')
-
-	# # else cutoff the remaining parts
-	# else:
-	# 	mfcc = mfcc[:,:max_len]
+	
+	if MELSPEC_MAX_LEN == -1: MELSPEC_MAX_LEN = melspec.shape[1]
+	if MELSPEC_NUM == -1: MELSPEC_NUM = melspec.shape[0]
 
 	return melspec
 
@@ -61,8 +67,8 @@ def wav2melspec(wave, max_len=melspec_MAX_LEN):
 X, y = [], []
 def datasetXy(label, wave):
 	y.append(label)
-	melspec = wav2melspec(wave)
-	X.append(melspec)
+	mfcc = wav2mfcc(wave) # (20, 2000)
+	X.append(mfcc)
 
 
 files = []
@@ -78,20 +84,20 @@ for genre in genres:
 	genre_num += 1
 
 for file in tqdm(files):
-	wave, sr = librosa.load(file[0], sr=SAMPLING_RATE, mono=True, duration=20.0)
+	wave, sr = librosa.load(file[0], sr=SAMPLING_RATE, mono=True, duration=30.0)
 	# wave = wave[::3] # audio downsampling
 	datasetXy(file[1], wave)
 
-X = np.ndarray(X)
-y = np.ndarray(y)
+X = np.asarray(X)
+y = np.asarray(y)
 y_hot = to_categorical(y) # not train label 5, but train [0,0,0,0,1] (prob of label 5 to 1)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y_hot, test_size=0.2, random_state=True, shuffle=True)
 # print(X_train.shape)
 
 # Feature dimension & other options
-feature_dim_1 = melspec_NUM # 128
-feature_dim_2 = melspec_MAX_LEN # 862
+feature_dim_1 = MELSPEC_NUM # 128
+feature_dim_2 = MELSPEC_MAX_LEN # 
 channel = 1 # each pixel has only db . ex) if each has RGB, channel = 3
 epochs = 10
 batch_size = 80
@@ -171,6 +177,6 @@ plt.show()
 
 # -----------------------------test----------------------------------------
 # wave, sr = librosa.load(TEST_WAV_PATH, mono=True, sr=None)
-# melspec = wav2melspec(wave)
-# X_test = melspec.reshape(1, feature_dim_1, feature_dim_2, channel)
+# mfcc = wav2mfcc(wave)
+# X_test = mfcc.reshape(1, feature_dim_1, feature_dim_2, channel)
 # preds = model.predict(X_test)[0]
