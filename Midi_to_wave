@@ -1,0 +1,322 @@
+from mido import MidiFile, Message
+import os
+import math
+
+'''
+1. Parsing Midi files
+Get all of the ./midiset/XXX.mid Files on the directory 
+open with MidiFile and Parse all of the Data 
+
+ '''
+
+# Main Code
+
+genre = 'Rock'
+#genre_dir = './midiset/' + genre
+genre_dir = 'D:\midiset\Rock_addition'
+file_dir = []
+file_name = []
+parsed_midi = []
+'''
+file_dir: 'List' of all of midi file directory
+genre : 'String' Change the genre for the file directory
+genre_dir : 'String'  
+parsed_midi: 'List' Get the data from original midi files
+'''
+os.chdir(genre_dir)
+
+for fp in os.listdir(genre_dir):
+    if os.path.isfile(os.path.join(genre_dir, fp)):
+        file_path = genre_dir + '/' + fp
+        if fp.endswith(".mid"):
+            file_dir.append(file_path)
+            file_name.append(fp)
+        else:
+            continue
+
+print("File name\n" + str(file_name))
+print("File \n" + str(file_dir))
+
+
+
+
+mid = MidiFile(file_name[1])
+
+for i, track in enumerate(mid.tracks):
+    # print('Track {}: {}'.format(i,track.name))
+    for msg in track:
+        if (not msg.is_meta) and (msg.type == 'note_off' or msg.type == 'note_on'):
+            parsed_midi.append(msg.bytes())
+            # print(msg.bytes())
+
+# print(parsed_midi)
+
+'''
+2. Generate Midi data to PCM data
+Get all of the ./midiset/XXX.mid Files on the directory 
+open with MidiFile and Parse all of the Data 
+-- FluidSynth
+ '''
+
+# Conversion Table
+CENTS_HZ_SIZE = 1200
+VEL_CB_SIZE = 128
+CB_AMP_SIZE = 961
+ATTEN_AMP_SIZE = 1441
+PAN_SIZE = 1002
+
+concave_tab = [0.0 for i in range(128)]  # 128 for float
+convex_tab = [0.0 for i in range(128)]  # 128 for float
+atten2amp_tab = [0.0 for i in range(ATTEN_AMP_SIZE)]
+cb2amp_tab = [0.0 for i in range(CB_AMP_SIZE)]
+ct2hz_tab = [0.0 for i in range(CENTS_HZ_SIZE)]
+posbp_tab = [0.0 for i in range(128)]
+pan_tab = [0.0 for i in range(PAN_SIZE)]
+
+
+def conversion_init():
+    '''
+    Make all of the initailize module
+
+    atten2amp_tab
+    cb2amp_tab
+    ct2hz_tab
+
+    :return: None
+    '''
+    i = 0
+    x = 0.0
+
+    # Trnaslate the cent -> Hertz (1200)
+    for i in range(0, CENTS_HZ_SIZE):
+        ct2hz_tab[i] = float(math.pow(2.0, (float(i)) / 1200.0))
+
+    # initialAttenuation is CB and 0- 144dB
+    for i in range(0, CB_AMP_SIZE):
+        cb2amp_tab[i] = float(math.pow(10.0, (float(i) / -200.0)))
+
+    # Approximation for Attenuation to Amplitutde Values
+    # Approximation for power factor Attenuation = -531.509 for soundfont2
+
+    for i in range(0, ATTEN_AMP_SIZE):
+        atten2amp_tab[i] = float(math.pow(10.0, (float(i) / -531.509)))
+
+    # Make Convex and Concave matching for 7 bit MIDI Controller Data Value
+    # If 14bit MIDI Controller Data value Min = 0 Max = 8191
+    convex_tab[0] = 0.0
+    convex_tab[127] = 1.0
+    concave_tab[0] = 0.0
+    concave_tab[127] = 1.0
+
+    # TODO: Need to investigate Amplitude Equation Again
+    for i in range(0, 128):
+        tmp = math.log10(128.0 / 127.0)
+        convex_tab[i] = float(1.0 - tmp)
+        concave_tab[127 - i] = float(tmp)
+
+    # Initial Pan Conversion
+    tmp = math.pi / 2.0 / (PAN_SIZE - 1.0)
+    for i in range(0, PAN_SIZE):
+        pan_tab[i] = float(math.sin(i * tmp))
+
+
+def ct2hz_real(cents):
+    '''
+
+    :param cents: float Values
+    :return: float values to calculate Real value
+    '''
+    if (cents < 0):
+        return 1.0
+    elif (cents < 900):
+        return (6.875 * ct2hz_tab[int(cents + 300)])
+    elif (cents < 2100):
+        return (13.75 * ct2hz_tab[int(cents - 900)])
+    elif (cents < 3300):
+        return (27.5 * ct2hz_tab[int(cents - 2100)])
+    elif (cents < 4500):
+        return (55.0 * ct2hz_tab[int(cents - 3300)])
+    elif (cents < 5700):
+        return (110.0 * ct2hz_tab[int(cents - 4500)])
+    elif (cents < 6900):
+        return (220.0 * ct2hz_tab[int(cents - 5700)])
+    elif (cents < 8100):
+        return (440.0 * ct2hz_tab[int(cents - 6900)])
+    elif (cents < 9300):
+        return (880.0 * ct2hz_tab[int(cents - 8100)])
+    elif (cents < 10500):
+        return (1760.0 * ct2hz_tab[int(cents - 9300)])
+    elif (cents < 11700):
+        return (3520.0 * ct2hz_tab[int(cents - 10500)])
+    elif (cents < 12900):
+        return (7040.0 * ct2hz_tab[int(cents - 11700)])
+    elif (cents < 14100):
+        return (14080.0 * ct2hz_tab[int(cents - 12900)])
+    # Other cases make the hertz to 1.0
+    else:
+        return 1.0
+
+
+def ct2hz(cents):
+    '''
+    Change with real cent unit to Hertz value
+    :param cents: float values
+    :return: ct2hz_real(cents) --> result: float values
+    '''
+    # Filter fc limit : 13500 Hz
+    if (cents >= 13500):
+        cents = 13500
+    elif (cents < 1500):
+        cents = 1500
+    # if the real value is between 1500 to 13500, Use function to ct2hz_real function
+    return ct2hz_real(cents)
+
+
+def cb2camp(cb):
+    '''
+    Max: 144dB
+    24bit - 144dB
+    16bit - 96dB
+    Min : 0 dB
+    :param cb: centi-deciBel (0.1dB)
+    :return: centibel to Real Amplitude
+    '''
+
+    if (cb < 0):
+        return 1.0
+    elif (cb >= CB_AMP_SIZE):
+        return 0.0
+    else:
+        return cb2amp_tab[int(cb)]
+
+
+def atten2amp(atten):
+    '''
+    :param atten: 'Integer' (Attenuation)
+    :return: 'Float' Converted Value for table
+    '''
+    if (atten < 0):
+        return 1.0
+    elif (atten >= ATTEN_AMP_SIZE):
+        return 0.0
+    else:
+        return atten2amp_tab[int(atten)]
+
+
+def pan(c, left):
+    '''
+    :param c: 'Integer' Get the value for the pan
+    :param left: 'Integer' get the value for the left panning or not
+    :return: 'Float' Converted Value for the Conversion Table
+    '''
+    if (left == 1):
+        c = (-1) * c
+
+    if (c < -500):
+        return 0.0
+    elif (c > 500):
+        return 1.0
+    else:
+        return pan_tab[int(c + 500)]
+
+
+def concave(tmp):
+    '''
+    For the Sine Wave function, convert to concave value
+    :param tmp: 'float' input value
+    :return: 'Integer' Converted Value
+    '''
+
+    if (tmp < 0):
+        return 0
+    elif (tmp > 127):
+        return 1
+    else:
+        return concave_tab[int(tmp)]
+
+
+def convex(tmp):
+    '''
+    For the Sine Wave function, convert to concave value
+    :param tmp: 'float' input value
+    :return: 'Integer' Converted Value
+    '''
+
+    if (tmp < 0):
+        return 0
+    elif (tmp > 127):
+        return 1
+    else:
+        return convex_tab[int(tmp)]
+
+
+# TODO: Make the function for the below
+# def tc2sec(tc):
+# def attack(tc):
+# def tc2secDelay(tc):
+
+'''
+3. Put the RIFF Header Chunk to PCM data then make it
+'''
+
+import argparse
+import os
+import subprocess
+
+__all__ = ['FluidSynth']
+
+DEFAULT_SOUND_FONT = '~/.fluidsynth/default_sound_font.sf2'
+DEFAULT_SAMPLE_RATE = 44100
+
+class FluidSynth():
+    def __init__(self, sound_font=DEFAULT_SOUND_FONT, sample_rate=DEFAULT_SAMPLE_RATE):
+        self.sample_rate = sample_rate
+        self.sound_font = os.path.expanduser(sound_font)
+
+    def midi_to_audio(self, midi_file, audio_file):
+        subprocess.call(['fluidsynth', '-n','-i','-F', str(audio_file), '-r', str(self.sample_rate), self.sound_font, midi_file])
+
+    def play_midi(self, midi_file):
+        subprocess.call(['fluidsynth', '-i', self.sound_font, midi_file, '-r', str(self.sample_rate)])
+
+def parse_args(allow_synth=True):
+    parser = argparse.ArgumentParser(description='Convert MIDI to audio via FluidSynth')
+    parser.add_argument('midi_file', metavar='MIDI', type=str)
+    if allow_synth:
+        parser.add_argument('audio_file', metavar='AUDIO', type=str, nargs='?')
+    parser.add_argument('-s', '--sound-font', type=str,
+        default=DEFAULT_SOUND_FONT,
+        help='path to a SF2 sound font (default: %s)' % DEFAULT_SOUND_FONT)
+    parser.add_argument('-r', '--sample-rate', type=int, nargs='?',
+        default=DEFAULT_SAMPLE_RATE,
+        help='sample rate in Hz (default: %s)' % DEFAULT_SAMPLE_RATE)
+    return parser.parse_args()
+
+def main(allow_synth=True):
+    args = parse_args(allow_synth)
+    fs = FluidSynth(args.sound_font, args.sample_rate)
+    if allow_synth and args.audio_file:
+        fs.midi_to_audio(args.midi_file, args.audio_file)
+    else:
+        fs.play_midi(args.midi_file)
+
+def main_play():
+    """
+    A method for the `midiplay` entry point. It omits the audio file from args.
+    """
+    main(allow_synth=False)
+
+
+print(os.getcwd())
+print(os.path.join(os.path.dirname(__file__), '(2542)Prelude opus.28, No.16 in B flat minor.mid'))
+os.chdir('D:\midiset')
+print(os.getcwd())
+output_dir = './output/'+ genre
+fs = FluidSynth()
+
+
+for i in range(0,len(file_name)):
+    fs.midi_to_audio('./' + genre + '_addition'+'/' + file_name[i],'./wav82/'+ genre +'/'+ file_name[i][0:-4] +'.wav')
+    print(str(i) +'th file : ' + file_name[i] + 'is converted successfully')
+
+print('All Process Succeed')
