@@ -17,13 +17,13 @@ from keras.utils import to_categorical
 from keras import optimizers
 
 
-WAV_PATH = './wav820/'
-SAMPLING_RATE = 16000
-MFCC_NUM = 40 # n_mels for spectogram
-MFCC_MAX_LEN = 1000
+WAV_PATH = './sunjong/wav820/'
+SAMPLING_RATE = 44100
+MFCC_NUM = 128 # n_mels for spectogram
+MFCC_MAX_LEN = 2000
 
 
-MODEL_SAVE_FOLDER_PATH = './melfmodel/'
+MODEL_SAVE_FOLDER_PATH = '../../../../data/models/'
 
 if not os.path.exists(MODEL_SAVE_FOLDER_PATH):
   os.mkdir(MODEL_SAVE_FOLDER_PATH)
@@ -58,7 +58,7 @@ def wav2mfcc(wave, max_len=MFCC_MAX_LEN):
 
 def wav2melspec(wave, max_len=MFCC_MAX_LEN):
 	
-	melspec = librosa.feature.melspectrogram(y=wave, sr=SAMPLING_RATE, n_mels=MFCC_NUM)
+	melspec = librosa.feature.melspectrogram(y=wave, n_fft=1024, hop_length=256, sr=SAMPLING_RATE, n_mels=MFCC_NUM)
 
 	# if max length exceeds mfcc lengths then pad the remaining ones
 	if (max_len > melspec.shape[1]):
@@ -97,7 +97,7 @@ for genre in genres:
 	genre_num += 1
 
 # mode
-mode = 'load'
+mode = 'save'
 
 if mode == 'save':
 	for file in tqdm(files):
@@ -109,18 +109,18 @@ if mode == 'save':
 	y = np.array(y)
 	print("X shape is:", X.shape)
 	print("y shape is:", y.shape)
-	with open('num40_len1000_melspec_X.pkl', 'wb') as f:
+	with open('../../../../data/mymelspec_X.pkl', 'wb') as f:
 		pickle.dump(X, f)
-	with open ('num40_len1000_melspec_y.pkl', 'wb') as t:
+	with open ('../../../../data/mymelspec_y.pkl', 'wb') as t:
 		pickle.dump(y, t)
 	print("save success...")
 
 
 elif mode == 'load':
-	with open('num40_len1000_melspec_X.pkl', 'rb') as f:
+	with open('../../../../data/mymelspec_X.pkl', 'rb') as f:
 		X = pickle.load(f)
 		print(X.shape)
-	with open ('num40_len1000_melspec_y.pkl', 'rb') as t:
+	with open ('../../../../data/mymelspec_y.pkl', 'rb') as t:
 		y = pickle.load(t)
 	print("load success...")
 
@@ -151,30 +151,40 @@ def Model():
 	# some paper said, simple model is better because of overfitting
 
 	model = Sequential()
-	model.add(Conv2D(16, kernel_size=(2, 2), activation='relu', input_shape=(feature_dim_1, feature_dim_2, channel)))
-	model.add(MaxPooling2D(pool_size=(2, 2)))
-	model.add(Dropout(0.2))
+	model.add(Conv2D(16, kernel_size=(3, 3), strides=(1,1), padding='same', activation='relu', 
+		input_shape=(feature_dim_1, feature_dim_2, channel)))
+	model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
+	model.add(Dropout(0.25))
 
-	model.add(Conv2D(48, kernel_size=(2, 2), activation='relu'))
-	model.add(MaxPooling2D(pool_size=(2, 2)))
-	model.add(Dropout(0.2))
-	
-	model.add(Conv2D(120, kernel_size=(2, 2), activation='relu'))
-	model.add(Conv2D(32, kernel_size=(2, 2), activation='relu')) # if Alexnet, 48 -> 120
-	model.add(Conv2D(64, kernel_size=(2, 2), activation='relu'))
-	model.add(MaxPooling2D(pool_size=(2, 2)))
-	model.add(Dropout(0.2))
+	model.add(Conv2D(32, kernel_size=(3, 3), strides=(1,1), padding='same', activation='relu', 
+		input_shape=(feature_dim_1, feature_dim_2, channel)))
+	model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
+	model.add(Dropout(0.25))
+
+	model.add(Conv2D(64, kernel_size=(3, 3), strides=(1,1), padding='same', activation='relu', 
+		input_shape=(feature_dim_1, feature_dim_2, channel)))
+	model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
+	model.add(Dropout(0.25))
+
+	model.add(Conv2D(128, kernel_size=(3, 3), strides=(1,1), padding='same', activation='relu', 
+		input_shape=(feature_dim_1, feature_dim_2, channel)))
+	model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
+	model.add(Dropout(0.25))
+
+	model.add(Conv2D(256, kernel_size=(3, 3), strides=(1,1), padding='same', activation='relu', 
+		input_shape=(feature_dim_1, feature_dim_2, channel)))
+	model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
+	model.add(Dropout(0.25))
 
 	model.add(Flatten())
-	model.add(Dense(128, activation='relu'))
-	model.add(Dropout(0.2))
-	model.add(Dense(64, activation='relu'))
-	model.add(Dropout(0.2))
-	model.add(Dense(64, activation='relu'))
-	model.add(Dropout(0.4))
-	model.add(Dense(num_classes, activation='softmax'))
+	model.add(Dropout(0.5))
+
+	model.add(Dense(512, activation='relu', kernel_regularizer=keras.regularizers.l2(0.02)))
+	model.add(Dropout(0.25))
+	model.add(Dense(num_classes, activation='softmax', kernel_regularizer=keras.regularizers.l2(0.02)))
 	
 	return model
+
 
 model = Model()
 model.summary()
