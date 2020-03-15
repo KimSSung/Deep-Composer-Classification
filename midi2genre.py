@@ -8,6 +8,7 @@ import pretty_midi
 import warnings
 import os
 
+
 def get_genres(path):
 	"""
 	This function reads the genre labels and puts it into a pandas DataFrame.
@@ -40,9 +41,9 @@ label_list = list(set(genre_df.Genre))
 label_dict = {lbl: label_list.index(lbl) for lbl in label_list}
 
 # Print to Visualize
-print(genre_df.head(), end="\n\n")
-print(label_list, end="\n\n")
-print(label_dict, end="\n\n")
+# print(genre_df.head(), end="\n\n")
+# print(label_list, end="\n\n")
+# print(label_dict, end="\n\n")
 
 def get_matched_midi(midi_folder, genre_df):
 	"""
@@ -78,7 +79,7 @@ midi_path = "../../../../data/LMD/lmd_matched"
 matched_midi_df = get_matched_midi(midi_path, genre_df)
 
 # Print to Check Correctness
-print(matched_midi_df.head())
+# print(matched_midi_df.head())
 
 def normalize_features(features):
 	"""
@@ -148,10 +149,12 @@ def extract_midi_features(path_df):
 			all_features.append(features)
 	return np.array(all_features)
 
+
 labeled_features = np.array([])
+mode = 'load'
 if mode == 'save':
 	labeled_features = extract_midi_features(matched_midi_df)
-	print(labeled_features)
+	# print(labeled_features)
 
 	with open('../../../../data/LMD/midi2genre.pkl', 'wb') as f:
 		pickle.dump(labeled_features, f)
@@ -162,3 +165,155 @@ elif mode == 'load':
 		labeled_features = pickle.load(t)
 	print("load success...")
 
+
+###############################################################################
+
+# Shuffle Entire Dataset to Make Random
+labeled_features = np.random.permutation(labeled_features)
+
+# Partition into 3 Sets
+num = len(labeled_features)
+num_training = int(num * 0.6)
+num_validation = int(num * 0.8)
+training_data = labeled_features[:num_training]
+validation_data = labeled_features[num_training:num_validation]
+test_data = labeled_features[num_validation:]
+
+# Separate Features from Labels
+num_cols = training_data.shape[1] - 1
+training_features = training_data[:, :num_cols]
+validation_features = validation_data[:, :num_cols]
+test_features = test_data[:, :num_cols]
+
+# Format Features for Multi-class Classification
+num_classes = len(label_list)
+print(label_list)
+training_labels = training_data[:, num_cols].astype(int)
+validation_labels = validation_data[:, num_cols].astype(int)
+test_labels = test_data[:, num_cols].astype(int)
+
+# Function for One-Hot Encoding
+def one_hot(labels):
+	"""
+	This function encodes the labels using one-hot encoding.
+	
+	@input num_classes: The number of genres/classes.
+	@type num_classes: int
+	@input labels: The genre labels to encode.
+	@type labels: numpy.ndarray of int
+	
+	@return: The one-hot encoding of the labels.
+	@rtype: numpy.ndarray of int
+	"""
+	return np.eye(num_classes)[labels].astype(int)
+
+# Print to Check Dimentions and to Visualize
+# print(test_features[:10])
+# print(test_labels[:10])
+# print(one_hot(test_labels)[:10])
+
+def train_model(t_features, t_labels, v_features, v_labels):
+	"""
+	This function trains a neural network using a couple different configurations.
+	
+	@input t_features: The training features.
+	@type t_features: numpy.ndarray of float
+	@input t_labels: The training labels.
+	@type t_labels: numpy.ndarray of int
+	@input v_features: The validation features.
+	@type v_features: numpy.ndarray of float
+	@input v_labels: The validation labels.
+	@type v_labels: numpy.ndarray of int
+	
+	@return: The classifier that achieved the best validation accuracy.
+	@rtype: sklearn.neural_network.multilayer_perceptron.MLPClassifier
+	"""
+	# Neural Network and SVM Configurations
+	clf_1 = MLPClassifier(solver='adam', alpha=1e-4, hidden_layer_sizes=(5,), random_state=1, max_iter=300)
+	clf_2 = MLPClassifier(solver='adam', alpha=1e-4, hidden_layer_sizes=(5, 5), random_state=1, max_iter=300)
+	clf_3 = MLPClassifier(solver='adam', alpha=1e-5, hidden_layer_sizes=(10, 10), random_state=1, max_iter=300)
+	clf_4 = MLPClassifier(solver='adam', alpha=1e-5, hidden_layer_sizes=(100, 100), random_state=1, max_iter=300)
+	clf_svm = SVC()
+	
+	# Keep Track of the Best Model
+	best_clf = None
+	best_accuracy = 0
+	
+	# Test the Accuracies of the Models and Get Best
+	for clf in [clf_1, clf_2, clf_3, clf_4, clf_svm]:
+		t_labels_hot = one_hot(t_labels)
+		v_labels_hot = one_hot(v_labels)
+		if (type(clf) == SVC):
+			clf = clf.fit(t_features, t_labels)
+		else:
+			clf = clf.fit(t_features, t_labels_hot)
+		predictions = clf.predict(v_features)
+		count = 0
+		for i in range(len(v_labels)):
+			if (type(clf) != SVC):
+				if np.array_equal(v_labels_hot[i], predictions[i]):
+					count += 1
+			else:
+				if v_labels[i] == predictions[i]:
+					count += 1
+		accuracy = count / len(v_labels_hot)
+		if accuracy > best_accuracy:
+			best_accuracy = accuracy
+			best_clf = clf
+
+	print("Best Accuracy:", best_accuracy)
+	return best_clf
+
+classifier = train_model(training_features, training_labels, validation_features, validation_labels)
+
+
+def calculate_accuracy(clf, t_features, t_labels):
+	"""
+	This function takes a trained model as well as the test features and its
+	corresponding labels, and reports the accuracy of the model.
+	
+	@input clf: The trained classifier.
+	@type model: sklearn.neural_network.multilayer_perceptron.MLPClassifier
+	@input t_features: The features from the test set.
+	@type f_features: numpy.ndarray of float
+	@input t_labels: The labels of the test set features.
+	@type t_labels: numpy.ndarray of int
+	
+	@return: The accuracy.
+	@rtype: float
+	"""
+	count = 0
+	predictions = clf.predict(t_features)
+	t_labels_hot = one_hot(t_labels)
+	for i in range(len(t_features)):
+		if (type(clf) == SVC):
+			if t_labels[i] == predictions[i]:
+				count += 1
+		else:
+			if np.array_equal(t_labels_hot[i], predictions[i]):
+				count += 1
+	return count / len(t_features)
+
+# Print the Test Accuracy
+print('test acc:',calculate_accuracy(classifier, test_features, test_labels))
+
+def make_prediction(clf, midi_path):
+	"""
+	This function uses the classifier to predict the genre of a midi file.
+	
+	@input clf: The trained classifier.
+	@type clf: sklearn.neural_network.multilayer_perceptron.MLPClassifier
+	@input midi_path: The path to the midi file that we are trying to classify.
+	@type midi_path: String
+	
+	@return: The predicted genre of the midi file.
+	@rtype: String
+	"""
+	features = get_features(midi_path)
+	prediction_ind = list(clf.predict([features])[0]).index(1)
+	prediction = label_list[prediction_ind]
+	return prediction
+	
+# Make a Prediction
+test_midi_path ="../../../../data/LMD/lmd_matched/B/F/E/TRBFELB128F426BFF2/289270d85c81802d912c9907c645dc2d.mid"
+print('one midi prediction:', make_prediction(classifier, test_midi_path))

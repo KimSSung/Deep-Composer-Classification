@@ -41,7 +41,7 @@ cb_checkpoint = ModelCheckpoint(filepath=model_path, monitor='val_loss',
 def wav2mfcc(wave, max_len=MFCC_MAX_LEN):
 	# mfcc = librosa.feature.mfcc(wave, n_mfcc=MFCC_NUM, sr=SAMPLING_RATE)
 	mfcc = librosa.feature.mfcc(wave, n_mfcc=MFCC_NUM, sr=SAMPLING_RATE)
-	# print(mfcc.shape)
+	print(mfcc.shape)
 
 	# if max length exceeds mfcc lengths then pad the remaining ones
 	if (max_len > mfcc.shape[1]):
@@ -109,10 +109,10 @@ if mode == 'save':
 	y = np.array(y)
 	print("X shape is:", X.shape)
 	print("y shape is:", y.shape)
-	with open('../../../../data/mymelspec_X.pkl', 'wb') as f:
-		pickle.dump(X, f)
-	with open ('../../../../data/mymelspec_y.pkl', 'wb') as t:
-		pickle.dump(y, t)
+	# with open('../../../../data/mymelspec_X.pkl', 'wb') as f:
+	# 	pickle.dump(X, f)
+	# with open ('../../../../data/mymelspec_y.pkl', 'wb') as t:
+	# 	pickle.dump(y, t)
 	print("save success...")
 
 
@@ -166,20 +166,24 @@ def Model():
 	model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
 	model.add(Dropout(0.25))
 
-	model.add(Conv2D(128, kernel_size=(3, 3), strides=(1,1), padding='same', activation='relu', 
-		input_shape=(feature_dim_1, feature_dim_2, channel)))
-	model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
-	model.add(Dropout(0.25))
+	# model.add(Conv2D(128, kernel_size=(3, 3), strides=(1,1), padding='same', activation='relu', 
+	# 	input_shape=(feature_dim_1, feature_dim_2, channel)))
+	# model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
+	# model.add(Dropout(0.25))
 
-	model.add(Conv2D(256, kernel_size=(3, 3), strides=(1,1), padding='same', activation='relu', 
-		input_shape=(feature_dim_1, feature_dim_2, channel)))
-	model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
-	model.add(Dropout(0.25))
+	# model.add(Conv2D(256, kernel_size=(3, 3), strides=(1,1), padding='same', activation='relu', 
+	# 	input_shape=(feature_dim_1, feature_dim_2, channel)))
+	# model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
+	# model.add(Dropout(0.25))
 
 	model.add(Flatten())
 	model.add(Dropout(0.5))
 
 	model.add(Dense(512, activation='relu', kernel_regularizer=keras.regularizers.l2(0.02)))
+	model.add(Dropout(0.25))
+	model.add(Dense(256, activation='relu', kernel_regularizer=keras.regularizers.l2(0.02)))
+	model.add(Dropout(0.25))
+	model.add(Dense(128, activation='relu', kernel_regularizer=keras.regularizers.l2(0.02)))
 	model.add(Dropout(0.25))
 	model.add(Dense(num_classes, activation='softmax', kernel_regularizer=keras.regularizers.l2(0.02)))
 	
