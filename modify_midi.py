@@ -1,23 +1,80 @@
-# import py_midicsv
-# import pandas as pd
+import py_midicsv
+import random
 
-# # Load the MIDI file and parse it into CSV format
-# csv_string = py_midicsv.midi_to_csv("Winter wind etude.mid")
-# df = pd.Dataframe(csv_string)
-# print(df)
+# Load the MIDI file and parse it into CSV format
+csv_string = py_midicsv.midi_to_csv("Winter wind etude.mid")
 
-# # Parse the CSV output of the previous command back into a MIDI file
-# midi_object = py_midicsv.csv_to_midi(csv_string)
+note_indices = []
+index = 0
+for string in csv_string:
+	split = string.split(', ')
 
-# # Save the parsed MIDI file to disk
-# with open("converted.mid", "wb") as output_file:
-# 	midi_writer = py_midicsv.FileWriter(output_file)
-# 	midi_writer.write(midi_object)
+	# format: ( Track, Time, Note_on_c, Channel, Note, Velocity )
+	if ("Note_on_c" in string) or ("Note_off_c" in string):
+		note_indices.append(index)
 
+	index += 1
+
+# if note on changed, note off right after note on need to be changed too
+# print(note_indices)
+rand_idx = -1
+rand_idx_list = [] # list of 'indices' of note_indices
+while 1:
+	rand_idx = random.randint(0, len(note_indices)-1) # random one index of note_indices. include last
+	# print(rand_idx)
+	if "Note_on_c" in csv_string[note_indices[rand_idx]]:
+		rand_idx_list.append(rand_idx)
+	if len(rand_idx_list) == 1:
+		break
+
+print("Winter wind etude.mid: ",csv_string[note_indices[rand_idx_list[0]]])
+
+# note_indices[rand_idx] -> rand_idx
+# print(csv_string[note_indices[rand_idx_list[0]]])
+old_on_string = csv_string[note_indices[rand_idx_list[0]]].split(', ')
+print("old on string: ",old_on_string)
+target_note = old_on_string[4] # string
+matched_off_idx = -1
+
+# change note both note_on_c & note_off_c
+rand_note = random.randint(0, 127)
+old_on_string[4] = str(rand_note)
+new_string = ', '.join(old_on_string)
+csv_string[note_indices[rand_idx_list[0]]] = new_string
+print("new on string: ",csv_string[note_indices[rand_idx_list[0]]])
+
+# print(rand_idx_list[0])
+# print(len(note_indices))
+for off in range(rand_idx_list[0]+1, len(note_indices)):
+	old_off_string = csv_string[note_indices[off]].split(', ')
+	# print(old_off_string)
+	if ('Note_off_c' in old_off_string) and (old_off_string[4] == target_note): # string == string
+		# note off right after changed note on
+		print("old off string: ",old_off_string)
+		old_off_string[4] = str(rand_note)
+		new_string = ', '.join(old_off_string)
+		csv_string[note_indices[off]] = new_string
+		print("new off string: ",csv_string[note_indices[off]])
+
+		break
+
+
+# Parse the CSV output of the previous command back into a MIDI file
+midi_object = py_midicsv.csv_to_midi(csv_string)
+
+# Save the parsed MIDI file to disk
+with open("converted.mid", "wb") as output_file:
+	midi_writer = py_midicsv.FileWriter(output_file)
+	midi_writer.write(midi_object)
+	print("converted success!")
+
+
+csv_string = py_midicsv.midi_to_csv("converted.mid")
+print("converted.mid: ",csv_string[note_indices[rand_idx_list[0]]])
 
 ########################################################################################
 ########################################################################################
-
+'''
 import subprocess
 import re
 import sys
@@ -135,3 +192,4 @@ with open("plain_{}.txt".format(filename), 'w') as f:
 	note_string = note_string.replace("'", "")
 	f.write(note_string)
 print("Successfully saved the converted file to {}".format("plain_{}.txt".format(filename)))
+'''
