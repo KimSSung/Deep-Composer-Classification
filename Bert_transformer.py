@@ -84,10 +84,10 @@ genres = ['Classical', 'Jazz', 'Pop', 'Country','Rock']
 # labels[2400:3199] = [3] * 800
 # labels[3200:3999] = [4] * 800
 
-with open('note_on_800.pkl', 'rb') as f:
+with open('note_on_510.pkl', 'rb') as f:
 	input_ids = pickle.load(f)
 
-with open('attention_800.pkl', 'rb') as f:
+with open('attention_510.pkl', 'rb') as f:
 	attention_mask = pickle.load(f)
 
 with open('labels.pkl', 'rb') as f:
