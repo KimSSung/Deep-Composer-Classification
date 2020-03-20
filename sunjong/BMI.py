@@ -1,7 +1,7 @@
 import torch
 from torch import Tensor
 import torch.nn as nn
-# import torch.nn.functional as F
+import torch.nn.functional as F
 # import random
 # import numpy as np
 
@@ -38,14 +38,16 @@ class BertForMidiClassification(BertPreTrainedModel):
             Outputs the classification logits of shape [batch_size, num_labels].
     """
 
-    def __init__(self, config, num_labels):
+    def __init__(self, config, num_labels=5):
         super(BertForMidiClassification, self).__init__(config)
         self.num_labels = num_labels
         self.bert = BertModel(config) #basic BERT model
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.classifier = nn.Linear(config.hidden_size, num_labels)
         self.apply(self.init_bert_weights)
-        # self.embed = nn.Embedding(config.vocab_size + 1, embedding_dim=300)
+
+        # vocab_size = 128(notes) + 3, hidden_size = 36(hyperparam)
+        self.bert.embeddings.word_embeddings = nn.Embedding(config.vocab_size, config.hidden_size, padding_idx=0)
 
     def forward(self, input_ids, token_type_ids=None, attention_mask=None, labels=None):
         # BertModel output: (sequence_output, pooled_output, (option: hidden_states), (option: attention))
@@ -53,18 +55,21 @@ class BertForMidiClassification(BertPreTrainedModel):
         # 2. pooled_output: get CLS([batch_size, dim]) then * [dim, dim] = [batch_size, dim]
         # we use pooled_out rather than sequence_output
         _, pooled_output = self.bert(input_ids, token_type_ids, attention_mask, output_all_encoded_layers=False)
-        pooled_output = self.dropout(pooled_output)
-        logits = self.classifier(pooled_output)
+        # return pooled_output
+        # pooled_output = self.dropout(pooled_output)
 
-        ''' ---------Don't know why used-------------
+        out = self.classifier(pooled_output)
+        # return out
+        return out # F.softmax(out, dim=1) # softmax for dim (dim=1) /  not batch_size(dim=0)
+
+        '''
+        ---------Don't know why used-------------
         if labels is not None:
             loss = nn.CrossEntropyLoss()
             return loss
         else:
             return logits
         '''
-
-        return logits
 
     def freeze_bert_encoder(self):
         for param in self.bert.parameters():

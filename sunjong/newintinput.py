@@ -62,7 +62,7 @@ for genre in genres:
             list = []
 
             # insert CLS
-            list.append(366)
+            list.append(128)
 
             for i, track in enumerate(mid.tracks):
 
@@ -70,7 +70,7 @@ for genre in genres:
                veloc = 0   #for comparison
                tempo = 500000 #this is default tempo of midi in microsec
 
-               if (len(list) >= 999):
+               if (len(list) >= 799):
                    break
 
                for msg in track:
@@ -79,53 +79,54 @@ for genre in genres:
                        tempo = msg.tempo
                    if(not msg.is_meta):
                        if((msg.type == 'note_on') or (msg.type == 'note_off')):
-                             new_veloc = msg.velocity
+                             # new_veloc = msg.velocity
                              new_note = msg.note
-                             new_time = msg.time
-                             new_type = msg.type
+                             # new_time = msg.time
+                             # new_type = msg.type
 
-                             if (new_time > 0):  # index: 256-355
+                             # if (new_time > 0):  # index: 256-355
 
-                                 new_time_sec = md.tick2second(msg.time, mid.ticks_per_beat, tempo)
-                                 timer += new_time_sec
-                                 new_time_ms = new_time_sec * 100  # sec to 10msec (10msec = 1unit => total 100units = 1sec)
-                                 if (new_time_ms > 100):  # max = 1000ms = 100units = 1sec
-                                     new_time_ms = 100
+                             #     new_time_sec = md.tick2second(msg.time, mid.ticks_per_beat, tempo)
+                             #     timer += new_time_sec
+                             #     new_time_ms = new_time_sec * 100  # sec to 10msec (10msec = 1unit => total 100units = 1sec)
+                             #     if (new_time_ms > 100):  # max = 1000ms = 100units = 1sec
+                             #         new_time_ms = 100
 
-                                 list.append(256 + int(new_time_ms))
-                                 if (len(list) >= 999):
-                                     break
+                             #     list.append(256 + int(new_time_ms))
+                             #     if (len(list) >= 999):
+                             #         break
 
-                             # order: time(ms) -> velocity(10bin) -> note event(128 pitches)
-                             if((new_veloc != veloc) and (new_veloc != 0)): #index: 356-365
-                                 veloc = new_veloc
-                                 list.append(356 + get_closest_bin(new_veloc))
-                                 if(len(list) >= 999):
-                                     break
+                             # # order: time(ms) -> velocity(10bin) -> note event(128 pitches)
+                             # if((new_veloc != veloc) and (new_veloc != 0)): #index: 356-365
+                             #     veloc = new_veloc
+                             #     list.append(356 + get_closest_bin(new_veloc))
+                             #     if(len(list) >= 999):
+                             #         break
 
                              if(new_type == 'note_on'): #index: 0-127
                                  list.append(int(new_note))
-                                 if (len(list) >= 999):
+                                 if (len(list) >= 799):
                                      break
 
-                             elif(new_type == 'note_off'): #index: 128-255
-                                 list.append(128 + int(new_note))
-                                 if (len(list) >= 999):
-                                     break
+                             # elif(new_type == 'note_off'): #index: 128-255
+                             #     list.append(128 + int(new_note))
+                             #     if (len(list) >= 999):
+                             #         break
 
-                             if(timer >= 5): #STOP track after 5 sec
-                                 break   #next track
+                             # if(timer >= 5): #STOP track after 5 sec
+                             #     break   #next track
 
 
 
                #after each track add SEP
-               list.append(367)
+               # list.append(367)
+               list.append(129)
 
 
             #after each file
             #add PAD if shorter than 1000
-            while len(list) < 1000:
-                list.append(368)
+            while len(list) < 800:
+                list.append(130)
 
             ls_genre.append(list)
 

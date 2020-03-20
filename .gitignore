@@ -9,3 +9,5 @@ melfmodel/
 
 # files #
 .wav
+.pkl
+.mid
