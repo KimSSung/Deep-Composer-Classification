@@ -3,11 +3,13 @@ import argparse
 class HParams(object):
 	def __init__(self):
 		self.dataset_path = '../../../../data/wav/genres/8genres'
+		# self.dataset_path = '../../../../data/wav/genres/8genres_tensor' # for tensor
+		
 		self.feature_path= '../../../../data/wav/genres/dataset/feature_augment'
 		self.genres =  ['classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae']
 
 		# Feature Parameters
-		self.sample_rate=22050
+		self.sample_rate=16000 #22050
 		self.fft_size = 1024
 		self.win_size = 1024
 		self.hop_size = 512
@@ -43,7 +45,7 @@ class HParams(object):
 			print('----------------------')
 			for var in vars(self):
 				value = getattr(hparams, var)
-				print(var + ":" + str(value))
+				print("▶" + var + ":" + str(value))
 			print('----------------------')
 
 hparams = HParams()
