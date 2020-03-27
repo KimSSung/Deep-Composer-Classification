@@ -150,10 +150,10 @@ class GTZANGenerator(Sequence):
 		self.y = y
 		self.batch_size = batch_size
 		self.is_test = is_test
-	
+
 	def __len__(self):
 		return int(np.ceil(len(self.X)/self.batch_size))
-	
+
 	def __getitem__(self, index):
 		# Get batch indexes
 		signals = self.X[index*self.batch_size:(index+1)*self.batch_size]
@@ -162,12 +162,12 @@ class GTZANGenerator(Sequence):
 		if not self.is_test:
 			signals = self.__augment(signals)
 		return signals, self.y[index*self.batch_size:(index+1)*self.batch_size]
-	
+
 	def __augment(self, signals, hor_flip = 0.5, random_cutout = 0.5):
 		spectrograms =  []
 		for s in signals:
 			signal = copy(s)
-			
+
 			# Perform horizontal flip
 			if np.random.rand() < hor_flip:
 				signal = np.flip(signal, 1)
@@ -181,7 +181,7 @@ class GTZANGenerator(Sequence):
 
 			spectrograms.append(signal)
 		return np.array(spectrograms)
-	
+
 	def on_epoch_end(self):
 		self.indexes = np.arange(len(self.X))
 		np.random.shuffle(self.indexes)

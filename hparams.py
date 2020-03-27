@@ -25,7 +25,7 @@ class HParams(object):
 		self.factor = 0.2
 		self.patience = 5
 
-	# Function for pasing argument and set hParams
+	# Function for parsing argument and set hParams
 	def parse_argument(self, print_argument=True):
 		parser = argparse.ArgumentParser()
 		for var in vars(self):
@@ -39,7 +39,7 @@ class HParams(object):
 
 		if print_argument:
 			print('----------------------')
-			print('Hyper Paarameter Settings')
+			print('Hyper Parameter Settings')
 			print('----------------------')
 			for var in vars(self):
 				value = getattr(hparams, var)
