@@ -87,6 +87,11 @@ def device_name(device):
 
 def main():
     train_loader, valid_loader, test_loader = data_manager.get_dataloader(hparams)
+    # print("train:", len(train_loader))
+    # print("valid:", len(train_loader))
+    # print("test:", len(train_loader))
+    
+
     runner = Runner(hparams)
 
     print('Training on ' + device_name(hparams.device))
