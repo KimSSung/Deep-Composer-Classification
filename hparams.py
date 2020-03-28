@@ -9,7 +9,7 @@ class HParams(object):
 		self.genres =  ['classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae']
 
 		# Feature Parameters
-		self.sample_rate=16000 #22050
+		self.sample_rate=10000 #22050
 		self.fft_size = 1024
 		self.win_size = 1024
 		self.hop_size = 512
@@ -27,7 +27,7 @@ class HParams(object):
 		self.factor = 0.2
 		self.patience = 5
 
-	# Function for parsing argument and set hParams
+	# Function for pasing argument and set hParams
 	def parse_argument(self, print_argument=True):
 		parser = argparse.ArgumentParser()
 		for var in vars(self):
@@ -41,7 +41,7 @@ class HParams(object):
 
 		if print_argument:
 			print('----------------------')
-			print('Hyper Parameter Settings')
+			print('Hyper Paarameter Settings')
 			print('----------------------')
 			for var in vars(self):
 				value = getattr(hparams, var)
