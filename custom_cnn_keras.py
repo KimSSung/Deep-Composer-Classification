@@ -33,7 +33,7 @@ PATH = '../../../../data/'
 """
 @description: Method to split a song into multiple songs using overlapping windows
 """
-def splitsongs(X, y, window = 0.05, overlap = 0.5):
+def splitsongs(X, y, window = 0.05, overlap = 0):
 	# Empty lists to hold our results
 	temp_X = []
 	temp_y = []

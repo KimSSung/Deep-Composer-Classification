@@ -3,7 +3,7 @@ torch.manual_seed(123)
 import torch.nn as nn
 
 class RCNN(nn.Module):
-	def __init__(self, num_genres):
+	def __init__(self, hparams):
 		super(RCNN, self).__init__()
 
 		self._extractor = nn.Sequential(
@@ -39,7 +39,7 @@ class RCNN(nn.Module):
 										 nn.Linear(in_features=512, out_features=256),
 										 nn.ReLU(),
 										 nn.Dropout(),
-										 nn.Linear(in_features=256, out_features=num_genres))
+										 nn.Linear(in_features=256, out_features=len(hparams.genres)))
 		self.apply(self._init_weights)
 
 	def forward(self, x):

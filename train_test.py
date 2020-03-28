@@ -14,12 +14,18 @@ np.random.seed(0)
 
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import data_manager
-from custom_upchannel32 import *
+
+# model
+# from custom_upchannel32 import * # acc: 0.8172 for lr: 1e-2/2
+from custom_rcnn import * # acc: 0.8254 for lr: 1e-2/2
+
 from hparams import hparams
 # Wrapper class to run PyTorch model
 class Runner(object):
     def __init__(self, hparams):
-        self.model =upchannel(hparams)
+        # self.model = upchannel(hparams)
+        self.model = RCNN(hparams)
+
         self.criterion = torch.nn.CrossEntropyLoss()
         # self.optimizer = torch.optim.Adam(self.model.parameters(), lr=hparams.learning_rate)
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=hparams.learning_rate, momentum=hparams.momentum, weight_decay=1e-6, nesterov=True)

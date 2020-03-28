@@ -20,7 +20,7 @@ class HParams(object):
 		self.device = 1  # 0: CPU, 1: GPU0, 2: GPU1, ...
 		self.batch_size = 16
 		self.num_epochs = 26
-		self.learning_rate = 1e-2
+		self.learning_rate = 1e-2/2
 		self.stopping_rate = 1e-5
 		self.weight_decay = 1e-6
 		self.momentum = 0.9
