@@ -6,6 +6,7 @@ import os
 import torch.nn as nn
 import torchaudio
 import torch
+import sys
 #print(data_middle)
 #print(data_note_on)
 #print(data_note_off)
@@ -67,11 +68,9 @@ def sound_wave (midi_note, start_time, duration,padding_size,sampling_rate = 100
         pad_sine_wave=np.zeros((padding_size,))
     print(pad_sine_wave.shape)
     if (pad_sine_wave.shape[0] < padding_size):
-        while (pad_sine_wave.shape[0] != padding_size):
-            pad_sine_wave= np.pad(pad_sine_wave,(1,0),'constant',constant_values = 0.0)
+        pad_sine_wave= np.pad(pad_sine_wave,(int(padding_size - pad_sine_wave.shape[0]),0),'constant',constant_values = 0.0)
     elif (pad_sine_wave.shape[0] > padding_size):
-        while (pad_sine_wave.shape[0] != padding_size):
-            pad_sine_wave = np.delete(pad_sine_wave,0)
+       pad_sine_wave = pad_sine_wave[int(pad_sine_wave.shape[0] - padding_size):]
     print(pad_sine_wave.shape)
     return pad_sine_wave
 
@@ -118,97 +117,99 @@ for genre_index in range (0,len(genre)):
 
 
     for cur_file in range(0,len(file_dir)):
-        print('current: file :' + file_name[cur_file] + "< " + genre[genre_index] + ">")
-        csv_string = py_midicsv.midi_to_csv(file_dir[cur_file])  #Set to File Directory Here!
-        ## Caution: csv_string is List[string]  : we need to manipulate this data preprocess
-        ## Split all of the string elements to list elements
 
-        tmp_list = []
-        for i in range(0,len(csv_string)):
-            temp=np.array(csv_string[i].replace("\n","").replace(" ","").split(","))
-            tmp_list.append(temp)
-
-        data = pd.DataFrame(tmp_list)
-        data.to_csv('/nfs/home/ryan0507/pycharm_maincomputer/csv/'+file_name[cur_file] +'.csv' ,header=False, index = False)
-
-        # Manipulating Dataframe
-        # Drop all of the other colunms
-
-        #BitMask for inside the dataframe, DF
-        #Define to cut midi files --> Too Long and it makes overflow
-
-        MAX_DF = 500
-
-        data_note = data [ (data[2]== 'Note_on_c') | (data[2]=='Note_off_c')]
-        print(data_note)
-
-        #Manipulate data_note_on DF
-        data_note_on = data[(data[2] == 'Note_on_c') & (data[5]!='0')]
-
-        #Change the MAX_DF
-        if data_note_on.shape[0] > 500:
-            MAX_DF = 500
-        else:
-            MAX_DF = data_note_on.shape[0]
-
-        data_note_on= data_note_on.loc[:,0:5]
-        data_note_on.reset_index(drop=True)
-        data_note_on.columns = ['Track','Time','Event_Type','Channel','Note','Velocity']
-        data_note_on.index = range(0,data_note_on.shape[0])
-        data_note_on.drop(data_note_on.index[MAX_DF:],inplace = True)
-
-        #Manipulate data_note_off DF
-        data_note_off = data[(data[2] == 'Note_off_c') | ((data[2]=='Note_on_c') & (data[5] == '0'))]
-        data_note_off= data_note_off.loc[:,0:5]
-        data_note_off.reset_index(drop=True)
-        data_note_off.columns = ['Track','Time','Event_Type','Channel','Note','Velocity']
-        data_note_off.index = range(0,data_note_off.shape[0])
-
-        #Cheking
-        print(data_note_on)
-        print(data_note_off)
-
-        # Make the new DataFrame for Middle State
-        # Cut the shape of DataFrame
-
-        data_middle = pd.DataFrame(index = range(0,MAX_DF),
-                                   columns= ['Track','Duration','Event_Type','Channel','Note','Velocity'])
-
-        # Shape returns tuple
-        print(data_middle)
-        # print(data_note_on)
-
-        #Calculate duration
-        for i in range(0,MAX_DF):
-            for j in range(0,data_note_off.shape[0]):
-                if ((data_note_on.iloc[i])['Note'] == (data_note_off.iloc[j])['Note'] and (data_note_on.iloc[i])['Track'] == (data_note_off.iloc[j])['Track'] ):
-                    data_middle.iloc[i] = data_note_on.iloc[i]
-                    (data_middle.iloc[i])['Duration'] = int((data_note_off.iloc[j])['Time']) - int((data_note_on.iloc[i])['Time'])
-                    data_note_off = data_note_off.drop(index = j)
-                    data_note_off.index = range(0, data_note_off.shape[0])
-                    break
-                else:
-                    continue
-
-        #Initialize Data to List
-        t_start_list = []
-        t_duration = []
-        note = []
-
-        for i in range (0,MAX_DF):
-            t_start_list.append(int(data_note_on.iloc[i,1])/1000)
-            t_duration.append(int(data_middle.iloc[i,1])/1000)
-            note.append(int(data_note_on.iloc[i,4]))
-
-
-        total_t = np.arange(0, t_start_list[MAX_DF-1]+t_duration[MAX_DF-1],1/sr)
-        PADDING_SIZE = total_t.shape[0]
-
-        #SET THE BASE WAVE TO ADD UP
-        base_sine_wave = np.sin(0 * 2 * np.pi * total_t + 0)
-        abs_sum_wave = 0
-        sum_wave = 0
         try:
+            print('current: file :' + file_name[cur_file] + "< " + genre[genre_index] + ">")
+            csv_string = py_midicsv.midi_to_csv(file_dir[cur_file])  #Set to File Directory Here!
+            ## Caution: csv_string is List[string]  : we need to manipulate this data preprocess
+            ## Split all of the string elements to list elements
+
+            tmp_list = []
+            for i in range(0,len(csv_string)):
+                temp=np.array(csv_string[i].replace("\n","").replace(" ","").split(","))
+                tmp_list.append(temp)
+
+            data = pd.DataFrame(tmp_list)
+            data.to_csv('/nfs/home/ryan0507/pycharm_maincomputer/csv/'+file_name[cur_file] +'.csv' ,header=False, index = False)
+
+            # Manipulating Dataframe
+            # Drop all of the other colunms
+
+            #BitMask for inside the dataframe, DF
+            #Define to cut midi files --> Too Long and it makes overflow
+
+            MAX_DF = 500
+
+            data_note = data [ (data[2]== 'Note_on_c') | (data[2]=='Note_off_c')]
+            print(data_note)
+
+            #Manipulate data_note_on DF
+            data_note_on = data[(data[2] == 'Note_on_c') & (data[5]!='0')]
+
+            #Change the MAX_DF
+            if data_note_on.shape[0] > 500:
+                MAX_DF = 500
+            else:
+                MAX_DF = data_note_on.shape[0]
+
+            data_note_on= data_note_on.loc[:,0:5]
+            data_note_on.reset_index(drop=True)
+            data_note_on.columns = ['Track','Time','Event_Type','Channel','Note','Velocity']
+            data_note_on.index = range(0,data_note_on.shape[0])
+            data_note_on.drop(data_note_on.index[MAX_DF:],inplace = True)
+
+            #Manipulate data_note_off DF
+            data_note_off = data[(data[2] == 'Note_off_c') | ((data[2]=='Note_on_c') & (data[5] == '0'))]
+            data_note_off= data_note_off.loc[:,0:5]
+            data_note_off.reset_index(drop=True)
+            data_note_off.columns = ['Track','Time','Event_Type','Channel','Note','Velocity']
+            data_note_off.index = range(0,data_note_off.shape[0])
+
+            #Cheking
+            print(data_note_on)
+            print(data_note_off)
+
+            # Make the new DataFrame for Middle State
+            # Cut the shape of DataFrame
+
+            data_middle = pd.DataFrame(index = range(0,MAX_DF),
+                                       columns= ['Track','Duration','Event_Type','Channel','Note','Velocity'])
+
+            # Shape returns tuple
+            print(data_middle)
+            # print(data_note_on)
+
+            #Calculate duration
+            for i in range(0,MAX_DF):
+                for j in range(0,data_note_off.shape[0]):
+                    if ((data_note_on.iloc[i])['Note'] == (data_note_off.iloc[j])['Note'] and (data_note_on.iloc[i])['Track'] == (data_note_off.iloc[j])['Track'] ):
+                        data_middle.iloc[i] = data_note_on.iloc[i]
+                        (data_middle.iloc[i])['Duration'] = int((data_note_off.iloc[j])['Time']) - int((data_note_on.iloc[i])['Time'])
+                        data_note_off = data_note_off.drop(index = j)
+                        data_note_off.index = range(0, data_note_off.shape[0])
+                        break
+                    else:
+                        continue
+
+            #Initialize Data to List
+            t_start_list = []
+            t_duration = []
+            note = []
+
+            for i in range (0,MAX_DF):
+                t_start_list.append(int(data_note_on.iloc[i,1])/1000)
+                t_duration.append(int(data_middle.iloc[i,1])/1000)
+                note.append(int(data_note_on.iloc[i,4]))
+
+
+            total_t = np.arange(0, t_start_list[MAX_DF-1]+t_duration[MAX_DF-1],1/sr)
+            PADDING_SIZE = total_t.shape[0]
+
+            #SET THE BASE WAVE TO ADD UP
+            base_sine_wave = np.sin(0 * 2 * np.pi * total_t + 0)
+            abs_sum_wave = 0
+            sum_wave = 0
+
             for i in range(0,MAX_DF):
                 abs_sum_wave = abs_sum_wave + np.abs(sound_wave(midi_note= note[i],start_time = t_start_list[i],duration = t_duration[i],padding_size= PADDING_SIZE))
                 sum_wave = sum_wave + sound_wave(midi_note= note[i],start_time = t_start_list[i],duration = t_duration[i],padding_size= PADDING_SIZE)
@@ -225,10 +226,18 @@ for genre_index in range (0,len(genre)):
             tensor_format = torch.from_numpy(tensor_format)
             print(tensor_format)
 
+
+            with open("/nfs/home/ryan0507/pycharm_maincomputer/Tensor_Data.txt","a") as f:
+                f.write('current: file :' + file_name[cur_file] + "< " + genre[genre_index] + ">" + "\n")
+                f.write(str(temp))
+                f.write("\n")
+
             write('/nfs/home/ryan0507/pycharm_maincomputer/wav/'+genre[genre_index] + '/' + file_name[cur_file] + '.wav', 10000, scaled)
 
 
+
         except:
-            with open("Error_Record.txt", "w") as f:
+            with open("/nfs/home/ryan0507/pycharm_maincomputer/Error_Record.txt", "a") as f:
                 f.write("Error Occured With: " + file_name[cur_file] + "\n")
+                f.write(str(sys.exc_info()[0]))
             pass
