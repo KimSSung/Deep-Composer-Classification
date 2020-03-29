@@ -5,8 +5,12 @@ class HParams(object):
 		self.dataset_path = '../../../../data/wav/genres/8genres'
 		# self.dataset_path = '../../../../data/wav/genres/8genres_tensor' # for tensor
 		
-		self.feature_path= '../../../../data/wav/genres/dataset/feature_augment'
-		self.genres =  ['classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae']
+		self.feature_path= '../../../../data/wav/genres/dataset/feature_augment' # num_mels = 128
+		# self.feature_path= '../../../../data/wav/genres/dataset/feature_augment_224' # num_mels = 224
+
+		# self.genres =  ['classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae']
+		self.genres = ['Rock','Jazz','Classical','Country','Pop']
+
 
 		# Feature Parameters
 		self.sample_rate=10000 #22050
@@ -19,7 +23,7 @@ class HParams(object):
 		# Training Parameters
 		self.device = 1  # 0: CPU, 1: GPU0, 2: GPU1, ...
 		self.batch_size = 16
-		self.num_epochs = 26
+		self.num_epochs = 50 # 26
 		self.learning_rate = 1e-2/2
 		self.stopping_rate = 1e-5
 		self.weight_decay = 1e-6
