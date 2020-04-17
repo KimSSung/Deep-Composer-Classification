@@ -9,7 +9,7 @@ import pickle
 from Fin_hparams import hparams
 
 
-TENSOR_PATH = './../../../../data/tensors/'
+TENSOR_PATH = '/nfs/home/kssung/midiclass/midi370/tensors/' # absolute path
 GENRES = ['Rock','Jazz','Classical','Country','Pop']
 
 # def load_list(list_name, hparams):
@@ -82,12 +82,17 @@ def get_label(file_name, hparams):
 
 def tensor2mel(wave_tensor, hparams):
 
-	mel_S = torchaudio.transforms.MelSpectrogram(sample_rate=hparams.sample_rate, n_fft=hparams.fft_size,
-													win_length=hparams.win_size, hop_length=hparams.hop_size, n_mels=hparams.num_mels)(wave_tensor)
+	# # MelSpectrogram
+	# mel_S = torchaudio.transforms.MelSpectrogram(sample_rate=hparams.sample_rate, n_fft=hparams.fft_size,
+	# 												win_length=hparams.win_size, hop_length=hparams.hop_size, n_mels=hparams.num_mels)(wave_tensor)
 
-	mel_S = torch.log10(1+10*mel_S)
+	# mel_S = torch.log10(1+10*mel_S)
 
 	# print(mel_S.shape)
+
+	# MFCC
+	mel_S = torchaudio.transforms.MFCC(sample_rate=hparams.sample_rate, n_mfcc=40, log_mels=True)(wave_tensor)
+
 
 	return mel_S
 
@@ -116,32 +121,35 @@ def main():
 	print("Extracting Feature")
 	# list_names = ['train_list.txt', 'valid_list.txt', 'test_list.txt']
 	err = 0
+	tot_mel_num = [0,0,0,0,0]
 
 	# train: 250 * 5 genre -> 67%
 	# valid: 60 * 5 genre -> 16%
 	# test: 60 * 5 genre -> 16%
 	for f in os.listdir(TENSOR_PATH):
 
-		if f == 'dataset': continue
+		# if f == 'dataset': continue
 
 		num = 0 # if num < 250: train, elif num < 310: test, elif num < 370: valid
 		label = get_label(f, hparams)
 		print('Label:', GENRES[label])
 
 		file_path = TENSOR_PATH + f
+		print(file_path)
 		tensor_list = torch.load(file_path) # len: 300
 		for i, tensor in enumerate(tensor_list):
 			tensor_list[i] = tensor.float()
 
+		print(len(tensor_list))
+		# continue
 
 		for k, wav_tensor in enumerate(tensor_list):
-			num += 1
 			
-			if num < 210: # 300 * 0.7
+			if num < 70: # 100 * 0.7
 				set_name = 'train'
-			elif num < 255: # 300 * 0.15
+			elif num < 85: # 100 * 0.15
 				set_name = 'test'
-			elif num < 300:
+			elif num < 100:
 				set_name = 'valid'
 			else: # only take 300 for each genre
 				break
@@ -149,12 +157,20 @@ def main():
 			feature = tensor2mel(wav_tensor, hparams) # [1,128, something]
 			feature = feature.reshape(feature.shape[1], feature.shape[2]) # [128, something]
 			print('feature size:',feature.shape)
+			
+			if feature.shape[1] < 1024: continue
+
+			# to check tot num for each genres of mel >= 1024
+			tot_mel_num[label] += 1
+
+
 			feature = resize_array(feature, hparams.feature_length)
 			print('after resize:', feature.shape) # (1024, 128)
 
 			# Data Arguments
 			num_chunks = feature.shape[0]//hparams.num_mels # 1024 / 128 = 8, 672 / 224 = 3
-			print(num_chunks)
+			# print(num_chunks)
+
 			print('-------------------')
 
 			# data_chuncks = np.split(feature, num_chunks)
@@ -163,14 +179,14 @@ def main():
 			for idx, i in enumerate(data_chuncks):
 
 				save_name = GENRES[label] + '_' + str(k).zfill(4) + str(idx) + '.npy' # Classical_00011.npy
-				print(save_name)
+				# print(save_name)
 				save_path = os.path.join(hparams.feature_path, set_name, GENRES[label])
-				print('save_path: ', save_path)
+				# print('save_path: ', save_path)
 				
 				if not os.path.exists(save_path):
 					os.makedirs(save_path)
 
-				if i.shape[0] == 128 and i.shape[1] == 128 and len(data_chuncks) == 8: # num_mels = 128
+				if i.shape[0] == 128 and i.shape[1] == 40 and len(data_chuncks) == 8: # num_mels = 128
 				
 
 					np.save(os.path.join(save_path, save_name), i.type(torch.FloatTensor))
@@ -178,12 +194,14 @@ def main():
 					
 
 				else:
-					print('error on file: ', file_name)
+					# print('error on file: ', file_name)
 					err += 1
 
+			num += 1
 
 
-			
+
+	print('genres tensor num [Rock,Jazz,Classical,Country,Pop]:', tot_mel_num)
 	print('total error:', err)
 
 	print('finished')

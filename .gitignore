@@ -2,14 +2,16 @@
 onehotvectors/
 midi820/
 wav820/
+midi370/
 model/
 pickles/
 before_drop_pickles/
 melfmodel/
+genre-*/
 
 # files #
 .wav
 .pkl
 .mid
-test.py
+test*.py
 temp.py

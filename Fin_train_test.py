@@ -13,15 +13,16 @@ import numpy as np
 np.random.seed(0)
 
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+# from torch.optim.lr_scheduler import CosineAnnealingLR
+
 import Fin_data_manager as data_manager
 
 # model
 # from custom_upchannel32 import * # acc: 0.8172 for lr: 1e-2/2
 # from custom_rcnn import * # acc: 0.8254 for lr: 1e-2/2
 # from DenseNet import *
-# from ResNet2 import * # 0.7
+from ResNet2 import * # 0.7
 # import torchvision.models as models # for resnet50 # not yet
-from custom_upchannel32 import *
 
 from Fin_hparams import hparams
 # Wrapper class to run PyTorch model
@@ -29,15 +30,16 @@ class Runner(object):
 	def __init__(self, hparams):
 		# self.model = upchannel(hparams)
 		# self.model = RCNN(hparams)
-		# self.model = resnet34(1,8)
-		# self.model = models.resnet50() # from torchvision.
+		self.model = resnet50(1,5)
 		# self.model = densenet121()
-		self.model = upchannel(hparams)
 
 		self.criterion = torch.nn.CrossEntropyLoss()
 		# self.optimizer = torch.optim.Adam(self.model.parameters(), lr=hparams.learning_rate)
 		self.optimizer = torch.optim.SGD(self.model.parameters(), lr=hparams.learning_rate, momentum=hparams.momentum, weight_decay=1e-6, nesterov=True)
+		
 		self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', factor=hparams.factor, patience=hparams.patience, verbose=True)
+		# self.scheduler = CosineAnnealingLR(self.optimizer, 10, eta_min=0, last_epoch=-1)
+
 		self.learning_rate = hparams.learning_rate
 		self.stopping_rate = hparams.stopping_rate
 		self.device = torch.device("cpu")
@@ -67,9 +69,10 @@ class Runner(object):
 			y = y.to(self.device)
 
 			# reshape for resnet
-			# x = x.reshape(x.shape[0], 1, x.shape[1], x.shape[2])
+			x = x.reshape(x.shape[0], 1, x.shape[1], x.shape[2])
 
 			prediction = self.model(x)
+			# if mode == 'eval': print('prediction: ', prediction.argmax(dim=1), "  |  label: ", y.long())
 			loss = self.criterion(prediction, y.long())
 			acc = self.accuracy(prediction, y.long())
 
@@ -88,7 +91,9 @@ class Runner(object):
 
 	# Early stopping function for given validation loss
 	def early_stop(self, loss, epoch):
-		self.scheduler.step(loss, epoch)
+		self.scheduler.step(loss, epoch) # ReduceLROnPlateau
+		# self.scheduler.step(loss) # Consine
+
 		self.learning_rate = self.optimizer.param_groups[0]['lr']
 		stop = self.learning_rate < self.stopping_rate
 

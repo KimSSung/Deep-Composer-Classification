@@ -2,15 +2,30 @@ import argparse
 
 class HParams(object):
 	def __init__(self):
+
+		# GTZAN
+		# self.genres =  ['classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae']
 		# self.dataset_path = '../../../../data/wav/genres/8genres'
 		# self.dataset_path = '../../../../data/wav/genres/8genres_tensor' # for tensor
 		
+
 		self.feature_path= '../../../../data/tensors/dataset/feature_augment' # num_mels = 128
 		# self.feature_path= '../../../../data/wav/genres/dataset/feature_augment_224' # num_mels = 224
 
-		# self.genres =  ['classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae']
-		self.genres = ['Rock','Jazz','Classical','Country','Pop']
+		# new midiset
+		# self.dataset_path = '../../../../data/new_midiset'
+		# self.genres = ['Blues','Jazz','Classical','Country','Pop']
+		# self.feature_path = '../../../../data/wav350_feature'		
 
+		# wav350
+		# self.dataset_path = '../../../../data/wav350'
+		# self.genres = ['Rock','Jazz','Classical','Country','Pop']
+		# self.feature_path = '../../../../data/wav350_feature'
+
+		# lmd
+		# self.dataset_path = "../../../../data/lmd/lmd_matched"
+		# self.genres = ['RnB', 'PopRock', 'Country', 'NewAge', 'Jazz', 'Folk', 'Latin']
+		# self.feature_path = "../../../../data/lmd/lmd_features"
 
 		# Feature Parameters
 		self.sample_rate=10000 #22050
@@ -22,9 +37,9 @@ class HParams(object):
 
 		# Training Parameters
 		self.device = 1  # 0: CPU, 1: GPU0, 2: GPU1, ...
-		self.batch_size = 16
-		self.num_epochs = 26 # 26
-		self.learning_rate = 1e-2
+		self.batch_size = 5
+		self.num_epochs = 100
+		self.learning_rate = 1e-2/4
 		self.stopping_rate = 1e-5
 		self.weight_decay = 1e-6
 		self.momentum = 0.9

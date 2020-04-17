@@ -7,10 +7,15 @@ import torch.nn as nn
 import torchaudio
 import torch
 import sys
+import pickle
 
-DATA_PATH = './../../../../data/midi370/'
-CSV_PATH = './../../../../data/csv/'
-SAVE_PATH = './../../../../data/tensors/'
+DATA_PATH = './../../../../data/new_midiset/'
+CSV_PATH = './../../../../data/new_midiset/csv/'
+SAVE_PATH = './../../../../data/new_midiset/tensors/'
+
+print(__file__)
+print(os.path.realpath(__file__))
+print(os.path.abspath(__file__))
 
 #print(data_middle)
 #print(data_note_on)
@@ -94,6 +99,9 @@ genre = ['Rock','Jazz','Classical','Country','Pop']
 #genre = ['Classical']
 #genre_dir = './midiset/' + genre
 
+
+err_num = 0
+tot_tensor_num = [0,0,0,0,0]
 for genre_index in range (0,len(genre)):
 	genre_dir = DATA_PATH +  genre[genre_index]
 	file_dir = []
@@ -239,9 +247,25 @@ for genre_index in range (0,len(genre)):
 
 			# append tensor to tensor_list
 			print("tensor shape: ", tensor_format.shape)
-			print('--------------------------------------------------------')
-			tensor_list.append(tensor_format)
+			# print('--------------------------------------------------------')
+			
+			# divide by 2^16
+			tensor_format = tensor_format.float()
+			tensor_format = torch.div(tensor_format, 1 << 16)
+			non_zero = int(torch.nonzero(tensor_format[0])[0][0]) # first index of non-zero
+			# before_remove = tensor_format.shape[1]
 
+			print('non_zero index:',non_zero)
+			# remove all preceding zeros
+			tensor_format = tensor_format[:, non_zero:]
+			# print('diff:', before_remove-tensor_format.shape[1])
+			# print('final tensor_format:', tensor_format)
+			
+			print(tensor_format.shape)
+			print('--------------------------------------------------------')
+
+			tensor_list.append(tensor_format)
+			print(genre[genre_index] + ' - tensor_list len:', len(tensor_list))
 
 			# with open(SAVE_PATH + "Tensor_Data_"+ str(genre[genre_index]) +".txt","a") as f:
 			# 	f.write('current: file :' + file_name[cur_file] + "< " + genre[genre_index] + ">" + "\n")
@@ -249,27 +273,40 @@ for genre_index in range (0,len(genre)):
 			# 	f.write("\n")
 
 			# write('/nfs/home/ryan0507/pycharm_maincomputer/wav/'+genre[genre_index] + '/' + file_name[cur_file] + '.wav', 10000, scaled)
-
+			# if num == 1: break # for check error
 
 
 		except:
 			# with open("./error_log/Error_Record_"+ str(genre[genre_index]) +".txt", "a") as f:
 			# 	f.write("Error Occured With: " + file_name[cur_file] + "\n")
 			# 	f.write(str(sys.exc_info()[0]))
-			print("Error on file: ", file_name[cur_file])
-			print('--------------------------------------------------------')
+			# print("Error on file: ", file_name[cur_file])
+			# print('--------------------------------------------------------')
 
-			os.remove(file_dir[cur_file])
+			# os.remove(file_dir[cur_file])
+			err_num += 1
 			pass
 
 
 	# save tensor....
-	try:
-		print('total # of genre:', num)
-		torch.save(tensor_list, './../../../../data/tensors/'+ genre[genre_index] + '.pt')
-		print(genre[genre_index] + ' - tensor_list len:', len(tensor_list))
-		print(genre[genre_index] + ' - save success!')
-		print('--------------------------------------------------------')
-	except:
-		print(genre[genre_index] + ' - save failed....')
-		print('--------------------------------------------------------')
+	print('total # of genre:', num)
+	
+	# torch save (= failed)
+	print(SAVE_PATH + genre[genre_index] + '.pt')
+	torch.save(tensor_list, SAVE_PATH + genre[genre_index] + '.pt')
+
+
+	# pickle save
+	# with open('./midi370/tensors/' + genre[genre_index] + '.pkl', 'wb') as f:
+	# 	pickle.dump(tensor_list, f)	
+
+	print(genre[genre_index] + ' - tensor_list len:', len(tensor_list))
+	print(genre[genre_index] + ' - save success!')
+	tot_tensor_num[genre_index] = len(tensor_list)
+	print('--------------------------------------------------------')
+
+
+
+print('genres tensor num [Rock,Jazz,Classical,Country,Pop]:', tot_tensor_num)
+print('total err num:', err_num)
+print('finished!')
