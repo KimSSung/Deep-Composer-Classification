@@ -1,17 +1,18 @@
 # Directories #
-onehotvectors/
-midi820/
-wav820/
-midi370/
-model/
-pickles/
-before_drop_pickles/
-melfmodel/
-genre-*/
+sunjong/
+Fin/
+inputs/
+lmd_files/
+models/
+music_generator/
+new_midiset/
+original_wav2genre/
+Output/
 
 # files #
 .wav
 .pkl
 .mid
+.npy
 test*.py
 temp.py
