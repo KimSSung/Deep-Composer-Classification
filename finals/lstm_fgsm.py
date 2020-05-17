@@ -80,15 +80,15 @@ print("==> MODEL LOADED")
 ##load data
 input_total=[]
 output_total=[]
-# filename_total = []
+filename_total = []
 for genre in genres:
     load_saved = np.load("/data/midi820_fgsm/instr/" + genre + "_input.npy", allow_pickle=True)
     if(load_saved.shape[0] < min_shape):
         min_shape = load_saved.shape[0] # num of data in genre
     output_temp = [genres.index(genre) for i in range(load_saved.shape[0])]
-    # filename_temp = np.load("/data/midi820_fgsm/instr/" + genre + "_filename.npy", allow_pickle=True)
+    filename_temp = np.load("/data/midi820_fgsm/instr/" + genre + "_filename.npy", allow_pickle=True)
 
-    # filename_total.append(filename_temp)
+    filename_total.append(filename_temp)
     output_total.append(output_temp)
     input_total.append(load_saved)
 
@@ -100,11 +100,11 @@ for i in input_total:
     input_list.extend(i[:min_shape,:,:])
 for o in output_total:
     output_list.extend(o[:min_shape])
-# for f in filename_total:
-#     filename_list.extend(f[:min_shape])
+for f in filename_total:
+    filename_list.extend(f[:min_shape])
 X_np = np.array(input_list)
 Y_np = np.array(output_list)
-# F_np = np.array(filename_list)
+F_np = np.array(filename_list)
 
 
 ##one-hot for Y
@@ -113,18 +113,17 @@ for i, index in enumerate(Y_np):
     y_one_hot[i, index] = 1
 Y_np = y_one_hot
 
-##shuffle
-data = list(zip(X_np, Y_np)) #zip data structure
-random.shuffle(data)
 
+##shuffle
+data = list(zip(X_np, Y_np, F_np)) #zip data structure
+random.shuffle(data)
 ##partition
-X,Y = zip(*data)
+X,Y,FN = zip(*data)
 X,Y = np.asarray(X), np.asarray(Y)
 test_X = torch.from_numpy(X).type(torch.Tensor)
 test_Y = torch.from_numpy(Y).type(torch.LongTensor)
-# test_F = torch.from_numpy(F).type(torch.Tensor)
 A = TensorDataset(test_X, test_Y)
-test_loader = DataLoader(A, batch_size=1, shuffle=True)
+test_loader = DataLoader(A) #default: batch_size=1 & shuffle=False
 
 
 ###########################attack functions##########################
@@ -137,18 +136,18 @@ def fgsm_attack(input, epsilon, data_grad):
     perturbed_input = torch.clamp(perturbed_input, 0, 1) #clip to range[0,1]
     return perturbed_input
 
-def test(model, device, test_loader, epsilon):
+def test(model, test_loader, files, epsilon):
 
-    # Accuracy counter
-    # counter=0
 
     adv_examples = []
     adv_orig = []
+    adv_fname = []
     correct = 0
     orig_wrong = 0
 
-    for data, target in test_loader:
-        # counter +=1
+    for i, ((data, target), each_file) in enumerate(zip(test_loader, files)):
+
+
         data =data.permute(1, 0, 2)
         target = torch.max(target, 1)[1]
 
@@ -156,13 +155,14 @@ def test(model, device, test_loader, epsilon):
         data.requires_grad = True #for attack
         init_output = model(data)
         init_pred = torch.max(init_output, 1)[1].view(target.size()).data
-        # print(init_pred)
+
         #if correct, skip
         if(init_pred.item() != target.item()):
             orig_wrong += 1
             # print("{}: correct! --- pred:{} orig:{}]".format(counter,init_pred.item(),target.item()))
             continue
         # print("{}: wrong!--- pred:{} orig:{}]".format(counter,init_pred.item(),target.item()))
+
         #if wrong, attack
         loss = loss_function(init_output, target)  # compute loss
         model.zero_grad()
@@ -176,16 +176,17 @@ def test(model, device, test_loader, epsilon):
         #check for success
         if new_pred.item() == target.item():
             correct += 1
-        else:
+        else: #ATTACK SUCCESS
             # if len(adv_examples) < 5: #save for later
             adv_ex = perturbed_data.squeeze().detach().cpu().numpy()
             adv_examples.append((init_pred.item(), new_pred.item(), adv_ex))
             adv_orig.append(data)
+            adv_fname.append(each_file)
     #calculate final accuracy of attack
     final_acc = correct / float(len(test_loader))
     print("Epsilon: {}\tTest Accuracy = {} / {} = {}".format(epsilon, correct, len(test_loader), final_acc))
 
-    return final_acc, adv_examples, adv_orig, orig_wrong, correct
+    return final_acc, adv_examples, adv_orig, adv_fname, orig_wrong, correct
 
 
 
@@ -201,7 +202,7 @@ epsilons = [0, .005, .01, .015, .020, .025, .03, 0.035, 0.04, 0.045, 0.05, 0.055
 
 for ep in epsilons:
 
-    acc, ex, ex_orig, orig_wrong, correct = test(model, device, test_loader, ep)
+    acc, ex, ex_orig, fname, orig_wrong, correct = test(model, test_loader, FN, ep)
     print("{} were originally predicted wrong, out of {} total data".format(orig_wrong, min_shape * len(genres)))
     print("{} examples were still classified correctly, out of {} attempts".format(correct, min_shape * len(genres) - orig_wrong))
 
@@ -213,9 +214,9 @@ for ep in epsilons:
     np_ex = np.array(ex)
     np_orig = np.array(ex_orig)
 
-    # np.save("/data/midi820_fgsm/attacks/instr/ep_"+str(ep)+"_attack", np_ex)  # save as .npy
-    # np.save("/data/midi820_fgsm/attacks/instr/ep_"+str(ep)+"_orig", np_orig)  # save as .npy
-
+    np.save("/data/midi820_fgsm/attacks/instr/ep_"+str(ep)+"_attack", np_ex)  # save as .npy
+    np.save("/data/midi820_fgsm/attacks/instr/ep_"+str(ep)+"_orig", np_orig)  # save as .npy
+    np.save("/data/midi820_fgsm/attacks/instr/ep_"+str(ep)+"_fname", fname)   # save as .npy
 
 
 
