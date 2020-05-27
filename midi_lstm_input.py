@@ -100,6 +100,10 @@ for genre in tqdm(genres):
 
     genre_dir = "/data/midi820/" + genre + "/"
     for file in glob.glob(genre_dir + "*.mid"):
+        
+        if file != '/data/midi820/Pop/Roxette - A Thing About You.mid': continue
+        print(file)
+        
         count_file += 1
         try:
             # mid = converter.parse(file) #original way of opening midi
@@ -115,9 +119,9 @@ for genre in tqdm(genres):
             print("SKIPPING ERROR TRACK!")
 
         else:
-            if (len(note_matrix) < 400):
-                print("{} SKIPPING: only {} in {}".format(count_file, len(note_matrix),file.replace(genre_dir, genre + "/")))
-                continue
+            # if (len(note_matrix) < 400):
+            #     print("{} SKIPPING: only {} in {}".format(count_file, len(note_matrix),file.replace(genre_dir, genre + "/")))
+            #     continue
             print("{} success: {}".format(count_file, file.replace(genre_dir,genre+"/")))
             note_matrix_df = pd.DataFrame(note_matrix)
             # note_str_df = pd.DataFrame(note_str)
@@ -129,7 +133,7 @@ for genre in tqdm(genres):
 
     # after circulating all files in each genre
     genre_3d_array = np.array(genre_data)
-    np.save('/data/midi820_input/'+genre+'_input' , genre_3d_array) #save as .npy
+    np.save('./input' , genre_3d_array) #save as .npy
 
 
 

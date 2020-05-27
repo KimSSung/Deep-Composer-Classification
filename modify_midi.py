@@ -1,9 +1,14 @@
 import py_midicsv
 import random
+import numpy as np
 
 # Load the MIDI file and parse it into CSV format
-csv_string = py_midicsv.midi_to_csv("Winter wind etude.mid")
-print(csv_string)
+file_name = 'Prelude n10 op28 _The Night Moth_.mid'
+csv_string = py_midicsv.midi_to_csv('Prelude n10 op28 _The Night Moth_.mid')
+print('csv_string len:',len(csv_string))
+print('csv_string type:',type(csv_string))
+print('show csv_string:')
+print(np.asarray(csv_string)) # 보기 편하게 numpy로 바꿔서 print
 
 note_indices = []
 index = 0
@@ -28,7 +33,7 @@ while 1:
 	if len(rand_idx_list) == 1:
 		break
 
-print("Winter wind etude.mid: ",csv_string[note_indices[rand_idx_list[0]]])
+print(file_name + ": ",csv_string[note_indices[rand_idx_list[0]]])
 
 # note_indices[rand_idx] -> rand_idx
 # print(csv_string[note_indices[rand_idx_list[0]]])

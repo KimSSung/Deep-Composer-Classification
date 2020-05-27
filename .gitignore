@@ -16,3 +16,6 @@ Output/
 .npy
 test*.py
 temp.py
+
+# model
+bestmodel/
