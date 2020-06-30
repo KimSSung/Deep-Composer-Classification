@@ -16,7 +16,7 @@ import random
 # import torchsummary
 from torch.optim import lr_scheduler
 
-from ResNet import resnet18, resnet101, resnet152, resnet50
+from ResNet import resnet50
 # from CustomCNN import CustomCNN
 
 # dataloader
@@ -34,101 +34,39 @@ os.environ["CUDA_VISIBLE_DEVICES"]="0,1"
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-MODEL_SAVE_PATH = '/data/drum/model/'
-TRAIN_LOADER_SAVE_PATH = '/data/drum/dataset/train/' # /data/midi820_drum/dataset/train/'
-VALID_LOADER_SAVE_PATH = '/data/drum/dataset/test/'
-VALID_FILENAME_PATH = '/data/drum/dataset/val_filename/'
+MODEL_SAVE_PATH = '/data/attack_drum/model/'
+TRAIN_LOADER_SAVE_PATH = '/data/attack_drum/dataset/train/' # /data/midi820_drum/dataset/train/'
+VALID_LOADER_SAVE_PATH = '/data/attack_drum/dataset/test/'
+VALID_FILENAME_PATH = '/data/attack_drum/dataset/val_filename/'
 
-##############################################################
+# ##############################################################
 # genres = ['Classical', 'Jazz','Rock','Country','Pop', 'HipHopRap', 'NewAge','Blues'] #total
 genres = ['Classical', 'Rock', 'Country', 'GameMusic'] #best
 num_genres = len(genres)
 min_shape= 820
 batch_size = 20
 
-'''
-input_total=[]
-output_total=[]
-for genre in genres:
-
-	load_saved = np.load("/data/midi820_drum/" + genre + "_input.npy", allow_pickle=True)[:200]
-	if(load_saved.shape[0] < min_shape):
-		min_shape = load_saved.shape[0] # num of data in genre
-	output_temp = [genres.index(genre)]*load_saved.shape[0]
-	output_total.append(output_temp)
-	input_total.append(load_saved)
-
-input_list = []
-output_list = []
-for i in input_total:
-	input_list.extend(i[:min_shape,:,:])
-for o in output_total:
-	output_list.extend(o[:min_shape])
-X_np = np.array(input_list)
-Y_np = np.array(output_list)
-
-##shuffle
-data = list(zip(X_np, Y_np)) #zip data structure
-random.shuffle(data)
-
-##partition
-X,Y = zip(*data)
-train_len = int(len(X) * 8 / 10)  # train : valid = 8 : 2
-X,Y = np.asarray(X), np.asarray(Y)
-train_X, train_Y = X[:train_len], Y[:train_len]
-dev_X, dev_Y = X[train_len:], Y[train_len:]
-
-##for batch calc
-t_keep = len(train_X) - len(train_X) % batch_size
-v_keep = len(dev_X) - len(dev_X) % batch_size
-trn_X, trn_Y, val_X, val_Y = train_X[:t_keep], train_Y[:t_keep], dev_X[:v_keep], dev_Y[:v_keep]
-
-
-trn_X = torch.from_numpy(trn_X).type(torch.Tensor)
-val_X = torch.from_numpy(val_X).type(torch.Tensor)
-trn_Y = torch.from_numpy(trn_Y).type(torch.LongTensor)
-val_Y = torch.from_numpy(val_Y).type(torch.LongTensor)
-
-# tensorDataset
-t = TensorDataset(trn_X, trn_Y)
-v = TensorDataset(val_X, val_Y)
-'''
-
 each_num = 300
-
-# Loader for origin training
-# t = MIDIDataset('/data/midi820_400/', genres, 0, each_num * 0.8)
-# v = MIDIDataset('/data/midi820_400/', genres, each_num * 0.8, each_num)
-
-# # create batch
-# train_loader = DataLoader(t, batch_size=batch_size, shuffle=True)
-# val_loader = DataLoader(v, batch_size=batch_size, shuffle=True)
-
-##############################################################################
-##############################################################################
-# Loader for adversarial training
-
-t_list = []
-t_list.append(MIDIDataset('/data/attacks/vel_deepfool/train/', -1, -1, genres, 'flat')) # not use start, end index for 'flat'
-t_list.append(MIDIDataset('/data/midi820_400/train/', 0, each_num * 0.8, genres, 'folder'))
-t = ConcatDataset(t_list)
-
+t = MIDIDataset('/data/attacks/vel_fgsm_ep20/train/', 0, each_num * 0.8, genres, 'flat')
 
 v2 = MIDIDataset('/data/midi820_400/valid/', 0, each_num * 0.2, genres, 'folder')
 v_list = []
-v_list.append(MIDIDataset('/data/attacks/vel_deepfool/valid/', -1, -1, genres, 'flat'))
+v_list.append(MIDIDataset('/data/attacks/vel_fgsm_ep20/valid/', 0, each_num * 0.2, genres, 'flat'))
 v_list.append(v2)
 v1 = ConcatDataset(v_list) # test + attack test 
 
 
-# train + attack train
+# # create batch
 train_loader = DataLoader(t, batch_size=batch_size, shuffle=True)
 # test + attack test = TandAT
 val_loader_1 = DataLoader(v1, batch_size=batch_size, shuffle=True)
 # Only Test = T
 val_loader_2 = DataLoader(v2, batch_size=batch_size, shuffle=True)
 
-
+# print("Training X shape: " + str(trn_X.shape))
+# print("Training Y shape: " + str(trn_Y.shape))
+# print("Validation X shape: " + str(val_X.shape))
+# print("Validation Y shape: " + str(val_Y.shape))
 
 # print('###############################################')
 # print('train_loader:',train_loader)
@@ -143,7 +81,6 @@ torch.save(val_loader_2, VALID_LOADER_SAVE_PATH + 'valid_loader_T.pt')
 print("valid_loader_T saved!")
 
 
-
 train_loader = torch.load(TRAIN_LOADER_SAVE_PATH + 'train_loader.pt')
 print("train_loader loaded!")
 val_loader_1 = torch.load(VALID_LOADER_SAVE_PATH + 'valid_loader_TandAT.pt')
@@ -151,22 +88,22 @@ print("valid_loader_TandAT loaded!")
 val_loader_2 = torch.load(VALID_LOADER_SAVE_PATH + 'valid_loader_T.pt')
 print("valid_loader_T loaded!")
 
-##############################################################
+# ##############################################################
 
 
-# Define model
+# Load model
 model = resnet50(129, num_genres)
-# model = CustomCNN(129, num_genres)
-# print(model)
-
+checkpoint = torch.load('/data/drum/bestmodel/Res50_valloss_0.8801_acc_81.25.pt')
+model.load_state_dict(checkpoint['model.state_dict'])
+print("81.25% model loaded!")
 
 
 #hyper params
-num_epochs = 40
+num_epochs = 50
 num_batches = len(train_loader)
 # num_dev_batches = len(val_loader)
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.00005, weight_decay=1e-6) # 0.00005
+optimizer = optim.Adam(model.parameters(), lr=0.00001, weight_decay=1e-6) # 0.00005
 # optimizer = optim.SGD(model.parameters(),lr=0.0001)
 # optimizer = optim.ASGD(model.parameters(), lr=0.00005, weight_decay=1e-6)
 # optimizer = optim.SparseAdam(model.parameters(), lr=0.00005, betas=(0.9, 0.999), eps=1e-08)
@@ -233,7 +170,9 @@ def Test(val_loader, model, save_filename=False):
 	return avg_valloss, avg_valacc, val_file_names
 
 
-
+# initialize
+avg_valloss_1, avg_valacc_1, val_file_names_1 = 0, 0, []
+avg_valloss_2, avg_valacc_2, val_file_names_2 = 0, 0, []
 min_valloss = 10000.0
 for epoch in range(num_epochs):
 
@@ -319,7 +258,7 @@ val_T loss: {:.4f} | val_T acc: {:.2f}% | '''
 					))
 
 		# save model
-		if True: # avg_valloss_1 < min_valloss
+		if avg_valloss_1 < min_valloss:
 			min_valloss = avg_valloss_1
 			torch.save({'epoch':epoch,
 						'model.state_dict':model.state_dict(),
@@ -342,92 +281,95 @@ val_T loss: {:.4f} | val_T acc: {:.2f}% | '''
 		# trn_running_loss = 0.0
 		# trn_total = 0
 		# trn_correct = 0
-	
 
 
 
-# # save val file names
-# torch.save(val_file_names, VALID_FILENAME_PATH + 'val_file_names.pt')
-# filenames = torch.load(VALID_FILENAME_PATH + 'val_file_names.pt')
-# print('val file names len:',len(filenames))
-
-
-
-
-
-
+################################################################
+######################## LOAD PART #############################
 '''
-# Summarize history for accuracy
-xi = [i*val_term for i in range(int(num_epochs/val_term))]
-plt.plot(xi, trn_acc_list)
-plt.plot(xi, val_acc_list)
-plt.xticks()
-plt.title('model accuracy')
-plt.ylabel('accuracy')
-plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='upper left')
-plt.show()
-
-# Summarize history for loss
-plt.plot(xi, trn_loss_list)
-plt.plot(xi, val_loss_list)
-plt.title('model loss')
-plt.ylabel('loss')
-plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='upper left')
-plt.show()
-
-'''
-
-'''
-# test for loading model
-#hyper params
-criterion = nn.CrossEntropyLoss()
-# optimizer = optim.Adam(model.parameters(), lr=0.00005, weight_decay=1e-6)
-# optimizer = optim.SGD(model.parameters(),lr=0.0001)
-# print("optimizer:",optimizer)
-# scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min',factor=0.5,patience=10,verbose=True) #0.5 best for midi370
-# scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs)
-
-# load:
 model = resnet50(129, num_genres)
-model.eval()
-checkpoint = torch.load('/data/drum/bestmodel/Conv_valloss_0.8801_acc_81.25.pt')
+checkpoint = torch.load('/data/attack_drum/bestmodel/Res50_val_TandAT_loss_0.5031_acc_81.59.pt')
 model.load_state_dict(checkpoint['model.state_dict'])
+print("model loaded!")
 
-val_term = 10
+criterion = nn.CrossEntropyLoss()
+
+each_num = 300
+t_list = []
+t_list.append(MIDIDataset('/data/attacks/vel_deepfool/train/', 0, each_num * 0.8, genres, 'flat'))
+t_list.append(MIDIDataset('/data/midi820_400/train/', 0, each_num * 0.8, genres, 'folder'))
+t = ConcatDataset(t_list)
+
+v_list = []
+v_list.append(MIDIDataset('/data/attacks/vel_deepfool/valid/', 0, each_num * 0.2, genres, 'flat'))
+v_list.append(MIDIDataset('/data/midi820_400/valid/', 0, each_num * 0.2, genres, 'folder'))
+v = ConcatDataset(v_list) # test + attack test 
+
+
+# create batch
+train_loader = DataLoader(t, batch_size=batch_size, shuffle=True)
+val_loader = DataLoader(v, batch_size=batch_size, shuffle=True)
+
 
 with torch.no_grad():  # important!!! for validation
-	# validate mode
-	model.eval()
+    # validate mode
+    model.eval()
 
-	print('testing pretrained model.......')
-	#average the acc of each batch
-	val_loss, val_acc = 0.0, 0.0
-	# val_correct = 0
-	# val_total = 0
-	for j, valset in enumerate(val_loader):
-		val_in, val_out, val_filename = valset
-		# to GPU
-		# val_in = val_in.to(device)
-		# val_out = val_out.to(device)
+    print('testing valid.......')
+    #average the acc of each batch
+    val_loss, val_acc = 0.0, 0.0
+    # val_correct = 0
+    # val_total = 0
+    for j, valset in enumerate(val_loader):
+        val_in, val_out, _ = valset
+        # to GPU
+        # val_in = val_in.to(device)
+        # val_out = val_out.to(device)
 
-		# forward
-		val_pred = model(val_in)
-		v_loss = criterion(val_pred, val_out)
-		val_loss += v_loss
+        # forward
+        val_pred = model(val_in)
+        v_loss = criterion(val_pred, val_out)
+        val_loss += v_loss
 
-		# # scheduler.step(v_loss)  # for reduceonplateau
-		# scheduler.step()       #for cos
-		# lr = optimizer.param_groups[0]['lr']
+        # # scheduler.step(v_loss)  # for reduceonplateau
+        # scheduler.step()       #for cos
+        # lr = optimizer.param_groups[0]['lr']
 
-		# accuracy
-		_, val_label_pred = torch.max(val_pred.data, 1)
-		val_total = val_out.size(0)
-		val_correct = (val_label_pred == val_out).sum().item()
-		val_acc += val_correct / val_total * 100
-		print("correct: {}, total: {}, acc: {}".format(val_correct, val_total, val_correct/val_total*100))
+        # accuracy
+        _, val_label_pred = torch.max(val_pred.data, 1)
+        val_total = val_out.size(0)
+        val_correct = (val_label_pred == val_out).sum().item()
+        val_acc += val_correct / val_total * 100
+        print("correct: {}, total: {}, acc: {}".format(val_correct, val_total, val_correct/val_total*100))
 
+    print('###############################################')
+    print('testing train.......')
+    #average the acc of each batch
+    train_loss, train_acc = 0.0, 0.0
+    # train_correct = 0
+    # train_total = 0
+    for j, trainset in enumerate(train_loader):
+        train_in, train_out, _ = trainset
+        # to GPU
+        # train_in = train_in.to(device)
+        # train_out = train_out.to(device)
 
-print("val acc: {:.2f}%".format(val_acc/len(val_loader)))
+        # forward
+        train_pred = model(train_in)
+        v_loss = criterion(train_pred, train_out)
+        train_loss += v_loss
+
+        # # scheduler.step(v_loss)  # for reduceonplateau
+        # scheduler.step()       #for cos
+        # lr = optimizer.param_groups[0]['lr']
+
+        # accuracy
+        _, train_label_pred = torch.max(train_pred.data, 1)
+        train_total = train_out.size(0)
+        train_correct = (train_label_pred == train_out).sum().item()
+        train_acc += train_correct / train_total * 100
+        print("correct: {}, total: {}, acc: {}".format(train_correct, train_total, train_correct/train_total*100))     
+
+print("train acc: {:.2f}% | train loss: {:.4f}".format(train_acc/len(train_loader), train_loss / len(train_loader)))
+print("test acc: {:.2f}% | test loss: {:.4f}".format(val_acc/len(val_loader), val_loss / len(val_loader)))
 '''

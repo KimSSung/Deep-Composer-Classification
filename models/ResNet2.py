@@ -102,28 +102,23 @@ class ResNetLayer(nn.Module):
         x = self.blocks(x)
         return x
 
-
-k = 3 # kernel size
-p = 3 # pool size
 class ResNetEncoder(nn.Module):
     """
     ResNet encoder composed by increasing different layers with increasing features.
     """
-    def __init__(self, in_channels=128, blocks_sizes=[64, 128, 256, 512], deepths=[2,2,2,2], 
+    def __init__(self, in_channels=3, blocks_sizes=[64, 128, 256, 512], deepths=[2,2,2,2], 
                  activation=nn.ReLU, block=ResNetBasicBlock, *args,**kwargs):
         super().__init__()
         
         self.blocks_sizes = blocks_sizes
         
         self.gate = nn.Sequential(
-
             nn.Conv2d(in_channels, self.blocks_sizes[0], kernel_size=7, stride=2, padding=3, bias=False),
             nn.BatchNorm2d(self.blocks_sizes[0]),
             activation(),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         )
         
-        # resnet part
         self.in_out_block_sizes = list(zip(blocks_sizes, blocks_sizes[1:]))
         self.blocks = nn.ModuleList([ 
             ResNetLayer(blocks_sizes[0], blocks_sizes[0], n=deepths[0], activation=activation, 

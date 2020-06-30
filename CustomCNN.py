@@ -36,22 +36,17 @@ class CustomCNN(nn.Module):
 			nn.MaxPool2d(kernel_size=p, stride=p),
 			nn.Dropout(p=0.25)
 		)
-		# self.layer5 = nn.Sequential(
-		# 	nn.Conv2d(1024, 4096, kernel_size=k, stride=1, padding=1),
-		# 	nn.ReLU(),
-		# 	nn.MaxPool2d(kernel_size=p, stride=p),
-		# 	nn.Dropout(p=0.25)
-		# )
+
 		self.fc = nn.Sequential(
 			nn.Flatten(),
 			nn.Dropout(p=0.5),
-			nn.Linear(8192, 2048),
+			nn.Linear(8192, 1024),
 			nn.ReLU(),
 			nn.Dropout(p=0.5),
-			nn.Linear(2048, 512),
-			nn.ReLU(),
+			nn.Linear(1024, 128),
+			nn.ReLU(),			
 			nn.Dropout(0.25),
-			nn.Linear(512, num_genres),
+			nn.Linear(128, num_genres),
 			nn.Softmax(dim=1)
 		)
 
@@ -60,7 +55,6 @@ class CustomCNN(nn.Module):
 		out2 = self.layer2(out1)
 		out3 = self.layer3(out2)
 		out4 = self.layer4(out3)
-		# out5 = self.layer5(out4)
 		out = self.fc(out4)
 
 		return out

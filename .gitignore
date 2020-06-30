@@ -1,13 +1,7 @@
 # Directories #
-sunjong/
-Fin/
-inputs/
-lmd_files/
-models/
-music_generator/
-new_midiset/
-original_wav2genre/
-Output/
+no_use/
+bestmodel/
+
 
 # files #
 .wav
@@ -17,5 +11,3 @@ Output/
 test*.py
 temp.py
 
-# model
-bestmodel/
