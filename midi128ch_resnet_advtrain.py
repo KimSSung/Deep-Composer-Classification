@@ -46,54 +46,6 @@ num_genres = len(genres)
 min_shape= 820
 batch_size = 20
 
-'''
-input_total=[]
-output_total=[]
-for genre in genres:
-
-	load_saved = np.load("/data/midi820_drum/" + genre + "_input.npy", allow_pickle=True)[:200]
-	if(load_saved.shape[0] < min_shape):
-		min_shape = load_saved.shape[0] # num of data in genre
-	output_temp = [genres.index(genre)]*load_saved.shape[0]
-	output_total.append(output_temp)
-	input_total.append(load_saved)
-
-input_list = []
-output_list = []
-for i in input_total:
-	input_list.extend(i[:min_shape,:,:])
-for o in output_total:
-	output_list.extend(o[:min_shape])
-X_np = np.array(input_list)
-Y_np = np.array(output_list)
-
-##shuffle
-data = list(zip(X_np, Y_np)) #zip data structure
-random.shuffle(data)
-
-##partition
-X,Y = zip(*data)
-train_len = int(len(X) * 8 / 10)  # train : valid = 8 : 2
-X,Y = np.asarray(X), np.asarray(Y)
-train_X, train_Y = X[:train_len], Y[:train_len]
-dev_X, dev_Y = X[train_len:], Y[train_len:]
-
-##for batch calc
-t_keep = len(train_X) - len(train_X) % batch_size
-v_keep = len(dev_X) - len(dev_X) % batch_size
-trn_X, trn_Y, val_X, val_Y = train_X[:t_keep], train_Y[:t_keep], dev_X[:v_keep], dev_Y[:v_keep]
-
-
-trn_X = torch.from_numpy(trn_X).type(torch.Tensor)
-val_X = torch.from_numpy(val_X).type(torch.Tensor)
-trn_Y = torch.from_numpy(trn_Y).type(torch.LongTensor)
-val_Y = torch.from_numpy(val_Y).type(torch.LongTensor)
-
-# tensorDataset
-t = TensorDataset(trn_X, trn_Y)
-v = TensorDataset(val_X, val_Y)
-'''
-
 each_num = 300
 
 # Loader for origin training
@@ -104,9 +56,9 @@ each_num = 300
 # train_loader = DataLoader(t, batch_size=batch_size, shuffle=True)
 # val_loader = DataLoader(v, batch_size=batch_size, shuffle=True)
 
-##############################################################################
-##############################################################################
-# Loader for adversarial training
+#############################################################################
+################### Loader for adversarial training #########################
+#############################################################################
 
 t_list = []
 t_list.append(MIDIDataset('/data/attacks/vel_deepfool/train/', -1, -1, genres, 'flat')) # not use start, end index for 'flat'
@@ -129,11 +81,6 @@ val_loader_1 = DataLoader(v1, batch_size=batch_size, shuffle=True)
 val_loader_2 = DataLoader(v2, batch_size=batch_size, shuffle=True)
 
 
-
-# print('###############################################')
-# print('train_loader:',train_loader)
-# print('train_loader_len:', len(train_loader))
-
 # save train_loader & valid_loader
 torch.save(train_loader, TRAIN_LOADER_SAVE_PATH + 'train_loader.pt')
 print("train_loader saved!")
@@ -151,7 +98,7 @@ print("valid_loader_TandAT loaded!")
 val_loader_2 = torch.load(VALID_LOADER_SAVE_PATH + 'valid_loader_T.pt')
 print("valid_loader_T loaded!")
 
-##############################################################
+#############################################################################
 
 
 # Define model
@@ -327,57 +274,8 @@ val_T loss: {:.4f} | val_T acc: {:.2f}% | '''
 						'acc':avg_valacc_1}, MODEL_SAVE_PATH + 'Res50_val_TandAT_loss_' + str(float(avg_valloss_1)) + '_acc_' + str(float(avg_valacc_1)) + '.pt')
 			print('model saved!')
 
-			# load:
-			# the_model = TheModelClass(*args, **kwargs)
-			# the_model.eval()
-			# the_model.load_state_dict(torch.load(PATH))
 
 
-		# trn_loss_list.append(trn_running_loss / num_batches)
-		# val_loss_list.append(val_loss / num_dev_batches)
-		# trn_acc_list.append(trn_acc / num_batches)
-		# val_acc_list.append(val_acc / num_dev_batches)
-
-		# reinit to 0
-		# trn_running_loss = 0.0
-		# trn_total = 0
-		# trn_correct = 0
-	
-
-
-
-# # save val file names
-# torch.save(val_file_names, VALID_FILENAME_PATH + 'val_file_names.pt')
-# filenames = torch.load(VALID_FILENAME_PATH + 'val_file_names.pt')
-# print('val file names len:',len(filenames))
-
-
-
-
-
-
-'''
-# Summarize history for accuracy
-xi = [i*val_term for i in range(int(num_epochs/val_term))]
-plt.plot(xi, trn_acc_list)
-plt.plot(xi, val_acc_list)
-plt.xticks()
-plt.title('model accuracy')
-plt.ylabel('accuracy')
-plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='upper left')
-plt.show()
-
-# Summarize history for loss
-plt.plot(xi, trn_loss_list)
-plt.plot(xi, val_loss_list)
-plt.title('model loss')
-plt.ylabel('loss')
-plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='upper left')
-plt.show()
-
-'''
 
 '''
 # test for loading model

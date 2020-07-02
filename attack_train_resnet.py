@@ -1,3 +1,4 @@
+
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.data
@@ -291,30 +292,22 @@ model = resnet50(129, num_genres)
 checkpoint = torch.load('/data/attack_drum/bestmodel/Res50_val_TandAT_loss_0.5031_acc_81.59.pt')
 model.load_state_dict(checkpoint['model.state_dict'])
 print("model loaded!")
-
 criterion = nn.CrossEntropyLoss()
-
 each_num = 300
 t_list = []
 t_list.append(MIDIDataset('/data/attacks/vel_deepfool/train/', 0, each_num * 0.8, genres, 'flat'))
 t_list.append(MIDIDataset('/data/midi820_400/train/', 0, each_num * 0.8, genres, 'folder'))
 t = ConcatDataset(t_list)
-
 v_list = []
 v_list.append(MIDIDataset('/data/attacks/vel_deepfool/valid/', 0, each_num * 0.2, genres, 'flat'))
 v_list.append(MIDIDataset('/data/midi820_400/valid/', 0, each_num * 0.2, genres, 'folder'))
 v = ConcatDataset(v_list) # test + attack test 
-
-
 # create batch
 train_loader = DataLoader(t, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(v, batch_size=batch_size, shuffle=True)
-
-
 with torch.no_grad():  # important!!! for validation
     # validate mode
     model.eval()
-
     print('testing valid.......')
     #average the acc of each batch
     val_loss, val_acc = 0.0, 0.0
@@ -325,23 +318,19 @@ with torch.no_grad():  # important!!! for validation
         # to GPU
         # val_in = val_in.to(device)
         # val_out = val_out.to(device)
-
         # forward
         val_pred = model(val_in)
         v_loss = criterion(val_pred, val_out)
         val_loss += v_loss
-
         # # scheduler.step(v_loss)  # for reduceonplateau
         # scheduler.step()       #for cos
         # lr = optimizer.param_groups[0]['lr']
-
         # accuracy
         _, val_label_pred = torch.max(val_pred.data, 1)
         val_total = val_out.size(0)
         val_correct = (val_label_pred == val_out).sum().item()
         val_acc += val_correct / val_total * 100
         print("correct: {}, total: {}, acc: {}".format(val_correct, val_total, val_correct/val_total*100))
-
     print('###############################################')
     print('testing train.......')
     #average the acc of each batch
@@ -353,23 +342,19 @@ with torch.no_grad():  # important!!! for validation
         # to GPU
         # train_in = train_in.to(device)
         # train_out = train_out.to(device)
-
         # forward
         train_pred = model(train_in)
         v_loss = criterion(train_pred, train_out)
         train_loss += v_loss
-
         # # scheduler.step(v_loss)  # for reduceonplateau
         # scheduler.step()       #for cos
         # lr = optimizer.param_groups[0]['lr']
-
         # accuracy
         _, train_label_pred = torch.max(train_pred.data, 1)
         train_total = train_out.size(0)
         train_correct = (train_label_pred == train_out).sum().item()
         train_acc += train_correct / train_total * 100
         print("correct: {}, total: {}, acc: {}".format(train_correct, train_total, train_correct/train_total*100))     
-
 print("train acc: {:.2f}% | train loss: {:.4f}".format(train_acc/len(train_loader), train_loss / len(train_loader)))
 print("test acc: {:.2f}% | test loss: {:.4f}".format(val_acc/len(val_loader), val_loss / len(val_loader)))
 '''

@@ -69,11 +69,8 @@ for file in os.listdir(ATTACK_PATH):
    if os.path.isfile(os.path.join(ATTACK_PATH, file)):
       loaded = np.load(os.path.join(ATTACK_PATH, file))
       if num == 30: break
-
       if 'vel' in file: vel += 1
       elif 'noise' in file: noise += 1
-
-
       for i in range(0,129):
          for j in range(0,400):
             for k in range(0, 128):
@@ -82,16 +79,12 @@ for file in os.listdir(ATTACK_PATH):
                   count += 1
                   skip = 1
                   break
-
             if skip == 1: break
          if skip == 1: break
-
       if skip == 0: good_files.append(file)
       num += 1
-
 for file in good_files:
    print(file)
-
 print('# of good file:', count)
 print('vel:', vel)
 print('noise:', noise)
@@ -101,33 +94,24 @@ print('noise:', noise)
 '''
 ### load npy for each genres
 for genre in GENRES:
-
    #changed_num = 0
-
    print('##############################')
    print('GENRE start:', genre)
-
    saved_name_numpy = SAVED_NUMPY_PATH + genre + '_filename.npy'
    saved_numpy = SAVED_NUMPY_PATH + genre + '_input.npy'
-
    load_full_data = np.load(saved_numpy)
    load_full_file_names = np.load(saved_name_numpy)
-
    # print(len(load_full_data)) # 100
    # print(load_full_data.shape) # (100, 400, 128)
-
    for idx in range(len(load_full_data)):
-
      #if changed_num == 30: break # check 30 for each genre first
      #changed_num += 1
-
      load_data = load_full_data[idx]
      load_file_name = load_full_file_names[idx]
      only_file_name = load_file_name.split('/')[4]
      genre = load_file_name.split('/')[3]
      # print(genre)
      # print(only_file_name)
-
      # origin_midi_dir = origin_midi_dir + genre + '/'  # add genre to path
 '''
 
