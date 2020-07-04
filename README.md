@@ -48,3 +48,11 @@ Genre classification in the music domain is a relatively common problem. To the 
 
 
 #### Adversarial Training
+
+
+## Similar Works
+
+## Contact Information
+* hylee817@yonsei.ac.kr
+* ryan0507@yonsei.ac.kr
+* hahala25@yonsei.ac.kr
