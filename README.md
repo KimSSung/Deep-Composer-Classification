@@ -5,24 +5,26 @@ Genre classification using music in symbolic format (MIDI) implemented in PyTorc
 
 
 ## Requirements
-### Library
-* Python 3.7
-* PyTorch
-* numpy
-* matplotlib
-* music21
-* tqdm
+#### Library
+> * Python 3.7
+> * PyTorch
+> * numpy
+> * matplotlib
+> * music21
+> * tqdm
 
-### Dataset
-Midi dataset was collected from two different websites cited as below:
-* https://freemidi.org/   
-Classical, Rock, Country genre midi files were collected from here and 300 of each were actually preprocessed and used to train the model.
-
-- https://www.vgmusic.com/music/console/nintendo/gameboy   
-GameMusic genre midi files were collected from here and 300 were actually used.
+#### Dataset
+> Midi dataset was collected from two different websites cited as below:
+> * https://freemidi.org/   
+> Classical, Rock, Country genre midi files were collected from here and 300 of each were actually preprocessed and used to train the model.
+> 
+> - https://www.vgmusic.com/music/console/nintendo/gameboy   
+> GameMusic genre midi files were collected from here and 300 were actually used.
 
 ## Preprocess
-Collected Midi dataset was preprocessed using music21
+Collected Midi dataset was preprocessed using [music21][music21_link], a toolkit for computer-aided musicology.
+
+[music21_link]: http://web.mit.edu/music21/
 
 <img src="https://user-images.githubusercontent.com/56469754/86505898-feab3080-be04-11ea-8ae6-90d8623352b4.jpg" width="40%" height="30%" title="input"></img><br/>
 
