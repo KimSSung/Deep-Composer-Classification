@@ -2,7 +2,7 @@
 Genre classification using music in symbolic representation (MIDI) implemented in PyTorch. 
 
 ## Abstract
-This research has its purpose in accelerating the usage of symbolic representation of music through showing its potential and efficiency in handling musical information.
+This research has its purpose in accelerating the usage of symbolic representation of music through showing its potential in improving accuracy and efficiency in recognizing and handling musical information.
 Genre classification in the music domain is a relatively common problem. However, all the attempts were done using audio/wav format. To the best of our knowledge, all the previous works including the ones that show SOTA performance have been attempted using audio/wav features, such as MFCC, mel-spectrogram. 
 
 ## Requirements
