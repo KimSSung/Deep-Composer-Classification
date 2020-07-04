@@ -1,8 +1,9 @@
 # Midi Genre Classification & Adversarial Attack
-Genre classification using music in symbolic format (MIDI) implemented in PyTorch. 
+Genre classification using music in symbolic representation (MIDI) implemented in PyTorch. 
 
 ## Abstract
-
+This research has its purpose in accelerating the usage of symbolic representation of music through showing its potential and efficiency in handling musical information.
+Genre classification in the music domain is a relatively common problem. However, all the attempts were done using audio/wav format. To the best of our knowledge, all the previous works including the ones that show SOTA performance have been attempted using audio/wav features, such as MFCC, mel-spectrogram. 
 
 ## Requirements
 #### Library
@@ -36,8 +37,8 @@ Genre classification using music in symbolic format (MIDI) implemented in PyTorc
 > * 129 channel = 128 instruments + 1 None
 > * 400 (x-dim) = time (0.5 sec)
 > * 128 (y-dim) = 0-127 pitch
-> * each cell value = velocity
-> <img src="https://user-images.githubusercontent.com/56469754/86505898-feab3080-be04-11ea-8ae6-90d8623352b4.jpg" width="40%" height="30%" title="input"></img><br/>
+> * each cell value = velocity   
+<img src="https://user-images.githubusercontent.com/56469754/86505898-feab3080-be04-11ea-8ae6-90d8623352b4.jpg" width="40%" height="30%" title="input"></img><br/>
 
 #### Model
 This dataset was trained using **ResNet50**
