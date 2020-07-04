@@ -3,7 +3,7 @@ Genre classification using music in symbolic representation (MIDI) implemented i
 
 ## Abstract
 This research has its purpose in accelerating the usage of symbolic representation of music through showing its potential in improving accuracy and efficiency in recognizing and handling musical information.
-Genre classification in the music domain is a relatively common problem. However, all the attempts were done using audio/wav format. To the best of our knowledge, all the previous works including the ones that show SOTA performance have been attempted using audio/wav features, such as MFCC, mel-spectrogram. 
+Genre classification in the music domain is a relatively common problem. However, all the attempts were done using audio/wav format. To the best of our knowledge, all the previous works including the ones that show SOTA performance have been attempted using audio/wav features, such as MFCC, mel-spectrogram. Through this research, we show that 
 
 ## Requirements
 #### Library
@@ -41,7 +41,6 @@ Genre classification in the music domain is a relatively common problem. However
 <img src="https://user-images.githubusercontent.com/56469754/86505898-feab3080-be04-11ea-8ae6-90d8623352b4.jpg" width="40%" height="30%" title="input"></img><br/>
 
 #### Model
-This dataset was trained using **ResNet50**
-
-![model](https://user-images.githubusercontent.com/56469754/86505899-01a62100-be05-11ea-81bb-174b37f66344.jpg)   
+> This dataset was trained using **ResNet50**
+> <img src="https://user-images.githubusercontent.com/56469754/86505899-01a62100-be05-11ea-81bb-174b37f66344.jpg" width="80%" height="50%" title="model"></img><br/>
 
