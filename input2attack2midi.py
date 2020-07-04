@@ -14,8 +14,8 @@ from torch.optim import lr_scheduler
 from os.path import *
 from os import listdir
 from tqdm import tqdm
-from MIDIDataset import MIDIDataset # MIDIDataset FOR ATTACK
-from ResNet import resnet50
+from data_loader import MIDIDataset # MIDIDataset FOR ATTACK
+from models.resnet import resnet50
 # from CustomCNN import CustomCNN
 import copy
 from sklearn.preprocessing import normalize

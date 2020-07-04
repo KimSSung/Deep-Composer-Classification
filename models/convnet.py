@@ -1,3 +1,5 @@
+# ConvNet model
+
 import torch
 torch.manual_seed(123)
 import torch.nn as nn

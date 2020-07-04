@@ -1,4 +1,4 @@
-# MIDIDataset FOR TRAINING MODEL
+# MIDIDataset
 
 
 from torch.utils.data import DataLoader, Dataset

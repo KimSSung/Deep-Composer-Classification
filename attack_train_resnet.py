@@ -17,11 +17,11 @@ import random
 # import torchsummary
 from torch.optim import lr_scheduler
 
-from ResNet import resnet50
+from models.resnet import resnet50
 # from CustomCNN import CustomCNN
 
 # dataloader
-from MIDIDataset import MIDIDataset
+from data_loader import MIDIDataset
 
 torch.manual_seed(123)
 import torch.nn as nn

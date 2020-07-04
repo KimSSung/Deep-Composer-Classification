@@ -1,8 +1,8 @@
 import py_midicsv
 import os
 import numpy as np
-import pandas as pd
-import csv
+# import pandas as pd
+# import csv
 import sys
 
 GENRES = ['Classical', 'Rock', 'Country', 'GameMusic']

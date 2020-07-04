@@ -11,11 +11,11 @@ import numpy as np
 # from tqdm import tqdm
 from torch.optim import lr_scheduler
 
-from ResNet import resnet18, resnet101, resnet152, resnet50
+from models.resnet import resnet18, resnet101, resnet152, resnet50
 # from CustomCNN import CustomCNN
 
 # dataloader
-from MIDIDataset import MIDIDataset
+from data_loader import MIDIDataset
 
 torch.manual_seed(123)
 

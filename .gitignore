@@ -1,6 +1,8 @@
 # Directories #
 bestmodel/
-
+maybe_no_use/
+no_use/
+other_models/
 
 # files #
 .wav

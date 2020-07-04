@@ -1,0 +1,6 @@
+torch
+numpy
+matplotlib
+music21
+py_midicsv
+tqdm
