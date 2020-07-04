@@ -24,4 +24,3 @@ GameMusic genre midi files were collected from here and 300 were actually used.
 This dataset was tested on ResNet50
 
 
-
