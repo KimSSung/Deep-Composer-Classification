@@ -7,7 +7,7 @@ Genre classification in the music domain is a relatively common problem. To the 
 
 ## Requirements
 #### Library
-> * Python 3.7
+> * Python >= 3.6.9
 > * PyTorch
 > * numpy
 > * matplotlib

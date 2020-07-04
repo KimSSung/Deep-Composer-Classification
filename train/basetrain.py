@@ -15,7 +15,7 @@ from models.resnet import resnet18, resnet101, resnet152, resnet50
 # from CustomCNN import CustomCNN
 
 # dataloader
-from data_loader import MIDIDataset
+from tools.data_loader import MIDIDataset
 
 torch.manual_seed(123)
 

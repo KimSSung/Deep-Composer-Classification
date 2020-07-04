@@ -14,9 +14,11 @@ from torch.optim import lr_scheduler
 from os.path import *
 from os import listdir
 from tqdm import tqdm
-from data_loader import MIDIDataset
+
+from tools.data_loader import MIDIDataset
 from models.resnet import resnet50
 from models.convnet import CustomCNN
+
 import copy
 from sklearn.preprocessing import normalize
 
