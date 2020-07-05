@@ -1,0 +1,17 @@
+genres = ['Classical', 'Rock', 'Country', 'GameMusic']
+genre_datanum = 300
+train_input_path = /data/midi820_400/train/
+valid_input_path = /data/midi820_400/valid/
+input_shape = (129, 400, 128)
+attacked_train_input_path = /data/attacks/vel_deepfool/train/
+attacked_valid_input_path = /data/attacks/vel_deepfool/valid/
+model_name = ResNet50
+epochs = 100
+train_batch = 20
+valid_batch = 20
+gpu = 0
+model_save_path = /data/drum/model/
+trainloader_save_path = /data/drum/dataset/train/
+validloader_save_path = /data/drum/dataset/valid/
+valid_filename_save_path = /data/drum/dataset/val_filename/
+learning_rate = 5e-05
