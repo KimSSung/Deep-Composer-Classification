@@ -229,14 +229,15 @@ def main(config):
 
 if __name__ == '__main__':
 	config, unparsed = get_config()
-	with open("config.txt", "w") as f: # execute on /train/ folder
+	with open("adv_config.txt", "w") as f: # execute on /train/ folder
+		f.write("Parameters for adversarial training:\n\n")
 		for arg in vars(config):
 			argname = arg
 			contents = str(getattr(config, arg))
 			#print(argname + ' = ' + contents)
 			f.write(argname + ' = ' + contents + '\n')
 
-
+	
 	#for GPU use
 	os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 	os.environ["CUDA_VISIBLE_DEVICES"]=config.gpu
@@ -259,6 +260,6 @@ if __name__ == '__main__':
 	# scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min',factor=0.5,patience=10,verbose=True) #0.5 best for midi370
 
 	main(config)
-
+	
 
 

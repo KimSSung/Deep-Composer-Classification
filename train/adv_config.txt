@@ -1,3 +1,5 @@
+Parameters for adversarial training:
+
 genres = ['Classical', 'Rock', 'Country', 'GameMusic']
 genre_datanum = 300
 train_input_path = /data/midi820_400/train/
@@ -5,7 +7,7 @@ valid_input_path = /data/midi820_400/valid/
 input_shape = (129, 400, 128)
 attacked_train_input_path = /data/attacks/vel_deepfool/train/
 attacked_valid_input_path = /data/attacks/vel_deepfool/valid/
-model_name = ResNet50
+model_name = ResNet
 epochs = 100
 train_batch = 20
 valid_batch = 20

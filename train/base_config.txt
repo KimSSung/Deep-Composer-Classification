@@ -1,3 +1,5 @@
+Parameters for base training:
+
 genres = ['Classical', 'Rock', 'Country', 'GameMusic']
 genre_datanum = 300
 train_input_path = /data/midi820_400/train/
