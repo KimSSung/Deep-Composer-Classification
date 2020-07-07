@@ -92,7 +92,6 @@ def vel_attack(input, epsilon, data_grad):
 
     return perturbed_input
 
-#선종아 여기함수를 채우면 된단다!
 def tempo_attack(input, epsilon, data_grad):
     MAX_SIZE = 400
     MAX_NUMPY_SIZE = 400
