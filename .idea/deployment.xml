@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="On explicit save action" serverName="hylee817@acsys10.yonsei.ac.kr:22" uploadOnCheckin="0201ba06-9936-4d6d-b98a-d2e388fd3b07">
+    <serverData>
+      <paths name="hylee817@acsys.yonsei.ac.kr:22">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="hylee817@acsys.yonsei.ac.kr:22 (1)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="hylee817@acsys01.yonsei.ac.kr:22">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="hylee817@acsys02.yonsei.ac.kr:22">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="hylee817@acsys10.yonsei.ac.kr:22">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/midi_atk" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myUploadOnCheckinName" value="hylee817@acsys10.yonsei.ac.kr:22" />
+    <option name="myAutoUpload" value="ON_EXPLICIT_SAVE" />
+  </component>
+</project>

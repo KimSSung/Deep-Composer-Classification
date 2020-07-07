@@ -12,8 +12,8 @@ from tqdm import tqdm
 import torch
 
 
-
 ################################    FUNCTIONS    #################################
+
 
 def open_midi(midi_path, remove_drums):
     mf = midi.MidiFile()
@@ -21,10 +21,13 @@ def open_midi(midi_path, remove_drums):
     mf.read()
     mf.close()
 
-    if(remove_drums):
+    if remove_drums:
         for i in range(len(mf.tracks)):
-            mf.tracks[i].events = [ev for ev in mf.tracks[i].events if ev.channel != 10] #channel 10 = drum -> remove
+            mf.tracks[i].events = [
+                ev for ev in mf.tracks[i].events if ev.channel != 10
+            ]  # channel 10 = drum -> remove
     return midi.translate.midiFileToStream(mf)
+
 
 def get_instr(mid, ilist, f, count):
 
@@ -34,9 +37,10 @@ def get_instr(mid, ilist, f, count):
         return
 
     temp = []
-    for e in s2: #each part(instrument)
+    for e in s2:  # each part(instrument)
         instr_index = e.getInstrument().midiProgram
-        if(instr_index == None): continue
+        if instr_index == None:
+            continue
         ilist[instr_index] += 1
         temp.append(instr_index)
 
@@ -44,13 +48,12 @@ def get_instr(mid, ilist, f, count):
     return
 
 
-
 ################################    RUN    #################################
 
 # genres = ['Classical','Rock', 'Country'] #best
 # genres = ['Jazz', 'HipHopRap','Blues']
 # genres = ['Rock']
-genres = ['Country']
+genres = ["Country"]
 # genres = ['Classical']
 # genres = ['Jazz']
 # genres = ['Blues']
@@ -63,11 +66,14 @@ for genre in genres:
     # genre_dir = "/data/new_midiset/" + genre + "/"
     for file in glob.glob(genre_dir + "*.mid"):
         try:
-            mid = open_midi(file, True) #unusual way of opening midi -> returns Stream obj
+            mid = open_midi(
+                file, True
+            )  # unusual way of opening midi -> returns Stream obj
 
         except:
             print("ERROR OCCURED ON: " + file)
             print("SKIPPING ERROR TRACK!")
+
         else:
             count_file += 1
             get_instr(mid, instr_distrib, file, count_file)
@@ -77,14 +83,11 @@ for genre in genres:
             # if(count_file % 100 == 0):
             #     print(instr_distrib)
 
-
     print(instr_distrib)
     x = [j for j in range(129)]
     plt.bar(x, instr_distrib)
-    string = 'Instrument distribution for ' + str(genre)
+    string = "Instrument distribution for " + str(genre)
     plt.title(string)
-    plt.ylabel('#')
-    plt.xlabel('Instrument number')
+    plt.ylabel("#")
+    plt.xlabel("Instrument number")
     plt.show()
-
-

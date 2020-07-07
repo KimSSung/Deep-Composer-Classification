@@ -9,14 +9,16 @@ from torchaudio import transforms
 from torch import utils
 import numpy as np
 import random
+
 # import torchsummary
 from torch.optim import lr_scheduler
 from os.path import *
 from os import listdir
 from tqdm import tqdm
 
-from tools.data_loader import MIDIDataset # MIDIDataset FOR ATTACK
+from tools.data_loader import MIDIDataset  # MIDIDataset FOR ATTACK
 from models.resnet import resnet50
+
 # from CustomCNN import CustomCNN
 
 import copy
@@ -32,29 +34,29 @@ torch.manual_seed(123)
 import torch.nn as nn
 
 
-#for GPU use
+# for GPU use
 # INPUT npy ==> ATTACK ==> MIDI file
 
 import os
+
 # os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 # os.environ["CUDA_VISIBLE_DEVICES"]="0,1"
 
 
-
 ####################################################
-GENRES = ['Classical','Rock', 'Country', 'GameMusic'] #best
+GENRES = ["Classical", "Rock", "Country", "GameMusic"]  # best
 num_genres = len(GENRES)
-batch_size = 1 #attack
+batch_size = 1  # attack
 
-data_dir = "/data/drum/bestmodel/" #orig path
+data_dir = "/data/drum/bestmodel/"  # orig path
 # data_dir = "/data/drum/attack_bestmodel/" #attacked path
 
 # vloader = torch.load('/data/drum/bestmodel/dataset/train/train_loader.pt') #orig train
-vloader = torch.load('/data/drum/bestmodel/dataset/test/valid_loader.pt') #orig valid
+vloader = torch.load("/data/drum/bestmodel/dataset/test/valid_loader.pt")  # orig valid
 
 # for simulation
-only_file = 'scn15_11_format0.mid'
-only_genre = 'Classical'
+only_file = "scn15_11_format0.mid"
+only_genre = "Classical"
 # only_file = 'tetriskb.mid'
 # only_genre = 'GameMusic'
 
@@ -63,9 +65,9 @@ input_total = []
 output_total = []
 fname_total = []
 for v in vloader:
-    for i in range(len(v[0])): #20
-        input_total.append(torch.unsqueeze(v[0][i],0)) #torch [1,129,400,128]
-        output_total.append(torch.unsqueeze(v[1][i],0)) #tensor [(#)]
+    for i in range(len(v[0])):  # 20
+        input_total.append(torch.unsqueeze(v[0][i], 0))  # torch [1,129,400,128]
+        output_total.append(torch.unsqueeze(v[1][i], 0))  # tensor [(#)]
     fname_total.extend(v[2])
 
 
@@ -76,7 +78,7 @@ for i, e in enumerate(fname_total):
         fname_total = [fname_total[i]]
         break
 
-print('########################################################')
+print("########################################################")
 print("==> DATA LOADED")
 ########################################################
 ###load model
@@ -87,23 +89,26 @@ loss_function = nn.CrossEntropyLoss()
 
 model = resnet50(129, num_genres)
 model.eval()
-checkpoint = torch.load(data_dir + 'Res50_valloss_0.8801_acc_81.25.pt') #original model
+checkpoint = torch.load(
+    data_dir + "Res50_valloss_0.8801_acc_81.25.pt"
+)  # original model
 # checkpoint = torch.load(data_dir + 'deepfool/Res50_valloss_0.7089444994926453_acc_81.13636363636364.pt') #adv training (model2)
 # checkpoint = torch.load(data_dir + 'fgsm/Res50_val_TandAT_loss_0.8046790957450867_acc_81.5.pt')
-model.load_state_dict(checkpoint['model.state_dict'])
+model.load_state_dict(checkpoint["model.state_dict"])
 print("==> BASE MODEL LOADED")
 
 
 def fgsm_attack(input, epsilon, data_grad):
-    #collect element-wise "sign" of the data gradient
+    # collect element-wise "sign" of the data gradient
     sign_data_grad = data_grad.sign()
-    perturbed_input = input + epsilon*sign_data_grad
+    perturbed_input = input + epsilon * sign_data_grad
     perturbed_input = torch.clamp(perturbed_input, 0, 127)
     return perturbed_input
 
+
 #
-def vel_attack(input, epsilon, data_grad, random): #input -> tensor
-    #FOR ZERO ATTACK - 모든 셀을 공격
+def vel_attack(input, epsilon, data_grad, random):  # input -> tensor
+    # FOR ZERO ATTACK - 모든 셀을 공격
     # sign_data_grad = data_grad.sign()
     # ep_mat = torch.zeros(input.shape)
     # rng = ep_mat + epsilon #all cells are epsilon
@@ -116,111 +121,108 @@ def vel_attack(input, epsilon, data_grad, random): #input -> tensor
     # perturbed_input = torch.clamp(perturbed_input, 0, 127)
     # print(perturbed_input)
 
-    #FOR NONZERO ATTACK - 이미 값이 있는 셀만 공격
+    # FOR NONZERO ATTACK - 이미 값이 있는 셀만 공격
     sign_data_grad = data_grad.sign()
-    indices = torch.nonzero(input) #get all the attack points
-    perturbed_input = input + 0*sign_data_grad
+    indices = torch.nonzero(input)  # get all the attack points
+    perturbed_input = input + 0 * sign_data_grad
     for index in indices:
         i, j, k, l = index[0], index[1], index[2], index[3]
-        orig_vel = int(input[i][j][k][l].item()) #int
+        orig_vel = int(input[i][j][k][l].item())  # int
         att_sign = int(sign_data_grad[i][j][k][l].item())
-        if(att_sign != 0): #meaningless -> almost all nonzero
+        if att_sign != 0:  # meaningless -> almost all nonzero
             max_vel = 127
             min_vel = 0
             rng = epsilon
-            if (random):
+            if random:
                 rn = np.random.rand()
-                rng = rn*epsilon #ex) ep = 20
+                rng = rn * epsilon  # ex) ep = 20
             perturbed_input[i][j][k][l] = orig_vel + att_sign * int(round(rng))
-            if(perturbed_input[i][j][k][l].item() > max_vel): perturbed_input[i][j][k][l] = max_vel
-            if(perturbed_input[i][j][k][l].item() < min_vel): perturbed_input[i][j][k][l] = min_vel
+            if perturbed_input[i][j][k][l].item() > max_vel:
+                perturbed_input[i][j][k][l] = max_vel
+            if perturbed_input[i][j][k][l].item() < min_vel:
+                perturbed_input[i][j][k][l] = min_vel
 
     return perturbed_input
 
 
-
-
-def deepfool(input, out_init, max_iter, nzero ,overshoot = 5):
+def deepfool(input, out_init, max_iter, nzero, overshoot=5):
     indices = torch.nonzero(input)
 
-    #model output (probability)
+    # model output (probability)
     f_out = out_init.detach().numpy().flatten()
-    I = (np.array(f_out)).argsort()[::-1] #index of greatest->least  ex:[2, 0, 1, 3]
-    label = I[0] #true class index
+    I = (np.array(f_out)).argsort()[::-1]  # index of greatest->least  ex:[2, 0, 1, 3]
+    label = I[0]  # true class index
 
-    #initialize variables
+    # initialize variables
     input_shape = input.numpy().shape
-    w = np.zeros(input_shape) # (1, 129, 400, 128)
+    w = np.zeros(input_shape)  # (1, 129, 400, 128)
     r_tot = np.zeros(input_shape)
     loop_i = 0
     k_i = label  # initialize as true class
 
-
-    perturbed_input = copy.deepcopy(input)  #copy entire tensor object
+    perturbed_input = copy.deepcopy(input)  # copy entire tensor object
     x = perturbed_input.clone().requires_grad_(True)
-    fs = model(x) #forward
+    fs = model(x)  # forward
     # fs_list = [fs[0,I[k]] for k in range(num_genres)] #greatest -> least
     print("loop", end=": ")
-    while k_i == label and loop_i < max_iter: #repeat until misclassify
+    while k_i == label and loop_i < max_iter:  # repeat until misclassify
         print("{}".format(loop_i), end=" ")
 
-        pert = np.inf #find min perturb (comparison)
-        #get true class gradient -> used in calculations
+        pert = np.inf  # find min perturb (comparison)
+        # get true class gradient -> used in calculations
         fs[0, I[0]].backward(retain_graph=True)
         grad_orig = x.grad.data.numpy().copy()
 
-        for k in range(1, num_genres): #find distance to closest class(hyperplane)
+        for k in range(1, num_genres):  # find distance to closest class(hyperplane)
 
-            #x.zero_grad()
+            # x.zero_grad()
 
-            #get gradient of another class "k"
+            # get gradient of another class "k"
             fs[0, I[k]].backward(retain_graph=True)
             cur_grad = x.grad.data.numpy().copy()
 
-            #set new w_k and new f_k (numpy)
+            # set new w_k and new f_k (numpy)
             w_k = cur_grad - grad_orig
             f_k = (fs[0, I[k]] - fs[0, I[0]]).data.numpy()
 
             pert_k = abs(f_k) / np.linalg.norm(w_k.flatten())
 
-            #determine w_k to use
+            # determine w_k to use
             if pert_k < pert:
                 pert = pert_k
                 w = w_k
 
-
-        #FINALLY we have min w & pert (= distance to closest hyperplane)
-        #now compute r_i and r_tot
+        # FINALLY we have min w & pert (= distance to closest hyperplane)
+        # now compute r_i and r_tot
         r_i = (pert + 1e-4) * w / np.linalg.norm(w)
 
-
         # manual implementation
-        r_i_scaled = r_i #initialize
+        r_i_scaled = r_i  # initialize
         r_i_valid = np.zeros(input_shape)
-        if(not nzero):  #non-empty cells
+        if not nzero:  # non-empty cells
             for index in indices:
                 i, j, k = index[1], index[2], index[3]
-                if(r_i[0][i][j][k] != 0):
-                    r_i_valid[0][i][j][k] = r_i[0][i][j][k] #copy cell
+                if r_i[0][i][j][k] != 0:
+                    r_i_valid[0][i][j][k] = r_i[0][i][j][k]  # copy cell
 
-            #어택 후보4
+            # 어택 후보4
             # r_i_sign = np.sign(r_i_valid)
             # r_i_scaled = r_i_sign*overshoot
 
-            #어택 후보3
+            # 어택 후보3
             # r_i_sign = np.sign(r_i_valid)
             # # normalize abs
             # r_i_abs = np.abs(r_i_valid)
             # r_i_norm = r_i_abs - np.min(r_i_abs) / np.ptp(r_i_abs)
             # r_i_scaled = r_i_norm * overshoot * r_i_sign
 
-            #어택 후보2
+            # 어택 후보2
             # #normalize to [-1,1]
             # r_i_norm = 2*(r_i_valid - np.min(r_i_valid)) / np.ptp(r_i_valid) -1  # np / (max - min)
             # #scale to [min, max]
             # r_i_scaled = r_i_norm * overshoot
 
-            #어택 후보1
+            # 어택 후보1
             # scale = 10
             # count = 0
             # while(len(np.where(np.abs(r_i_valid) > 1)[0]) < ((len(np.nonzero(r_i_valid)[0]))/3)): #threshold : half
@@ -230,32 +232,30 @@ def deepfool(input, out_init, max_iter, nzero ,overshoot = 5):
             #     r_i_valid = r_i_valid * scale
             # r_i_scaled = np.int_(r_i_valid)  # goal: 1-2digit integer
 
-            #FINAL...
-            r_i_scaled = np.int_(r_i_valid*1e+4) #1-2digit inte
+            # FINAL...
+            r_i_scaled = np.int_(r_i_valid * 1e4)  # 1-2digit inte
             # r_i_scaled = r_i_valid*1e+4
 
+        r_tot = np.float32(r_tot + r_i_scaled)  # r_tot += r_i
 
-        r_tot = np.float32(r_tot + r_i_scaled) # r_tot += r_i
-
-        #reset perturbed_input
+        # reset perturbed_input
         perturbed_input = input + torch.from_numpy(r_tot)
         perturbed_input = torch.clamp(perturbed_input, 0, 127)
 
         x = perturbed_input.clone().requires_grad_(True)
         fs = model(x)
-        k_i = np.argmax(fs.data.numpy().flatten()) #new pred
+        k_i = np.argmax(fs.data.numpy().flatten())  # new pred
 
         loop_i += 1
 
-
     print("")
-    #double check
+    # double check
     # perturbed_input = torch.clamp(perturbed_input, 0, 127)
     r_tot = np.clip(np.abs(r_tot), 0, 127)
     return r_tot, loop_i, k_i, perturbed_input
 
 
-def tempo_edge_attack(input, eps ,data_grad):
+def tempo_edge_attack(input, eps, data_grad):
     sign_data_grad = data_grad.sign()
 
     # indices = torch.nonzero(input, as_tuple=True)  # get all the attack points
@@ -267,43 +267,44 @@ def tempo_edge_attack(input, eps ,data_grad):
     save_pair = []
     # for i, index in enumerate(indices_np):
     # for i in range(1, len(indices_np)-1):
-    for i in range(len(indices_np)): # 0 - len-1
+    for i in range(len(indices_np)):  # 0 - len-1
 
-        while(i < len(indices_np) and indices_np[i][1] == cur_ch):
+        while i < len(indices_np) and indices_np[i][1] == cur_ch:
 
             start, end = indices_np[i], indices_np[i]
             pitch = indices_np[i][3]
             i += 1
-            while(i < len(indices_np) and indices_np[i][3] == pitch):
-                end = indices_np[i] #cur pos
+            while i < len(indices_np) and indices_np[i][3] == pitch:
+                end = indices_np[i]  # cur pos
                 i += 1  # update i -> next pos
 
-            #check is len > 2
-            if(start[2] < end[2] and start[3] == end[3]):
-                save_pair.append([start, end]) #save pair
+            # check is len > 2
+            if start[2] < end[2] and start[3] == end[3]:
+                save_pair.append([start, end])  # save pair
                 # print("{}: {}".format(i,[start, end]))
 
-            if(i < (len(indices_np)-1)):
+            if i < (len(indices_np) - 1):
                 cur_ch = indices_np[i][1]
             else:
                 cur_ch = -1
 
-
-########## manipulate!! ###########
+    ########## manipulate!! ###########
     for pair in save_pair:
         begin, until = pair[0], pair[1]
         b_vel = perturbed_input[0][begin[1]][begin[2]][begin[3]]
         u_vel = perturbed_input[0][until[1]][until[2]][until[3]]
         rng = eps
-        if (begin[2] > rng and until[2] < (400-rng)):
+        if begin[2] > rng and until[2] < (400 - rng):
             for i in range(rng):
-                perturbed_input[0][begin[1]][begin[2]-i][begin[3]] = b_vel
-                perturbed_input[0][until[1]][until[2]+i][until[3]] = u_vel
+                perturbed_input[0][begin[1]][begin[2] - i][begin[3]] = b_vel
+                perturbed_input[0][until[1]][until[2] + i][until[3]] = u_vel
 
     perturbed_input = torch.from_numpy(perturbed_input)
     return perturbed_input
 
+
 ##########################################################################
+
 
 def test(model, epsilon):
 
@@ -313,57 +314,64 @@ def test(model, epsilon):
     orig_wrong = 0
 
     # for i,val in enumerate(tqdm(val_loader)):
-    for i, (v_in, v_out, v_fn) in enumerate(zip(input_total, output_total, fname_total)):
+    for i, (v_in, v_out, v_fn) in enumerate(
+        zip(input_total, output_total, fname_total)
+    ):
         model.eval()
         data, target, name = v_in, v_out, v_fn.replace("/", "_")
 
         # data, target = data.to(device), target.to(device)
         data = data.detach()
-        data.requires_grad = True #for attack
+        data.requires_grad = True  # for attack
         init_out = model(data)
         init_pred = torch.max(init_out, 1)[1].view(target.size()).data
         # _, init_pred = torch.max(init_out.data, 1)
 
-        #if correct, skip
-        if(init_pred.item() != target.item()):
+        # if correct, skip
+        if init_pred.item() != target.item():
             orig_wrong += 1
             # print("{}: wrong! --- pred:{} orig:{}]".format(i,init_pred.item(),target.item()))
             continue
         # print("{}: correct!--- pred:{} orig:{}]".format(i,init_pred.item(),target.item()))
 
-
-        #if wrong, ATTACK
+        # if wrong, ATTACK
         loss = loss_function(init_out, target)  # compute loss
         model.zero_grad()
         loss.backward()
         data_grad = data.grad.data
 
-        #VEL ATTACKS
+        # VEL ATTACKS
         # perturbed_data = vel_attack(data, epsilon, data_grad, True) # vel --> fgsm random attack
-        perturbed_data = vel_attack(data, epsilon, data_grad, False) # vel --> fgsm sign grad attack
+        perturbed_data = vel_attack(
+            data, epsilon, data_grad, False
+        )  # vel --> fgsm sign grad attack
         # perturbed_data = tempo_edge_attack(data.detach(), epsilon, data_grad) #tempo edge attack
-        #RERUN MODEL
+        # RERUN MODEL
         new_out = model(perturbed_data)
         # confidence = torch.softmax(new_out[0], dim=0)
         # target_confidence = torch.max(confidence).item() * 100
         new_pred = torch.max(new_out, 1)[1].view(target.size()).data
         # print(new_out)
 
-        #get orig data
+        # get orig data
         # orig_data = data.squeeze().numpy()
-        np_vel = perturbed_data.squeeze().detach().numpy() #(129 400 128)
+        np_vel = perturbed_data.squeeze().detach().numpy()  # (129 400 128)
 
         # check for success
         if new_pred.item() == target.item():
             correct += 1
         else:
             print("Origin Genre:", GENRES[int(target.item())])
-            print("After Attack:", GENRES[int(new_pred.item())]) # 'with Confidence:', target_confidence
+            print(
+                "After Attack:", GENRES[int(new_pred.item())]
+            )  # 'with Confidence:', target_confidence
             print()
             # pass
-        #np.save("/data/attack_test/pitch_" + each_file, np_pitch)  # save as .npy
-        #     np.save("/data/attack_test/time_" + each_file, np_time)  # save as .npy
-            np.save("/data/scn15/vel_" +  name, np_vel)  # save as .npy | "_[" + str(epsilon) +"]"+
+            # np.save("/data/attack_test/pitch_" + each_file, np_pitch)  # save as .npy
+            #     np.save("/data/attack_test/time_" + each_file, np_time)  # save as .npy
+            np.save(
+                "/data/scn15/vel_" + name, np_vel
+            )  # save as .npy | "_[" + str(epsilon) +"]"+
         #     np.save("/data/attack_test/vel_" + each_file + "_[0]" , orig_data)  # save as .npy
 
         # DEEPFOOL(LAST)
@@ -386,7 +394,7 @@ def test(model, epsilon):
 
 
 ##########################################################
-#run attack
+# run attack
 
 accuracies = []
 # epsilons = [0,2,4,6,8,10,12,14,16,18,20, 22, 24, 26, 28, 30,32,34,36,38,40] #for vel attacks
@@ -395,7 +403,7 @@ epsilons = [20]
 # epsilons = [3,4,5,6] #for tempo
 # epsilons = [0] #for deepfool
 for ep in tqdm(epsilons):
-#
+    #
     print("Epsilon: {}".format(ep))
     rounded, fname, orig_wrong, correct = test(model, ep)
     denom = len(input_total)
@@ -403,13 +411,13 @@ for ep in tqdm(epsilons):
     final_acc = correct / float(denom)
     # print("Before: {} / {} = {}".format(denom - orig_wrong, denom, orig_acc))
     # print("After: {} / {} = {}".format(correct, denom, final_acc))
-#
-#     #for plt
+    #
+    #     #for plt
     accuracies.append(final_acc)
     # examples.append(ex)
 
 
-#Draw Results
+# Draw Results
 # plt.figure(figsize=(5,5))
 # plt.plot(epsilons, accuracies, "*-")
 # plt.yticks(np.arange(0, 1.1, step=0.1))
@@ -419,7 +427,7 @@ for ep in tqdm(epsilons):
 # plt.ylabel("Accuracy")
 # plt.show()
 
-#Draw Results
+# Draw Results
 # plt.figure(figsize=(5,5))
 # plt.plot(epsilons, accuracies, "*-")
 # plt.yticks(np.arange(0, 1.1, step=0.1))
@@ -430,20 +438,21 @@ for ep in tqdm(epsilons):
 # plt.show()
 
 
-
 ##########################################################################################
 ##########################################################################################
 
 # GENRES = ['Classical', 'Rock', 'Country', 'GameMusic']
-SAVED_NUMPY_PATH = '/data/midi820_128channel/'
+SAVED_NUMPY_PATH = "/data/midi820_128channel/"
 
 ### Set File directory
-origin_midi_dir = '/data/3genres/'  # Get the Hedaer and other data at original Midi Data
+origin_midi_dir = (
+    "/data/3genres/"  # Get the Hedaer and other data at original Midi Data
+)
 # classical_numpy = 'C:/Users/hahal/PycharmProjects/MidiClass/attack_npy_filename/Classical_input.npy'
 # classical_name_numpy = 'C:/Users/hahal/PycharmProjects/MidiClass/attack_npy_filename/Classical_filename.npy'
-output_file_dir = '/data/scn15/'
+output_file_dir = "/data/scn15/"
 # csv_output_dir = './attack2midi/csv/'
-ATTACK_PATH = '/data/scn15/'
+ATTACK_PATH = "/data/scn15/"
 
 
 # --------------------------------------------------------------------------
@@ -470,7 +479,7 @@ ATTACK_PATH = '/data/scn15/'
 
 # functions
 def start_track_string(track_num):
-    return str(track_num) + ', 0, Start_track\n'
+    return str(track_num) + ", 0, Start_track\n"
 
 
 def title_track_string(track_num):
@@ -478,26 +487,53 @@ def title_track_string(track_num):
 
 
 def program_c_string(track_num, channel, program_num):
-    return str(track_num) + ', 0, Program_c, ' + str(channel) + ', ' + str(int(program_num)) + '\n'
+    return (
+        str(track_num)
+        + ", 0, Program_c, "
+        + str(channel)
+        + ", "
+        + str(int(program_num))
+        + "\n"
+    )
 
 
 def note_on_event_string(track_num, delta_time, channel, pitch, velocity):
-    return str(track_num) + ', ' + str(delta_time) + ', Note_on_c, ' + str(channel) + ', ' + str(pitch) + ', ' + str(
-        velocity) + '\n'
+    return (
+        str(track_num)
+        + ", "
+        + str(delta_time)
+        + ", Note_on_c, "
+        + str(channel)
+        + ", "
+        + str(pitch)
+        + ", "
+        + str(velocity)
+        + "\n"
+    )
 
 
 def note_off_event_string(track_num, delta_time, channel, pitch, velocity):
-    return str(track_num) + ', ' + str(delta_time) + ', Note_off_c, ' + str(channel) + ', ' + str(pitch) + ', ' + str(
-        velocity) + '\n'
+    return (
+        str(track_num)
+        + ", "
+        + str(delta_time)
+        + ", Note_off_c, "
+        + str(channel)
+        + ", "
+        + str(pitch)
+        + ", "
+        + str(velocity)
+        + "\n"
+    )
 
 
 def end_track_string(track_num, delta_time):
-    return str(track_num) + ', ' + str(delta_time) + ', End_track\n'
+    return str(track_num) + ", " + str(delta_time) + ", End_track\n"
 
 
-end_of_file_string = '0, 0, End_of_file\n'
+end_of_file_string = "0, 0, End_of_file\n"
 
-'''
+"""
 count = 0
 good_files = []
 num = 0
@@ -534,8 +570,8 @@ for file in good_files:
 print('# of good file:', count)
 print('vel:', vel)
 print('noise:', noise)
-'''
-'''
+"""
+"""
 # load npy for each genres
 for genre in GENRES:
 
@@ -566,7 +602,7 @@ for genre in GENRES:
      # print(only_file_name)
 
      # origin_midi_dir = origin_midi_dir + genre + '/'  # add genre to path
-'''
+"""
 
 new_csv_string = []
 
@@ -606,22 +642,22 @@ for file in os.listdir(ATTACK_PATH):
     if os.path.isfile(os.path.join(ATTACK_PATH, file)):
 
         # for simulation one music
-        if file != 'vel_' + only_genre + '_' + only_file + '.npy': continue
-
-        if 'vel' in file:
-            atype = 'vel'
-        elif 'noise' in file:
+        if file != "vel_" + only_genre + "_" + only_file + ".npy":
             continue
-        else: # origin input2midi
-          atype = 'origin'
 
-        only_file_name = file.replace(atype + '_', '').replace('.npy', '')
+        if "vel" in file:
+            atype = "vel"
+        elif "noise" in file:
+            continue
+        else:  # origin input2midi
+            atype = "origin"
+
+        only_file_name = file.replace(atype + "_", "").replace(".npy", "")
 
         for genre in GENRES:
             if genre in only_file_name:
-                only_file_name = only_file_name.replace(genre + '_', '')
+                only_file_name = only_file_name.replace(genre + "_", "")
                 break
-
 
         # print(only_file_name)
 
@@ -637,9 +673,9 @@ for file in os.listdir(ATTACK_PATH):
             continue
 
         else:
-            print('########################################################')
-            print('########################################################')
-            print('Converting FGSM attacked input to MIDI..........')
+            print("########################################################")
+            print("########################################################")
+            print("Converting FGSM attacked input to MIDI..........")
             # print("current file:", file)
             # for string in origin_file_csv:
             #    if 'Program_c' in string: print(string)
@@ -652,22 +688,24 @@ for file in os.listdir(ATTACK_PATH):
                     current_used_instrument.append(instrument_num)
 
             # slower by 4.8
-            header = origin_file_csv[0].split(', ')
+            header = origin_file_csv[0].split(", ")
             # print('Before header:', header)
-            header[-1] = str(int(int(header[-1][:-1]) / 4.0)) + '\n'
+            header[-1] = str(int(int(header[-1][:-1]) / 4.0)) + "\n"
             header[-2] = str(int(total_track))
             # print('After header:', header)
-            new_csv_string.append(', '.join(header))  # header_string(total_track) + change last to 168 (too fast)
+            new_csv_string.append(
+                ", ".join(header)
+            )  # header_string(total_track) + change last to 168 (too fast)
             new_csv_string.append(origin_file_csv[1])  # start_track_string(track_num)
 
             for string in origin_file_csv:
-                if 'SMPTE_offset' in string:
+                if "SMPTE_offset" in string:
                     # print(string)
                     continue
-                elif 'Time_signature' in string or 'Tempo' in string:
+                elif "Time_signature" in string or "Tempo" in string:
                     new_csv_string.append(string)
 
-                elif 'Program_c' in string:
+                elif "Program_c" in string:
                     break
 
             new_csv_string.append(end_track_string(track_num, delta_time))
@@ -678,7 +716,7 @@ for file in os.listdir(ATTACK_PATH):
             # current_used_instrument = [-1, -1]
             # for instrument_num in instrument_dict.keys():
             #     current_used_instrument.append(instrument_num)
-                # print(lst.shape)
+            # print(lst.shape)
 
             # print(total_track)
 
@@ -707,19 +745,43 @@ for file in os.listdir(ATTACK_PATH):
                             # print('music21 instrument:', load_data[row][col]) # 0-59
                             # print('py_midicsv instrument:', program_num_map[load_data[row][col]])
 
-                            if len(track_string_list[current_used_instrument.index(channel_instrument)]) != 0:
-                                program_num = channel_instrument  # program_num = instrment num
+                            if (
+                                len(
+                                    track_string_list[
+                                        current_used_instrument.index(
+                                            channel_instrument
+                                        )
+                                    ]
+                                )
+                                != 0
+                            ):
+                                program_num = (
+                                    channel_instrument  # program_num = instrment num
+                                )
                                 pitch = col
                                 channel = 0
                                 delta_time = 50 * row
                                 end_delta_time = 50 * (row + 1)
                                 velocity = int(
-                                    load_data[channel_instrument][row][col])  # TODO: We should consider later
-                                note_on_list[track_num].append([track_num, delta_time, channel, pitch, velocity])
-                                note_off_list[track_num].append([track_num, end_delta_time, channel, pitch, velocity])
+                                    load_data[channel_instrument][row][col]
+                                )  # TODO: We should consider later
+                                note_on_list[track_num].append(
+                                    [track_num, delta_time, channel, pitch, velocity]
+                                )
+                                note_off_list[track_num].append(
+                                    [
+                                        track_num,
+                                        end_delta_time,
+                                        channel,
+                                        pitch,
+                                        velocity,
+                                    ]
+                                )
                             else:
                                 # Set the track_string_list new track header - program_c event
-                                track_num = current_used_instrument.index(channel_instrument)
+                                track_num = current_used_instrument.index(
+                                    channel_instrument
+                                )
                                 if channel_instrument == 128:
                                     program_num = 1
                                 else:
@@ -728,26 +790,51 @@ for file in os.listdir(ATTACK_PATH):
                                 pitch = col
                                 delta_time = 50 * row
                                 end_delta_time = 50 * (row + 1)
-                                velocity = int(
-                                    load_data[channel_instrument][row][col])
-                                track_string_list[track_num].append(start_track_string(track_num))
-                                track_string_list[track_num].append(title_track_string(track_num))
-                                track_string_list[track_num].append(program_c_string(track_num, channel, program_num))
-                                note_on_list[track_num].append([track_num, delta_time, channel, pitch, velocity])
-                                note_off_list[track_num].append([track_num, end_delta_time, channel, pitch, velocity])
+                                velocity = int(load_data[channel_instrument][row][col])
+                                track_string_list[track_num].append(
+                                    start_track_string(track_num)
+                                )
+                                track_string_list[track_num].append(
+                                    title_track_string(track_num)
+                                )
+                                track_string_list[track_num].append(
+                                    program_c_string(track_num, channel, program_num)
+                                )
+                                note_on_list[track_num].append(
+                                    [track_num, delta_time, channel, pitch, velocity]
+                                )
+                                note_off_list[track_num].append(
+                                    [
+                                        track_num,
+                                        end_delta_time,
+                                        channel,
+                                        pitch,
+                                        velocity,
+                                    ]
+                                )
 
                     for num in range(2, len(note_on_list)):  # num = track num
                         for notes in range(0, len(note_on_list[num])):
                             track_string_list[num].append(
-                                note_on_event_string(note_on_list[num][notes][0], note_on_list[num][notes][1],
-                                                     note_on_list[num][notes][2], note_on_list[num][notes][3],
-                                                     note_on_list[num][notes][4]))
+                                note_on_event_string(
+                                    note_on_list[num][notes][0],
+                                    note_on_list[num][notes][1],
+                                    note_on_list[num][notes][2],
+                                    note_on_list[num][notes][3],
+                                    note_on_list[num][notes][4],
+                                )
+                            )
                     for num in range(2, len(note_off_list)):
                         for notes in range(0, len(note_off_list[num])):
                             track_string_list[num].append(
-                                note_off_event_string(note_off_list[num][notes][0], note_off_list[num][notes][1],
-                                                      note_off_list[num][notes][2], note_off_list[num][notes][3],
-                                                      note_off_list[num][notes][4]))
+                                note_off_event_string(
+                                    note_off_list[num][notes][0],
+                                    note_off_list[num][notes][1],
+                                    note_off_list[num][notes][2],
+                                    note_off_list[num][notes][3],
+                                    note_off_list[num][notes][4],
+                                )
+                            )
                     note_on_list = [[] for i in range(0, total_track)]
                     note_off_list = [[] for i in range(0, total_track)]
 
@@ -764,10 +851,12 @@ for file in os.listdir(ATTACK_PATH):
 
             midi_object = py_midicsv.csv_to_midi(new_csv_string)
 
-            with open(output_file_dir + '/New_' + atype + '_' + only_file_name, "wb") as output_file:
+            with open(
+                output_file_dir + "/New_" + atype + "_" + only_file_name, "wb"
+            ) as output_file:
                 midi_writer = py_midicsv.FileWriter(output_file)
                 midi_writer.write(midi_object)
-                print('CSV to Midi File success!!')
+                print("CSV to Midi File success!!")
 
                 success_num += 1
 

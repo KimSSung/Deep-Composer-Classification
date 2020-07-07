@@ -1,20 +1,23 @@
 import py_midicsv
 import os
 import numpy as np
+
 # import pandas as pd
 # import csv
 import sys
 
-GENRES = ['Classical', 'Rock', 'Country', 'GameMusic']
-SAVED_NUMPY_PATH = '/data/midi820_128channel/'
+GENRES = ["Classical", "Rock", "Country", "GameMusic"]
+SAVED_NUMPY_PATH = "/data/midi820_128channel/"
 
 ### Set File directory
-origin_midi_dir = '/data/3genres/'  # Get the Hedaer and other data at original Midi Data
+origin_midi_dir = (
+    "/data/3genres/"  # Get the Hedaer and other data at original Midi Data
+)
 # classical_numpy = 'C:/Users/hahal/PycharmProjects/MidiClass/attack_npy_filename/Classical_input.npy'
 # classical_name_numpy = 'C:/Users/hahal/PycharmProjects/MidiClass/attack_npy_filename/Classical_filename.npy'
-output_file_dir = '/data/scn15/'
+output_file_dir = "/data/scn15/"
 # csv_output_dir = './attack2midi/csv/'
-ATTACK_PATH = '/data/scn15/'
+ATTACK_PATH = "/data/scn15/"
 
 
 # --------------------------------------------------------------------------
@@ -31,7 +34,7 @@ ATTACK_PATH = '/data/scn15/'
 
 ### Functions
 def start_track_string(track_num):
-    return str(track_num) + ', 0, Start_track\n'
+    return str(track_num) + ", 0, Start_track\n"
 
 
 def title_track_string(track_num):
@@ -39,25 +42,51 @@ def title_track_string(track_num):
 
 
 def program_c_string(track_num, channel, program_num):
-    return str(track_num) + ', 0, Program_c, ' + str(channel) + ', ' + str(int(program_num)) + '\n'
+    return (
+        str(track_num)
+        + ", 0, Program_c, "
+        + str(channel)
+        + ", "
+        + str(int(program_num))
+        + "\n"
+    )
 
 
 def note_on_event_string(track_num, delta_time, channel, pitch, velocity):
-    return str(track_num) + ', ' + str(delta_time) + ', Note_on_c, ' + str(channel) + ', ' + str(pitch) + ', ' + str(
-        velocity) + '\n'
+    return (
+        str(track_num)
+        + ", "
+        + str(delta_time)
+        + ", Note_on_c, "
+        + str(channel)
+        + ", "
+        + str(pitch)
+        + ", "
+        + str(velocity)
+        + "\n"
+    )
 
 
 def note_off_event_string(track_num, delta_time, channel, pitch, velocity):
-    return str(track_num) + ', ' + str(delta_time) + ', Note_off_c, ' + str(channel) + ', ' + str(pitch) + ', ' + str(
-        velocity) + '\n'
+    return (
+        str(track_num)
+        + ", "
+        + str(delta_time)
+        + ", Note_off_c, "
+        + str(channel)
+        + ", "
+        + str(pitch)
+        + ", "
+        + str(velocity)
+        + "\n"
+    )
 
 
 def end_track_string(track_num, delta_time):
-    return str(track_num) + ', ' + str(delta_time) + ', End_track\n'
+    return str(track_num) + ", " + str(delta_time) + ", End_track\n"
 
 
-
-'''
+"""
 ### Check whether all cell have 0-127 velocity
 count = 0
 good_files = []
@@ -88,10 +117,10 @@ for file in good_files:
 print('# of good file:', count)
 print('vel:', vel)
 print('noise:', noise)
-'''
+"""
 
 ### Codes for "Classical.npy, ..." ==> per Genre
-'''
+"""
 ### load npy for each genres
 for genre in GENRES:
    #changed_num = 0
@@ -113,7 +142,7 @@ for genre in GENRES:
      # print(genre)
      # print(only_file_name)
      # origin_midi_dir = origin_midi_dir + genre + '/'  # add genre to path
-'''
+"""
 
 new_csv_string = []
 
@@ -150,25 +179,25 @@ velocity = 90
 ### Codes for "scn15_format0.npy, ..." ==> per MIDI File
 
 off_note = 0
-attack_type = ['vel', 'noise']  # 'orig', 'pitch', 'time',
+attack_type = ["vel", "noise"]  # 'orig', 'pitch', 'time',
 # only_file_name = 'alb_esp4_format0.mid'
 success_num = 0
 
 for file in os.listdir(ATTACK_PATH):
     if os.path.isfile(os.path.join(ATTACK_PATH, file)):
 
-        if 'vel' in file:
-            atype = 'vel'
-        elif 'noise' in file:
+        if "vel" in file:
+            atype = "vel"
+        elif "noise" in file:
             continue
-        else: # origin input2midi
-          atype = 'origin'
+        else:  # origin input2midi
+            atype = "origin"
 
-        only_file_name = file.replace(atype + '_', '').replace('.npy', '')
+        only_file_name = file.replace(atype + "_", "").replace(".npy", "")
 
         for genre in GENRES:
             if genre in only_file_name:
-                only_file_name = only_file_name.replace(genre + '_', '')
+                only_file_name = only_file_name.replace(genre + "_", "")
                 break
 
         # FOR SIMULATION
@@ -201,22 +230,24 @@ for file in os.listdir(ATTACK_PATH):
                     current_used_instrument.append(instrument_num)
 
             # slower by 4.8
-            header = origin_file_csv[0].split(', ')
+            header = origin_file_csv[0].split(", ")
             # print('Before header:', header)
-            header[-1] = str(int(int(header[-1][:-1]) / 4.0)) + '\n'
+            header[-1] = str(int(int(header[-1][:-1]) / 4.0)) + "\n"
             header[-2] = str(int(total_track))
             # print('After header:', header)
-            new_csv_string.append(', '.join(header))  # header_string(total_track) + change last to 168 (too fast)
+            new_csv_string.append(
+                ", ".join(header)
+            )  # header_string(total_track) + change last to 168 (too fast)
             new_csv_string.append(origin_file_csv[1])  # start_track_string(track_num)
 
             for string in origin_file_csv:
-                if 'SMPTE_offset' in string:
+                if "SMPTE_offset" in string:
                     # print(string)
                     continue
-                elif 'Time_signature' in string or 'Tempo' in string:
+                elif "Time_signature" in string or "Tempo" in string:
                     new_csv_string.append(string)
 
-                elif 'Program_c' in string:
+                elif "Program_c" in string:
                     break
 
             new_csv_string.append(end_track_string(track_num, delta_time))
@@ -227,7 +258,7 @@ for file in os.listdir(ATTACK_PATH):
             # current_used_instrument = [-1, -1]
             # for instrument_num in instrument_dict.keys():
             #     current_used_instrument.append(instrument_num)
-                # print(lst.shape)
+            # print(lst.shape)
 
             # print(total_track)
 
@@ -244,7 +275,7 @@ for file in os.listdir(ATTACK_PATH):
             note_off_list[0].append(-1)
             note_off_list[1].append(-1)
 
-            print(load_data.shape[0], ' ', load_data.shape[1], ' ', load_data.shape[2])
+            print(load_data.shape[0], " ", load_data.shape[1], " ", load_data.shape[2])
             for channel_instrument in range(0, load_data.shape[0]):
                 for row in range(0, load_data.shape[1]):
                     for col in range(0, load_data.shape[2]):
@@ -256,19 +287,43 @@ for file in os.listdir(ATTACK_PATH):
                             # print('music21 instrument:', load_data[row][col]) # 0-59
                             # print('py_midicsv instrument:', program_num_map[load_data[row][col]])
 
-                            if len(track_string_list[current_used_instrument.index(channel_instrument)]) != 0:
-                                program_num = channel_instrument  # program_num = instrment num
+                            if (
+                                len(
+                                    track_string_list[
+                                        current_used_instrument.index(
+                                            channel_instrument
+                                        )
+                                    ]
+                                )
+                                != 0
+                            ):
+                                program_num = (
+                                    channel_instrument  # program_num = instrment num
+                                )
                                 pitch = col
                                 channel = 0
                                 delta_time = 50 * row
                                 end_delta_time = 50 * (row + 1)
                                 velocity = int(
-                                    load_data[channel_instrument][row][col])  # TODO: We should consider later
-                                note_on_list[track_num].append([track_num, delta_time, channel, pitch, velocity])
-                                note_off_list[track_num].append([track_num, end_delta_time, channel, pitch, velocity])
+                                    load_data[channel_instrument][row][col]
+                                )  # TODO: We should consider later
+                                note_on_list[track_num].append(
+                                    [track_num, delta_time, channel, pitch, velocity]
+                                )
+                                note_off_list[track_num].append(
+                                    [
+                                        track_num,
+                                        end_delta_time,
+                                        channel,
+                                        pitch,
+                                        velocity,
+                                    ]
+                                )
                             else:
                                 # Set the track_string_list new track header - program_c event
-                                track_num = current_used_instrument.index(channel_instrument)
+                                track_num = current_used_instrument.index(
+                                    channel_instrument
+                                )
                                 if channel_instrument == 128:
                                     program_num = 1
                                 else:
@@ -277,26 +332,51 @@ for file in os.listdir(ATTACK_PATH):
                                 pitch = col
                                 delta_time = 50 * row
                                 end_delta_time = 50 * (row + 1)
-                                velocity = int(
-                                    load_data[channel_instrument][row][col])
-                                track_string_list[track_num].append(start_track_string(track_num))
-                                track_string_list[track_num].append(title_track_string(track_num))
-                                track_string_list[track_num].append(program_c_string(track_num, channel, program_num))
-                                note_on_list[track_num].append([track_num, delta_time, channel, pitch, velocity])
-                                note_off_list[track_num].append([track_num, end_delta_time, channel, pitch, velocity])
+                                velocity = int(load_data[channel_instrument][row][col])
+                                track_string_list[track_num].append(
+                                    start_track_string(track_num)
+                                )
+                                track_string_list[track_num].append(
+                                    title_track_string(track_num)
+                                )
+                                track_string_list[track_num].append(
+                                    program_c_string(track_num, channel, program_num)
+                                )
+                                note_on_list[track_num].append(
+                                    [track_num, delta_time, channel, pitch, velocity]
+                                )
+                                note_off_list[track_num].append(
+                                    [
+                                        track_num,
+                                        end_delta_time,
+                                        channel,
+                                        pitch,
+                                        velocity,
+                                    ]
+                                )
 
                     for num in range(2, len(note_on_list)):  # num = track num
                         for notes in range(0, len(note_on_list[num])):
                             track_string_list[num].append(
-                                note_on_event_string(note_on_list[num][notes][0], note_on_list[num][notes][1],
-                                                     note_on_list[num][notes][2], note_on_list[num][notes][3],
-                                                     note_on_list[num][notes][4]))
+                                note_on_event_string(
+                                    note_on_list[num][notes][0],
+                                    note_on_list[num][notes][1],
+                                    note_on_list[num][notes][2],
+                                    note_on_list[num][notes][3],
+                                    note_on_list[num][notes][4],
+                                )
+                            )
                     for num in range(2, len(note_off_list)):
                         for notes in range(0, len(note_off_list[num])):
                             track_string_list[num].append(
-                                note_off_event_string(note_off_list[num][notes][0], note_off_list[num][notes][1],
-                                                      note_off_list[num][notes][2], note_off_list[num][notes][3],
-                                                      note_off_list[num][notes][4]))
+                                note_off_event_string(
+                                    note_off_list[num][notes][0],
+                                    note_off_list[num][notes][1],
+                                    note_off_list[num][notes][2],
+                                    note_off_list[num][notes][3],
+                                    note_off_list[num][notes][4],
+                                )
+                            )
                     note_on_list = [[] for i in range(0, total_track)]
                     note_off_list = [[] for i in range(0, total_track)]
 
@@ -313,10 +393,12 @@ for file in os.listdir(ATTACK_PATH):
 
             midi_object = py_midicsv.csv_to_midi(new_csv_string)
 
-            with open(output_file_dir + '/New_' + atype + '_' + only_file_name, "wb") as output_file:
+            with open(
+                output_file_dir + "/New_" + atype + "_" + only_file_name, "wb"
+            ) as output_file:
                 midi_writer = py_midicsv.FileWriter(output_file)
                 midi_writer.write(midi_object)
-                print('Good Midi File')
+                print("Good Midi File")
 
                 success_num += 1
 
@@ -331,4 +413,4 @@ for file in os.listdir(ATTACK_PATH):
 
             # break # for checking one midi
 
-print('total success:', success_num)
+print("total success:", success_num)
