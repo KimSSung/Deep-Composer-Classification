@@ -41,12 +41,6 @@ class Trainer:
 		os.environ["CUDA_VISIBLE_DEVICES"]=self.config.gpu
 		self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-		# dummy loaders
-		self.train_loader = MIDIDataset('', -1, -1, [], '')
-		self.valid_loader = MIDIDataset('', -1, -1, [], '')
-		self.valid_loader_1 = MIDIDataset('', -1, -1, [], '')
-		self.valid_loader_2 = MIDIDataset('', -1, -1, [], '')
-
 		self.data_load(self.config.mode)
 		self.num_batches = len(self.train_loader)
 
@@ -248,7 +242,7 @@ class Trainer:
 
 				if mode == 'basetrain':
 					print('''epoch: {}/{} | trn loss: {:.4f} | trn acc: {:.2f}%| lr: {:.6f} |
-	val loss: {:.4f} | val acc: {:.2f}%'''
+		val loss: {:.4f} | val acc: {:.2f}%'''
 						.format(epoch + 1, self.config.epochs,
 						trn_running_loss / self.num_batches, trn_acc / self.num_batches, lr,
 						avg_valloss, avg_valacc
@@ -340,7 +334,7 @@ class Trainer:
 
 
 
-
+# # Testing
 # config, unparsed = get_config()
 # with open("config.txt", "w") as f: # execute on /train/ folder
 # 	f.write('Parameters for ' + config.mode + ':\n\n')
