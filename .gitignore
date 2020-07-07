@@ -4,6 +4,8 @@ maybe_no_use/
 no_use/
 other_models/
 
+train/train_options/
+
 # files #
 .wav
 .pkl
@@ -12,3 +14,4 @@ other_models/
 test*.py
 temp.py
 
+train/test*.py

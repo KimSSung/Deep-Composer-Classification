@@ -1,3 +1,5 @@
+# Configuration file for (base training / adversarial training / adversarial attack)
+
 import argparse
 
 # Configuration
@@ -47,6 +49,9 @@ parser.add_argument('--valid_filename_save_path', default='/data/drum/dataset/va
 
 parser.add_argument('--learning_rate', default=0.00005, type=float,
 						  help='Model learning rate.')
+
+parser.add_argument('--mode', default='basetrain', type=str,
+						  help='Mode (basetrain / advtrain / attack).')
 
 def get_config():
     config, unparsed = parser.parse_known_args()
