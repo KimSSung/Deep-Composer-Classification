@@ -3,6 +3,9 @@ bestmodel/
 maybe_no_use/
 no_use/
 other_models/
+.idea
+__pycache__
+
 
 train/train_options/
 
