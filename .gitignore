@@ -3,9 +3,8 @@ bestmodel/
 maybe_no_use/
 no_use/
 other_models/
-.idea
-__pycache__
-
+.idea/
+__pycache__/
 
 train/train_options/
 
@@ -16,5 +15,6 @@ train/train_options/
 .npy
 test*.py
 temp.py
+
 
 train/test*.py
