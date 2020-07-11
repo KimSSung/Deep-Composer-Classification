@@ -139,7 +139,13 @@ parser.add_argument(
 parser.add_argument(
     "--max_iter", default=10, type=int, help="max iterations for deepfool attack",
 )
+parser.add_argument(
+    "--overshoot", default=5, type=int, help="overshoot for deepfool attack"
+)
 parser.add_argument("--plot", default=True, type=bool, help="draw plot?")
+parser.add_argument(
+    "--tempo_range", default=1, type=int, help="+/-n tempo cells to attack"
+)
 
 
 def get_config():
