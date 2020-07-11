@@ -64,7 +64,6 @@ parser.add_argument(
 )
 
 
-
 ##shared parameters (train & attack)
 parser.add_argument(
     "--mode",
@@ -98,46 +97,49 @@ parser.add_argument(
 )
 
 
-
-
 ##attack parameters
 
-#1. basic configurations
+# 1. basic configurations
 # parser.add_argument("--attack_mode", default="base", type=str, help="Attack Mode (base / trained)") # full name of .pt will tell anyway
 parser.add_argument("--targeted", default=False, type=bool, help="is Targeted?")
 parser.add_argument(
     "--attack_type", default="fgsm", type=str, help="attack (fgsm / deepfool / random)"
 )
-parser.add_argument("--model_fname", default="Res50_valloss_0.8801_acc_81.25.pt", type=str, help="model file (ex: Res50_valloss_0.8801_acc_81.25.pt)")
-
-#2. data related
 parser.add_argument(
-    "--specific_files", default=[], type=list, help="List file names to attack(default = [])",
+    "--model_fname",
+    default="Res50_valloss_0.8801_acc_81.25.pt",
+    type=str,
+    help="model file (ex: Res50_valloss_0.8801_acc_81.25.pt)",
+)
+
+# 2. data related
+parser.add_argument(
+    "--specific_files",
+    default=[],
+    type=list,
+    help="List file names to attack(default = [])",
 )
 parser.add_argument(
     "--t_or_v", default="v", type=str, help="dataset to attack (t: train / v: valid)"
 )
 parser.add_argument(
-    "--orig", default=True, type=bool, help = "attack on original dataset? (default: True)"
+    "--orig",
+    default=True,
+    type=bool,
+    help="attack on original dataset? (default: True)",
 )
 
-#3. specific attack related
+# 3. specific attack related
 parser.add_argument(
-    "--epsilon", default=[0.05], type=list, help="list of epsilons [ep0, ep1, ep2..] (default: [0.05])"
+    "--epsilons",
+    default=[0.0],
+    type=list,
+    help="list of epsilons [ep0, ep1, ep2..] (default: [0.0])",
 )
 parser.add_argument(
-    "--deepfool_max_iter",
-    default=10,
-    type=int,
-    help="max iterations for deepfool attack",
+    "--max_iter", default=10, type=int, help="max iterations for deepfool attack",
 )
 parser.add_argument("--plot", default=True, type=bool, help="draw plot?")
-
-parser.add_argument("--", default=, type=, help=)
-parser.add_argument("--", default=, type=, help=)
-parser.add_argument("--", default=, type=, help=)
-parser.add_argument("--", default=, type=, help=)
-
 
 
 def get_config():
