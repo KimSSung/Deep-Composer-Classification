@@ -1,7 +1,6 @@
 # Trainer class (config.mode = 'basetrain' -> base training / 'advtrain' -> adversarial training)
 
-from config import get_config
-
+from .config import get_config
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.data
@@ -22,8 +21,6 @@ import sys
 # to import from sibling folders
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from models.resnet import resnet18, resnet101, resnet152, resnet50
-
-# from model.convnet import CustomCNN
 
 # dataloader
 from tools.data_loader import MIDIDataset

@@ -90,7 +90,7 @@ print("==> MODEL LOADED")
 ########################################################
 ####attack functions
 
-#
+
 def fgsm_attack(input, epsilon, data_grad):
     # collect element-wise "sign" of the data gradient
     sign_data_grad = data_grad.sign()
@@ -99,7 +99,6 @@ def fgsm_attack(input, epsilon, data_grad):
     return perturbed_input
 
 
-#
 def vel_attack(input, epsilon, data_grad, random):  # input -> tensor
     # FOR ZERO ATTACK - 모든 셀을 공격
     # sign_data_grad = data_grad.sign()
