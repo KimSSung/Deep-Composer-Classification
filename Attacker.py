@@ -41,9 +41,8 @@ class Attacker:
 
     def model_load(self):
         self.model.eval()
-        checkpoint = torch.load(
-            self.config.model_save_path + self.config.model_fname  # 명시
-        )
+        model_fname = os.listdir(self.config.atk_model_path)
+        checkpoint = torch.load(self.config.atk_model_path + model_fname[0])  # 명시
         self.model.load_state_dict(checkpoint["model.state_dict"])
         print("==> MODEL LOADED")
         self.model = self.model.to(self.device)
@@ -103,7 +102,7 @@ class Attacker:
     def run(self):
         self.accuracies = []
         for ep in tqdm(self.config.epsilons):  # iteration: fgsm(n) others(1)
-            orig_correct, atk_correct = self.test()
+            orig_correct, atk_correct = self.test(ep)
             orig_acc = orig_correct / len(self.input_total)
             atk_acc = atk_correct / len(self.input_total)
 
@@ -125,7 +124,7 @@ class Attacker:
             self.draw_plot(self.accuracies, self.config.attack_type)
         return
 
-    def test(self):  # call this function to run attack
+    def test(self, epsilon):  # call this function to run attack
         orig_wrong = 0
         atk_correct = 0
         for i, (X, truth, name) in enumerate(
@@ -133,7 +132,8 @@ class Attacker:
         ):
             name = name.replace("/", "_")
             X, truth = X.to(self.device), truth.to(self.device)
-
+            X = X.detach()
+            X.requires_grad = True  # for attack
             # check initial performance
             init_out = self.model(X)
             init_pred = torch.max(init_out, 1)[1].view(truth.size()).data
@@ -150,7 +150,9 @@ class Attacker:
             X_grad = X.grad.data
 
             # generate attack (single X)
-            attack = self.generate(self.config.attack_type, X, X_grad, init_out)
+            attack = self.generate(
+                self.config.attack_type, X, X_grad, init_out, epsilon
+            )
 
             # re-test
             new_out = self.model(attack)
@@ -166,9 +168,9 @@ class Attacker:
 
         return len(self.input_total) - orig_wrong, atk_correct
 
-    def generate(self, atk, data, data_grad, init_out):
+    def generate(self, atk, data, data_grad, init_out, eps):
         if atk is "fgsm":
-            attack = self.fgsm(data, data_grad, self.config.epsilons)
+            attack = self.fgsm(data, data_grad, eps)
         elif atk is "deepfool":
             attack = self.deepfool(data, init_out, self.config.max_iter)
         elif atk is "random":
@@ -178,9 +180,24 @@ class Attacker:
         return attack
 
     def fgsm(self, data, data_grad, eps):
+        # ORIGINAL FGSM
+        # sign_data_grad = data_grad.sign()
+        # perturbed_input = data + eps * sign_data_grad
+        # perturbed_input = torch.clamp(perturbed_input, 0, 127)
+
+        # manipulation : NON ZERO ATTACK
         sign_data_grad = data_grad.sign()
-        perturbed_input = data + eps * sign_data_grad
-        perturbed_input = torch.clamp(perturbed_input, 0, 127)
+        indices = torch.nonzero(data)  # get all the attack points
+        perturbed_input = data + 0 * sign_data_grad
+        for index in indices:
+            i, j, k, l = index[0], index[1], index[2], index[3]
+            orig_vel = int(data[i][j][k][l].item())  # int
+            att_sign = int(sign_data_grad[i][j][k][l].item())
+            if att_sign != 0:  # meaningless -> almost all nonzero
+                perturbed_input[i][j][k][l] = max(
+                    0, min(orig_vel + att_sign * eps, 127)
+                )  # clamp
+
         return perturbed_input
 
     def deepfool(self, data, model_out, max_iter):
@@ -253,10 +270,7 @@ class Attacker:
 
             loop_i += 1
 
-            print("")
-            # double check
-            r_tot = np.clip(np.abs(r_tot), 0, 127)
-            return r_tot, loop_i, k_i, perturbed_input
+        print("")
         return perturbed_input
 
     def random(self, data, eps):
@@ -278,3 +292,13 @@ class Attacker:
             plt.ylabel("Accuracy")
             plt.show()
         return
+
+
+# Testing
+# config, unparsed = get_config()
+# for arg in vars(config):
+#     argname = arg
+#     contents = str(getattr(config, arg))
+#     print(argname + " = " + contents)
+# temp = Attacker(config)
+# temp.run()

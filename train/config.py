@@ -106,10 +106,16 @@ parser.add_argument(
     "--attack_type", default="fgsm", type=str, help="attack (fgsm / deepfool / random)"
 )
 parser.add_argument(
-    "--model_fname",
-    default="Res50_valloss_0.8801_acc_81.25.pt",
+    "--atk_model_path",
+    default="/data/drum/bestmodel/model/",
     type=str,
-    help="model file (ex: Res50_valloss_0.8801_acc_81.25.pt)",
+    help="model to be attacked (dir path)",
+)
+parser.add_argument(
+    "--save_attack",
+    default=False,
+    type=bool,
+    help="save some adversarial examples? (True / False)",
 )
 
 # 2. data related
@@ -142,7 +148,7 @@ parser.add_argument(
 parser.add_argument(
     "--overshoot", default=5, type=int, help="overshoot for deepfool attack"
 )
-parser.add_argument("--plot", default=True, type=bool, help="draw plot?")
+parser.add_argument("--plot", default=False, type=bool, help="draw plot?")
 parser.add_argument(
     "--tempo_range", default=1, type=int, help="+/-n tempo cells to attack"
 )
