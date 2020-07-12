@@ -1,3 +1,7 @@
+# Attacker class
+
+# from config import get_config
+
 import os
 import sys
 import copy
@@ -7,17 +11,13 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 import torch.nn as nn
-from train.config import get_config
 
 # to import from sibling folders
-sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+# sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from models.resnet import resnet18, resnet101, resnet152, resnet50
 
 # dataloader
 from tools.data_loader import MIDIDataset
-
-
-torch.manual_seed(123)
 
 
 class Attacker:
@@ -25,8 +25,8 @@ class Attacker:
         self.config = args
 
         # for GPU use
-        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-        os.environ["CUDA_VISIBLE_DEVICES"] = self.config.gpu
+        # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+        # os.environ["CUDA_VISIBLE_DEVICES"] = self.config.gpu
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         num_genres = len(self.config.genres)

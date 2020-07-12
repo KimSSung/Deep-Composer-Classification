@@ -1,6 +1,7 @@
 # Trainer class (config.mode = 'basetrain' -> base training / 'advtrain' -> adversarial training)
 
-from .config import get_config
+# from config import get_config
+
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.data
@@ -19,14 +20,11 @@ import os
 import sys
 
 # to import from sibling folders
-sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+# sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from models.resnet import resnet18, resnet101, resnet152, resnet50
 
 # dataloader
 from tools.data_loader import MIDIDataset
-
-
-torch.manual_seed(123)
 
 
 class Trainer:
@@ -34,8 +32,8 @@ class Trainer:
         self.config = args
 
         # for GPU use
-        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-        os.environ["CUDA_VISIBLE_DEVICES"] = self.config.gpu
+        # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID" # moved to main
+        # os.environ["CUDA_VISIBLE_DEVICES"] = self.config.gpu # moved to main
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.data_load(self.config.mode)

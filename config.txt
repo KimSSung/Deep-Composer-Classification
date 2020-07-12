@@ -1,20 +1,32 @@
-Parameters for basetrain:
+Parameters for advtrain:
 
 genres = ['Classical', 'Rock', 'Country', 'GameMusic']
 genre_datanum = 300
+model_name = ResNet
 train_input_path = /data/midi820_400/train/
 valid_input_path = /data/midi820_400/valid/
-input_shape = (129, 400, 128)
 attacked_train_input_path = /data/attacks/vel_deepfool/train/
 attacked_valid_input_path = /data/attacks/vel_deepfool/valid/
-model_name = ResNet
 epochs = 100
 train_batch = 20
 valid_batch = 20
 gpu = 0
+learning_rate = 5e-05
+mode = advtrain
 model_save_path = /data/drum/model/
+input_shape = (129, 400, 128)
 trainloader_save_path = /data/drum/dataset/train/
 validloader_save_path = /data/drum/dataset/valid/
 valid_filename_save_path = /data/drum/dataset/val_filename/
-learning_rate = 5e-05
-mode = basetrain
+targeted = False
+attack_type = fgsm
+atk_model_path = /data/drum/bestmodel/model/
+save_attack = False
+specific_files = []
+t_or_v = v
+orig = True
+epsilons = [0.0]
+max_iter = 10
+overshoot = 5
+plot = False
+tempo_range = 1
