@@ -6,8 +6,7 @@ import os
 
 from trainer import Trainer
 from attacker import Attacker
-
-# from generator import Generator
+from generator import Generator
 
 
 def main(args):
@@ -24,7 +23,8 @@ def main(args):
         net.run()
 
     elif args.mode == "generate":
-        print("Not implemented")
+        net = Generator(args)
+        net.run()
 
     else:
         print('#### Please execute with mode: ex) --mode "basetrain"')

@@ -158,7 +158,7 @@ parser.add_argument(
     "--remove_drum", default=True, type=bool, help="remove drum track? (True / False)"
 )
 parser.add_argument(
-    "--midi_file_path",
+    "--midi_files_path",
     default="/data/genres/",
     type=str,
     help="dir to original files (absolute dir)",
@@ -170,7 +170,7 @@ parser.add_argument(
     help="save path (absolute dir)",
 )
 parser.add_argument(
-    "--time_series", default=400, type=int, help="x-dim length(1=0.05sec)"
+    "--input_generate_num", default=300, type=int, help="inputs per genre"
 )
 
 
