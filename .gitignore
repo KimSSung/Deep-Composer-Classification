@@ -5,6 +5,7 @@ no_use/
 other_models/
 .idea/
 __pycache__/
+old_versions/
 
 train/train_options/
 
