@@ -7,80 +7,16 @@ import sys
 
 
 class Converter:
-
-    # Instrument mapping for 'gm.dls' (Windows Default Soundfont)
-    # 50: Harmonica --> Piccolo, 57: Shehnai --> Clarinet
-    # program_num_map = {
-    #     0: 0,
-    #     1: 64,
-    #     2: 24,
-    #     3: 1,
-    #     4: 34,
-    #     5: 40,
-    #     6: 105,
-    #     7: 69,
-    #     8: 64,
-    #     9: 85,
-    #     10: 68,
-    #     11: 32,
-    #     12: 27,
-    #     13: 57,
-    #     14: 48,
-    #     15: 60,
-    #     16: 18,
-    #     17: 35,
-    #     18: 75,
-    #     19: 7,
-    #     20: 47,
-    #     21: 43,
-    #     22: 12,
-    #     23: 61,
-    #     24: 73,
-    #     25: 11,
-    #     26: 21,
-    #     27: 16,
-    #     28: 20,
-    #     29: 56,
-    #     30: 6,
-    #     31: 71,
-    #     32: 79,
-    #     33: 15,
-    #     34: 74,
-    #     35: 104,
-    #     36: 42,
-    #     37: 106,
-    #     38: 58,
-    #     39: 107,
-    #     40: 66,
-    #     41: 46,
-    #     42: 9,
-    #     43: 77,
-    #     44: 41,
-    #     45: 14,
-    #     46: 72,
-    #     47: 70,
-    #     48: 114,
-    #     49: 113,
-    #     50: 72,
-    #     51: 108,
-    #     52: 67,
-    #     53: 78,
-    #     54: 109,
-    #     55: 8,
-    #     56: 115,
-    #     57: 71,
-    #     58: 116,
-    #     59: 13,
-    # }
-
     def __init__(self, args):
         self.config = args
-        self.GENRES = ["Classical", "Rock", "Country"]
+        self.GENRES = ["Classical", "Rock", "Country", "GameMusic"]
+        self.atype = "origin"
         # self.csv_printable = self.cofnig.csv_printable
         self.csv_printable = True
 
         ### Set File directory
         # Get the Hedaer and other data at original Midi Data
+        self.ATTACK_PATH = "/data/inputs/"
         self.SAVED_NUMPY_PATH = "/data/midi820_128channel/"
         self.origin_midi_dir = "/data/3genres/"
         self.output_file_dir = "./attack2midi/converted/"
@@ -135,6 +71,27 @@ class Converter:
 
     def end_track_string(self, track_num, delta_time):
         return str(track_num) + ", " + str(delta_time) + ", End_track\n"
+
+    def run(self):
+
+        self.set_atype()
+        self.convert_genre()
+
+        return
+
+    def set_atype(self):
+
+        for file in os.listdir(self.ATTACK_PATH):
+            if os.path.isfile(os.path.join(self.ATTACK_PATH, file)):
+
+                # for simulation one music
+                if "vel" in file:
+                    self.atype = "vel"
+                elif "noise" in file:
+                    continue
+                else:  # origin input2midi
+                    self.atype = "origin"
+        return
 
     def convert_genre(self):
         # load npy for each genres

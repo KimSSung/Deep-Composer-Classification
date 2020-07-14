@@ -28,7 +28,7 @@ def main(args):
         net.run()
 
     elif args.mode == "convert":
-        net = Convertor(args)
+        net = Converter(args)
         net.run()
 
     else:
