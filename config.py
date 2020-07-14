@@ -69,7 +69,7 @@ parser.add_argument(
     "--mode",
     default="foo",  # force to input mode ^_^
     type=str,
-    help="Mode (basetrain / advtrain / attack / generate)",
+    help="Mode (basetrain / advtrain / attack / generate / converter)",
 )
 parser.add_argument(
     "--model_save_path", default="/data/drum/model/", type=str, help="Model saving path"
