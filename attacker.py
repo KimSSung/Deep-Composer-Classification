@@ -54,22 +54,21 @@ class Attacker:
             print("attack on TRAIN data")
             if orig:
                 self.data_loader = torch.load(
-                    self.config.trainloader_save_path + "train_loader.pt"
+                    self.config.atk_path + "dataset/train/train_loader.pt"
                 )
             else:
                 self.data_loader = torch.load(
-                    self.config.trainloader_save_path + "adv_train_loader.pt"
+                    self.config.atk_path + "dataset/train/adv_train_loader.pt"
                 )
         elif option is "v":
             print("attack on VALID data")
             if orig:
                 self.data_loader = torch.load(
-                    self.config.validloader_save_path
-                    + "valid_loader.pt"  # default config (orig + valid)
+                    self.config.atk_path + "dataset/test/train_loader.pt"
                 )
             else:
                 self.data_loader = torch.load(
-                    self.config.validloader_save_path + "adv_valid_loader_TandAT.pt"
+                    self.config.atk_path + "dataset/test/adv_valid_loader_TandAT.pt"
                 )
 
         self.split_data(spec_files)  # split into single batch (for attack)
