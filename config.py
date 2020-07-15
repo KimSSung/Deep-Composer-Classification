@@ -2,7 +2,7 @@
 
 import argparse
 
-# Basic Configuration
+# Configuration
 parser = argparse.ArgumentParser(description="Base Training")
 
 parser.add_argument(
@@ -67,9 +67,9 @@ parser.add_argument(
 ##shared parameters (train & attack)
 parser.add_argument(
     "--mode",
-    default="foo",  # force to input mode ^_^
+    default="foo", # force to input mode ^_^
     type=str,
-    help="Mode (basetrain / advtrain / attack / generate / converter)",
+    help="Mode (basetrain / advtrain / attack / generate)",
 )
 parser.add_argument(
     "--model_save_path", default="/data/drum/model/", type=str, help="Model saving path"
@@ -109,7 +109,7 @@ parser.add_argument(
     "--atk_path",
     default="/data/drum/bestmodel/",
     type=str,
-    help="model to be attacked (dir path)",
+    help="model and dataloader to be attacked. /model/ & /dataset/",
 )
 parser.add_argument(
     "--save_atk",
@@ -157,26 +157,6 @@ parser.add_argument(
 parser.add_argument("--plot", default=False, type=bool, help="draw plot?")
 parser.add_argument(
     "--tempo_range", default=1, type=int, help="+/-n tempo cells to attack"
-)
-
-##input generator
-parser.add_argument(
-    "--remove_drum", default=True, type=bool, help="remove drum track? (True / False)"
-)
-parser.add_argument(
-    "--midi_files_path",
-    default="/data/genres/",
-    type=str,
-    help="dir to original files (absolute dir)",
-)
-parser.add_argument(
-    "--input_save_path",
-    default="/data/inputs/",
-    type=str,
-    help="save path (absolute dir)",
-)
-parser.add_argument(
-    "--input_generate_num", default=300, type=int, help="inputs per genre"
 )
 
 
