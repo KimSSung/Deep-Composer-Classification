@@ -7,6 +7,7 @@ import os
 from trainer import Trainer
 from attacker import Attacker
 from generator import Generator
+from converter import Converter
 
 
 def main(args):
@@ -24,6 +25,10 @@ def main(args):
 
     elif args.mode == "generate":
         net = Generator(args)
+        net.run()
+
+    elif args.mode == "convert":
+        net = Converter(args)
         net.run()
 
     else:
