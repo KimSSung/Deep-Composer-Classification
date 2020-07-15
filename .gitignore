@@ -16,6 +16,7 @@ train/train_options/
 .npy
 test*.py
 temp.py
+confusion_matrix.py
 
 
 train/test*.py
