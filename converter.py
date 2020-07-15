@@ -9,14 +9,14 @@ import sys
 class Converter:
     def __init__(self, args):
         self.config = args
-        self.GENRES = ["Classical", "Rock", "Country", "GameMusic"]
+        # self.GENRES = ["Classical", "Rock", "Country", "GameMusic"] #unused?
         self.atype = "origin"
-        # self.csv_printable = self.cofnig.csv_printable
+        # self.csv_printable = self.config.csv_printable
         self.csv_printable = True
 
         ### Set File directory
-        # Get the Hedaer and other data at original Midi Data
-        self.ATTACK_PATH = "/data/inputs/"
+        # Get the Header and other data at original Midi Data
+        self.ATTACK_PATH = self.config.input_save_path
         self.SAVED_NUMPY_PATH = "/data/midi820_128channel/"
         self.origin_midi_dir = "/data/3genres/"
         self.output_file_dir = "./attack2midi/converted/"

@@ -106,16 +106,22 @@ parser.add_argument(
     "--attack_type", default="fgsm", type=str, help="attack (fgsm / deepfool / random)"
 )
 parser.add_argument(
-    "--atk_model_path",
-    default="/data/drum/bestmodel/model/",
+    "--atk_path",
+    default="/data/drum/bestmodel/",
     type=str,
     help="model to be attacked (dir path)",
 )
 parser.add_argument(
-    "--save_attack",
+    "--save_atk",
     default=False,
     type=bool,
     help="save some adversarial examples? (True / False)",
+)
+parser.add_argument(
+    "--save_atk_path",
+    default="/data/attacks/",
+    type=str,
+    help="Dir to save successful attacks",
 )
 
 # 2. data related
