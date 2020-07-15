@@ -165,6 +165,7 @@ class Attacker:
                 # TODO: save successful attacks
                 if self.config.save_atk:
                     np.save(self.config.save_atk_path + name, attack)
+                    print("saved: {}".format(name))
                 pass
 
         return len(self.input_total) - orig_wrong, atk_correct
