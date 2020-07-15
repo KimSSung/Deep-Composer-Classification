@@ -67,7 +67,7 @@ parser.add_argument(
 ##shared parameters (train & attack)
 parser.add_argument(
     "--mode",
-    default="foo", # force to input mode ^_^
+    default="foo",  # force to input mode ^_^
     type=str,
     help="Mode (basetrain / advtrain / attack / generate)",
 )
