@@ -1,4 +1,4 @@
-Parameters for advtrain:
+Parameters for basetrain:
 
 genres = ['Classical', 'Rock', 'Country', 'GameMusic']
 genre_datanum = 300
@@ -12,7 +12,7 @@ train_batch = 20
 valid_batch = 20
 gpu = 0
 learning_rate = 5e-05
-mode = advtrain
+mode = basetrain
 model_save_path = /data/drum/model/
 input_shape = (129, 400, 128)
 trainloader_save_path = /data/drum/dataset/train/
@@ -20,8 +20,9 @@ validloader_save_path = /data/drum/dataset/valid/
 valid_filename_save_path = /data/drum/dataset/val_filename/
 targeted = False
 attack_type = fgsm
-atk_model_path = /data/drum/bestmodel/model/
-save_attack = False
+atk_path = /data/drum/bestmodel/
+save_atk = False
+save_atk_path = /data/attacks/
 specific_files = []
 t_or_v = v
 orig = True
@@ -30,3 +31,8 @@ max_iter = 10
 overshoot = 5
 plot = False
 tempo_range = 1
+remove_drum = True
+midi_files_path = /data/genres/
+input_save_path = /data/inputs/
+input_generate_num = 300
+to_convert_path = /data/attacks/

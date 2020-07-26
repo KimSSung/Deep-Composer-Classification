@@ -41,8 +41,8 @@ class Attacker:
 
     def model_load(self):
         self.model.eval()
-        model_fname = os.listdir(self.config.atk_model_path)
-        checkpoint = torch.load(self.config.atk_model_path + model_fname[0])  # 명시
+        model_fname = os.listdir(self.config.atk_path + 'model/')
+        checkpoint = torch.load(self.config.atk_path + 'model/' + model_fname[0])  # 명시
         self.model.load_state_dict(checkpoint["model.state_dict"])
         print("==> MODEL LOADED")
         self.model = self.model.to(self.device)

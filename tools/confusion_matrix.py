@@ -7,7 +7,9 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-from data_loader import MIDIDataset
+
+from MIDIDataset import MIDIDataset
+
 
 
 # to import from sibling folders

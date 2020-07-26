@@ -109,7 +109,7 @@ parser.add_argument(
     "--atk_path",
     default="/data/drum/bestmodel/",
     type=str,
-    help="model to be attacked (dir path)",
+    help="model & data_loader to be attacked [/model/ & /dataset/]",
 )
 parser.add_argument(
     "--save_atk",
@@ -179,6 +179,12 @@ parser.add_argument(
     "--input_generate_num", default=300, type=int, help="inputs per genre"
 )
 
+
+##converter
+parser.add_argument(
+    "--to_convert_path", default="/data/attacks/", type=str,
+    help="Path for 'only MIDIs' to convert. MUST NOT contain any folder !!"
+)
 
 def get_config():
     config, unparsed = parser.parse_known_args()
