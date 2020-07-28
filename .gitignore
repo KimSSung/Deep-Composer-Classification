@@ -8,6 +8,7 @@ __pycache__/
 old_versions/
 
 train/train_options/
+*.git/
 
 # files #
 .wav
