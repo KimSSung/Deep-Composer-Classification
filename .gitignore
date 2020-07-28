@@ -16,7 +16,8 @@ train/train_options/
 .npy
 test*.py
 temp.py
-conf_matrix.png
 
 
 train/test*.py
+
+music.pk
