@@ -19,6 +19,7 @@ random.seed(123)
 class Generator:
     def __init__(self, args):
         self.config = args
+        self.song_dict = dict()
 
     def run(self):
 
@@ -26,7 +27,7 @@ class Generator:
         input_path = self.config.input_save_path
         data_list, composers = self.get_data_list(dataset_dir + 'maestro-v2.0.0_cleaned.csv')
 
-        for i,(composer, num) in enumerate(composers.items()): #enumerate over composers
+        for i,(composer, num) in tqdm(enumerate(composers.items())): #enumerate over composers
             if i==0: continue #TODO: just for test REMOVE!
             count_file = 0  # count files for each composer
 
@@ -36,20 +37,23 @@ class Generator:
                 track_comp, orig_name, file_name = data[0], data[1], data[2]
 
                 if track_comp is composer:
-                    fsave_dir = input_path + composer + '/' + orig_name #dir to save segments
+                    version = self.fetch_version(orig_name)
+                    print(self.song_dict)
+                    fsave_dir = input_path + 'Composer'+ str(i) + '/' + orig_name  #dir to save segments
                     try:
                         mid = self.open_midi(dataset_dir + data[2])
-                        segments = self.generate_segments(mid)  # list of segments
-                        if segments == -1:  # TODO: reformat as error
-                            print("ERROR: failed to segment {}\tSKIPPING...".format(file_name))
-                            continue
+
                     except:
                         print("ERROR: failed to open {}\tSKIPPING...".format(file_name))
 
                     else:
-                        # self.save_input(segments, fsave_dir, version_num)
+                        segments = self.generate_segments(mid)  # list of segments
+                        if segments == -1:  # TODO: reformat as error
+                            print("ERROR: failed to segment {}\tSKIPPING...".format(file_name))
+                            continue
+                        self.save_input(segments, fsave_dir, version)
                         count_file += 1
-                        print("{} success: {}".format(count_file, file_name))
+                        print("{} success: {} -> {}".format(count_file, file_name, orig_name))
 
         return
 
@@ -62,6 +66,16 @@ class Generator:
 
         return data_list, composers
 
+    def fetch_version(self, track):
+        version = 0
+        if track in self.song_dict:
+            version = self.song_dict[track]
+            self.song_dict[track] = version + 1 #update
+        else:
+            self.song_dict.update({track : 0})
+
+        return version
+
     def open_midi(self, file):
         mf = midi.MidiFile()
         mf.open(file)
@@ -69,12 +83,12 @@ class Generator:
         mf.close()
         return midi.translate.midiFileToStream(mf)
 
-    def save_input(self, matrices, save_dir, vn): #TODO: take care of diff versions of same song
+    def save_input(self, matrices, save_dir, vn):
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
         for i, mat in enumerate(matrices):
-            np.save(save_dir + "/ver" + vn + '_seg' + i, mat)  # save as .npy
+            np.save(save_dir + "/ver" + str(vn) + '_seg' + str(i), mat)  # save as .npy
         return
 
     def generate_segments(self, mid): #mid = each track(song)
@@ -104,7 +118,8 @@ class Generator:
             if track_seg < 10: # not used
                 return -1
             elif track_seg >= 10:
-                rnd_selected = random.sample(range(track_seg),10).sort #randomly select 10 segments
+                rnd_selected = random.sample(range(track_seg),10) #randomly select 10 segments
+                rnd_selected.sort()
                 for i in rnd_selected:
                     segment = [
                         [[0 for k in range(128)] for i in range(seg_length)] for j in range(2)
