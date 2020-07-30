@@ -161,11 +161,8 @@ parser.add_argument(
 
 ##input generator
 parser.add_argument(
-    "--remove_drum", default=True, type=bool, help="remove drum track? (True / False)"
-)
-parser.add_argument(
     "--midi_files_path",
-    default="/data/genres/",
+    default="/data/MAESTRO/maestro-v2.0.0/",
     type=str,
     help="dir to original files (absolute dir)",
 )
@@ -175,10 +172,6 @@ parser.add_argument(
     type=str,
     help="save path (absolute dir)",
 )
-parser.add_argument(
-    "--input_generate_num", default=300, type=int, help="inputs per genre"
-)
-
 
 ##converter
 parser.add_argument(
