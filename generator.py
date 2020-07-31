@@ -11,15 +11,16 @@ from config import get_config
 
 random.seed(123)
 ##for visualize
-# pd.set_option('display.max_rows', None)
-# pd.set_option('display.max_columns', None)
-# pd.set_option('display.width', None)
-# pd.set_option('display.max_colwidth', None)
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.width', None)
+pd.set_option('display.max_colwidth', None)
 
 class Generator:
     def __init__(self, args):
         self.config = args
         self.song_dict = dict()
+        self.name_id_map = pd.DataFrame(columns=['composer','composer_id','orig_name','midi_id']) #df to store mapped info
 
     def run(self):
 
@@ -27,54 +28,64 @@ class Generator:
         input_path = self.config.input_save_path
         data_list, composers = self.get_data_list(dataset_dir + 'maestro-v2.0.0_cleaned.csv')
 
-        for i,(composer, num) in tqdm(enumerate(composers.items())): #enumerate over composers
+        for i, composer in tqdm(enumerate(composers)):
             if i==0: continue #TODO: just for test REMOVE!
-            count_file = 0  # count files for each composer
+            success = 0  # count files for each composer
+            track_list = list() #for uniq track id
 
-            print("################################## {} ####################################".format(composer))
+            print("\n################################## {} ####################################\n".format(composer))
 
             for data in data_list:
                 track_comp, orig_name, file_name = data[0], data[1], data[2]
 
                 if track_comp is composer:
-                    version = self.fetch_version(orig_name)
-                    print(self.song_dict)
-                    fsave_dir = input_path + 'Composer'+ str(i) + '/' + orig_name  #dir to save segments
                     try:
                         mid = self.open_midi(dataset_dir + data[2])
-
-                    except:
-                        print("ERROR: failed to open {}\tSKIPPING...".format(file_name))
-
-                    else:
                         segments = self.generate_segments(mid)  # list of segments
                         if segments == -1:  # TODO: reformat as error
-                            print("ERROR: failed to segment {}\tSKIPPING...".format(file_name))
+                            print("ERROR occurred while generating segments {}\tSKIPPING...".format(file_name))
                             continue
-                        self.save_input(segments, fsave_dir, version)
-                        count_file += 1
-                        print("{} success: {} -> {}".format(count_file, file_name, orig_name))
+                    except:
+                        print("ERROR occurred while opening {}\tSKIPPING...".format(file_name))
+                    else:
+                        version = self.fetch_version(orig_name)
+                        track_id = self.fetch_id(track_list, orig_name) #assign uniq id to midi
+                        fsave_dir = input_path + 'composer' + str(i) + '/midi' + str(track_id)
+
+                        # self.save_input(segments, fsave_dir, version)
+                        self.name_id_map = self.name_id_map.append({'composer': composer, 'composer_id': i, 'orig_name': orig_name, 'midi_id': track_id}, ignore_index=True)
+
+                        #print result
+                        success += 1
+                        print("{} success: {} => {} => midi{}_ver{}".format(success, file_name, orig_name, track_id, version))
+
+        #save mapped list
+        print(self.name_id_map)
+        self.name_id_map.to_csv(input_path + "name_id_map.csv", sep=',')
 
         return
 
     def get_data_list(self, fdir): #return preprocessed list of paths
         data = pd.read_csv(fdir) #cleaned csv
         data = data.drop(['split', 'year', 'audio_filename', 'duration'], axis=1) #drop unnecessary columns
-
         data_list = list(zip(data['canonical_composer'], data['canonical_title'], data['midi_filename']))
-        composers = dict(data['canonical_composer'].value_counts())
+        composers = data['canonical_composer'].unique()
 
         return data_list, composers
 
     def fetch_version(self, track):
-        version = 0
         if track in self.song_dict:
-            version = self.song_dict[track]
-            self.song_dict[track] = version + 1 #update
+            self.song_dict[track] = self.song_dict[track] + 1 #update
         else:
             self.song_dict.update({track : 0})
 
-        return version
+        return self.song_dict[track]
+
+    def fetch_id(self, lookup, name):
+        if name not in lookup:
+            lookup.append(name)
+
+        return lookup.index(name)
 
     def open_midi(self, file):
         mf = midi.MidiFile()
@@ -88,7 +99,7 @@ class Generator:
             os.makedirs(save_dir)
 
         for i, mat in enumerate(matrices):
-            np.save(save_dir + "/ver" + str(vn) + '_seg' + str(i), mat)  # save as .npy
+            np.save(save_dir + '/ver' + str(vn) + '_seg' + str(i), mat)  # save as .npy
         return
 
     def generate_segments(self, mid): #mid = each track(song)
