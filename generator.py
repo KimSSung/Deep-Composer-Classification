@@ -49,6 +49,7 @@ class Generator:
                         print("ERROR occurred while opening {}\tSKIPPING...".format(file_name))
                     else:
                         version = self.fetch_version(orig_name)
+                        print(self.song_dict)
                         track_id = self.fetch_id(track_list, orig_name) #assign uniq id to midi
                         fsave_dir = input_path + 'composer' + str(i) + '/midi' + str(track_id)
 
@@ -74,6 +75,7 @@ class Generator:
         return data_list, composers
 
     def fetch_version(self, track):
+        track = track.lower() #case-insensitive comparison
         if track in self.song_dict:
             self.song_dict[track] = self.song_dict[track] + 1 #update
         else:
