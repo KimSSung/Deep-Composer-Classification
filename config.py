@@ -175,9 +175,12 @@ parser.add_argument(
 
 ##converter
 parser.add_argument(
-    "--to_convert_path", default="/data/attacks/", type=str,
-    help="Path for 'only MIDIs' to convert. MUST NOT contain any folder !!"
+    "--to_convert_path",
+    default="/data/attacks/",
+    type=str,
+    help="Path for 'only MIDIs' to convert. MUST NOT contain any folder !!",
 )
+
 
 def get_config():
     config, unparsed = parser.parse_known_args()
