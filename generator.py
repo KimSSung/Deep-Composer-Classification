@@ -94,7 +94,7 @@ class Generator:
                             input_path + "composer" + str(i) + "/midi" + str(track_id)
                         )
 
-                        # self.save_input(segments, fsave_dir, version)
+                        self.save_input(segments, fsave_dir, version)
                         self.name_id_map = self.name_id_map.append(
                             {
                                 "composer": composer,
@@ -114,7 +114,7 @@ class Generator:
                         )
 
         # save mapped list
-        print(self.name_id_map)
+        # print(self.name_id_map)
         self.name_id_map.to_csv(input_path + "name_id_map.csv", sep=",")
 
         return
@@ -194,39 +194,39 @@ class Generator:
             track_seg = int(track_dur / 20)
             seg_length = 400  # 20 seconds
 
-            if track_seg < 10:  # not used
+            if track_seg < 10:  # 4. not enough segments
                 return -1
             elif track_seg >= 10:
                 rnd_selected = random.sample(
                     range(track_seg), 10
                 )  # randomly select 10 segments
                 rnd_selected.sort()
-                for i in rnd_selected:
+
+                for i in rnd_selected:  # iterate: each segment
                     segment = [
                         [[0 for k in range(128)] for i in range(seg_length)]
                         for j in range(2)
                     ]
 
-                    start, end = i * 20, (i + 1) * 20
+                    start, end = i * 20, (i + 1) * 20  # segment's start & end seconds
                     for j, note in enumerate(
                         zip(on, off, dur, pitch, vel)
-                    ):  # zip lists
+                    ):  # iterate: each note
 
                         x_index = int((note[0] - start) / 0.05)  # time
                         y_index = int(note[3])  # pitch
 
-                        # note
-                        # if note[0] > end and note[1] < start: continue
                         if (note[0] >= start and note[0] < end) or (
                             note[1] > start and note[1] <= end
-                        ):
+                        ):  # if note belongs to current segment
                             for t in range(
                                 int(note[2] / 0.05)
-                            ):  # mark all cells in duration
+                            ):  # iterate: each 0.05 unit of a single note's duration
                                 if (x_index + t) >= 400:
                                     break
                                 segment[1][x_index + t][y_index] = int(note[4])
-                        # onset
+
+                        # onset (binary)
                         if note[0] >= start and note[0] < end:
                             segment[0][x_index][y_index] = 1
 
@@ -258,10 +258,10 @@ class Generator:
 
 ########################################
 # Testing
-config, unparsed = get_config()
+# config, unparsed = get_config()
 # for arg in vars(config):
 #     argname = arg
 #     contents = str(getattr(config, arg))
 # print(argname + " = " + contents)
-temp = Generator(config)
-temp.run()
+# temp = Generator(config)
+# temp.run()
