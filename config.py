@@ -6,31 +6,38 @@ import argparse
 parser = argparse.ArgumentParser(description="Base Training")
 
 parser.add_argument(
-    "--genres",
-    default=["Classical", "Rock", "Country", "GameMusic"],
-    type=list,
-    help="Genres",
+    "--composers",
+    default=13,
+    type=int,
+    help="The number of composers.",
 )
 parser.add_argument(
-    "--genre_datanum", default=300, type=int, help="The number of data per each genre."
+    "--model_name", type=str, default="resnet50",
+    help="Prefix of model name (resnet18 / resnet34 / resnet50 / resnet101 / resnet152 / convnet)"
 )
 parser.add_argument(
-    "--model_name", type=str, default="ResNet", help="Prefix of model name."
+    "--train_split_path", type=str, default='/data/split/train.txt',
+    help="Path of train.txt (train split text file)"
+)
+parser.add_argument(
+    "--test_split_path", type=str, default='/data/split/test.txt',
+    help="Path of test.txt (test split text file)"
 )
 
-# base input
-parser.add_argument(
-    "--train_input_path",
-    type=str,
-    default="/data/midi820_400/train/",
-    help="Train input directory.",
-)
-parser.add_argument(
-    "--valid_input_path",
-    type=str,
-    default="/data/midi820_400/valid/",
-    help="Valid input directory.",
-)
+
+# # base input
+# parser.add_argument(
+#     "--train_input_path",
+#     type=str,
+#     default="/data/midi820_400/train/",
+#     help="Train input directory.",
+# )
+# parser.add_argument(
+#     "--valid_input_path",
+#     type=str,
+#     default="/data/midi820_400/valid/",
+#     help="Valid input directory.",
+# )
 
 # attacked input
 parser.add_argument(
@@ -53,14 +60,14 @@ parser.add_argument(
     help="Total number of epochs to run. Not actual epoch.",
 )
 parser.add_argument(
-    "--train_batch", default=20, type=int, help="Batch size for training"
+    "--train_batch", default=40, type=int, help="Batch size for training"
 )
 parser.add_argument("--valid_batch", default=20, type=int, help="Batch size for valid.")
 
 parser.add_argument("--gpu", default="0", type=str, help="GPU id to use.")
 
 parser.add_argument(
-    "--learning_rate", default=0.00005, type=float, help="Model learning rate."
+    "--lr", default=0.00005, type=float, help="Model learning rate."
 )
 
 
@@ -75,7 +82,7 @@ parser.add_argument(
     "--model_save_path", default="/data/drum/model/", type=str, help="Model saving path"
 )
 parser.add_argument(
-    "--input_shape", default=(129, 400, 128), type=tuple, help="Input shape."
+    "--input_shape", default=(2, 400, 128), type=tuple, help="Input shape."
 )
 parser.add_argument(
     "--trainloader_save_path",
@@ -85,15 +92,9 @@ parser.add_argument(
 )
 parser.add_argument(
     "--validloader_save_path",
-    default="/data/drum/dataset/valid/",
+    default="/data/drum/dataset/test/",
     type=str,
-    help="Valid loader saving path",
-)
-parser.add_argument(
-    "--valid_filename_save_path",
-    default="/data/drum/dataset/val_filename/",
-    type=str,
-    help="Valid loader file name saving path",
+    help="Test loader saving path",
 )
 
 

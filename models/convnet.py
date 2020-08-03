@@ -9,9 +9,9 @@ k = 3  # kernel size
 p = 3  # pool size
 
 
-class CustomCNN(nn.Module):
+class convnet(nn.Module):
     def __init__(self, input_size, num_genres):
-        super(CustomCNN, self).__init__()
+        super(convnet, self).__init__()
         self.input_size = input_size
         self.output_size = num_genres
 

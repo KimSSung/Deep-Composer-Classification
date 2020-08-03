@@ -1,5 +1,7 @@
 from sklearn.metrics import confusion_matrix, plot_confusion_matrix
-from matplotlib import pyplot
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 import sys
 import os
 import torch
@@ -8,17 +10,16 @@ import torch.nn as nn
 import numpy as np
 
 
-from MIDIDataset import MIDIDataset
+from data_loader import MIDIDataset
 
 
 # to import from sibling folders
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 # print(sys.path)
 
-from models.resnet import resnet18, resnet101, resnet152, resnet50
+from models.resnet import resnet18, resnet34, resnet101, resnet152, resnet50
 
-genres = ["Classical", "Rock", "Country", "GameMusic"]
-model = resnet50(129, len(genres))
+model = resnet18(2, 13)
 
 model_fname = os.listdir("/data/drum/bestmodel/model/")
 checkpoint = torch.load("/data/drum/bestmodel/model/" + model_fname[0])
@@ -36,7 +37,7 @@ with torch.no_grad():  # important!!! for validation
     model.eval()
 
     for j, valset in enumerate(test_loader):
-        val_in, val_out, file_name = valset
+        val_in, val_out = valset
 
         # predict
         val_pred = model(val_in)
@@ -52,3 +53,17 @@ with torch.no_grad():  # important!!! for validation
 conf = confusion_matrix(y_true, y_pred)
 print(">>> CONFUSION MATRIX:")
 print(conf)
+
+# fig, ax = plt.subplots()
+# im = ax.imshow(conf)
+# ax.set_title("Confusion matrix [13 composers]")
+# fig.tight_layout()
+# plt.savefig('confmat.png', dpi=300)
+
+
+axis_labels = ['Scriab','Debus','Scarl','Liszt','Schube','Chop','Bach','Brahm','Haydn','Beethov','Schum','Rach','Moza'] # labels for x-axis
+
+sns.heatmap(conf, annot=True, annot_kws={'size': 10},  fmt="d", xticklabels=axis_labels, yticklabels=axis_labels, cmap=plt.cm.bone)
+
+plt.title('Confusion Matrix => [x : Pred, y : True]')
+plt.savefig('confmat.png', dpi=700)
