@@ -54,6 +54,19 @@ conf = confusion_matrix(y_true, y_pred)
 print(">>> CONFUSION MATRIX:")
 print(conf)
 
+normalize = True
+val_format = "" # heatmap print value format
+if normalize:
+    conf= np.round(conf.astype('float') / conf.sum(axis=1)[:, np.newaxis], 2)
+    print(">>> Normalized confusion matrix:")
+    print(conf)
+    val_format = ".2f"
+
+else:
+    print('Confusion matrix, without normalization')
+    val_format = "d"
+
+
 # fig, ax = plt.subplots()
 # im = ax.imshow(conf)
 # ax.set_title("Confusion matrix [13 composers]")
@@ -63,7 +76,7 @@ print(conf)
 
 axis_labels = ['Scriab','Debus','Scarl','Liszt','Schube','Chop','Bach','Brahm','Haydn','Beethov','Schum','Rach','Moza'] # labels for x-axis
 
-sns.heatmap(conf, annot=True, annot_kws={'size': 10},  fmt="d", xticklabels=axis_labels, yticklabels=axis_labels, cmap=plt.cm.bone)
+sns.heatmap(conf, annot=True, annot_kws={'size': 7},  fmt=val_format, xticklabels=axis_labels, yticklabels=axis_labels, cmap=plt.cm.bone)
 
 plt.title('Confusion Matrix => [x : Pred, y : True]')
 plt.savefig('confmat.png', dpi=700)

@@ -63,17 +63,17 @@ class Trainer:
 
 	def model_selection(self):
 		if self.config.model_name == 'resnet18':
-			return resnet18(self.config.input_shape[0], self.config.composers)
+			return resnet18(int(self.config.input_shape[0]), self.config.composers)
 		elif self.config.model_name == 'resnet34':
-			return resnet34(self.config.input_shape[0], self.config.composers)
+			return resnet34(int(self.config.input_shape[0]), self.config.composers)
 		elif self.config.model_name == 'resnet50':
-			return resnet50(self.config.input_shape[0], self.config.composers)
+			return resnet50(int(self.config.input_shape[0]), self.config.composers)
 		elif self.config.model_name == 'resnet101':
-			return resnet101(self.config.input_shape[0], self.config.composers)
+			return resnet101(int(self.config.input_shape[0]), self.config.composers)
 		elif self.config.model_name == 'resnet152':
-			return resnet152(self.config.input_shape[0], self.config.composers)
+			return resnet152(int(self.config.input_shape[0]), self.config.composers)
 		elif self.config.model_name == 'convnet':
-			return convnet(self.config.input_shape[0], self.config.composers)
+			return convnet(int(self.config.input_shape[0]), self.config.composers)
 
 	def data_load(self, mode):
 		if mode == "basetrain":
@@ -218,6 +218,10 @@ class Trainer:
 
 		self.set_mode("train")  # model.train()
 
+		# print input shape
+		print("\nInput shape:", self.config.input_shape)
+		print()
+
 		# train
 		for epoch in range(self.config.epochs+1):
 
@@ -231,8 +235,18 @@ class Trainer:
 
 				# unpack
 				train_in, train_out = trainset
-				# print(train_in.shape)
-				# print(train_out.shape)
+
+				##### Optional: Remove onset channel = [0]
+				##### Run here when --input_shape 1,400,128
+				if int(self.config.input_shape[0]) == 1:
+					# if torch.sum(train_in[:,1:,:,:]) < torch.sum(train_in[:,:1,:,:]): print("1 is onset")
+					train_in = train_in[:,1:,:,:] # note channel
+					# print(train_in.shape)
+					# print(train_out.shape)
+				
+				################################################################
+				
+				
 				# use GPU
 				train_in = train_in.to(self.device)
 				train_out = train_out.to(self.device)
@@ -403,6 +417,16 @@ class Trainer:
 			for j, valset in enumerate(test_loader):
 				val_in, val_out = valset
 
+				##### Optional: Remove onset channel = [0]
+				##### Run here when --input_shape 1,400,128
+				if int(self.config.input_shape[0]) == 1:
+					# if torch.sum(train_in[:,1:,:,:]) < torch.sum(train_in[:,:1,:,:]): print("1 is onset")
+					val_in = val_in[:,1:,:,:] # note channel
+					# print(val_in.shape)
+					# print(train_out.shape)
+				
+				################################################################
+
 				# to GPU
 				val_in = val_in.to(self.device)
 				val_out = val_out.to(self.device)
@@ -425,12 +449,12 @@ class Trainer:
 				val_preds.extend(val_label_pred.tolist())
 				val_ground_truths.extend(val_out.tolist())
 
-				print(
-					"correct: {}, total: {}, acc: {}".format(
-						val_correct, val_total,
-						f1_score(val_out.tolist(), val_label_pred.tolist(), average='weighted')  * 100
-					)
-				)
+				# print(
+				# 	"correct: {}, total: {}, f1-score: {}".format(
+				# 		val_correct, val_total,
+				# 		f1_score(val_out.tolist(), val_label_pred.tolist(), average='weighted')  * 100
+				# 	)
+				# )
 				
 			avg_valloss = val_loss / len(test_loader)
 			avg_valacc = f1_score(val_ground_truths, val_preds, average='weighted') * 100
