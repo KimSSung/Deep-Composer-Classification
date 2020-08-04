@@ -6,22 +6,25 @@ import argparse
 parser = argparse.ArgumentParser(description="Base Training")
 
 parser.add_argument(
-    "--composers",
-    default=13,
-    type=int,
-    help="The number of composers.",
+    "--composers", default=13, type=int, help="The number of composers.",
 )
 parser.add_argument(
-    "--model_name", type=str, default="resnet50",
-    help="Prefix of model name (resnet18 / resnet34 / resnet50 / resnet101 / resnet152 / convnet)"
+    "--model_name",
+    type=str,
+    default="resnet50",
+    help="Prefix of model name (resnet18 / resnet34 / resnet50 / resnet101 / resnet152 / convnet)",
 )
 parser.add_argument(
-    "--train_split_path", type=str, default='/data/split/train.txt',
-    help="Path of train.txt (train split text file)"
+    "--train_split_path",
+    type=str,
+    default="/data/split/train.txt",
+    help="Path of train.txt (train split text file)",
 )
 parser.add_argument(
-    "--test_split_path", type=str, default='/data/split/test.txt',
-    help="Path of test.txt (test split text file)"
+    "--test_split_path",
+    type=str,
+    default="/data/split/test.txt",
+    help="Path of test.txt (test split text file)",
 )
 
 
@@ -66,9 +69,7 @@ parser.add_argument("--valid_batch", default=20, type=int, help="Batch size for 
 
 parser.add_argument("--gpu", default="0", type=str, help="GPU id to use.")
 
-parser.add_argument(
-    "--lr", default=0.00005, type=float, help="Model learning rate."
-)
+parser.add_argument("--lr", default=0.00005, type=float, help="Model learning rate.")
 
 
 ##shared parameters (train & attack)

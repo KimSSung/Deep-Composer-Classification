@@ -61,9 +61,31 @@ print(conf)
 # plt.savefig('confmat.png', dpi=300)
 
 
-axis_labels = ['Scriab','Debus','Scarl','Liszt','Schube','Chop','Bach','Brahm','Haydn','Beethov','Schum','Rach','Moza'] # labels for x-axis
+axis_labels = [
+    "Scriab",
+    "Debus",
+    "Scarl",
+    "Liszt",
+    "Schube",
+    "Chop",
+    "Bach",
+    "Brahm",
+    "Haydn",
+    "Beethov",
+    "Schum",
+    "Rach",
+    "Moza",
+]  # labels for x-axis
 
-sns.heatmap(conf, annot=True, annot_kws={'size': 10},  fmt="d", xticklabels=axis_labels, yticklabels=axis_labels, cmap=plt.cm.bone)
+sns.heatmap(
+    conf,
+    annot=True,
+    annot_kws={"size": 10},
+    fmt="d",
+    xticklabels=axis_labels,
+    yticklabels=axis_labels,
+    cmap=plt.cm.bone,
+)
 
-plt.title('Confusion Matrix => [x : Pred, y : True]')
-plt.savefig('confmat.png', dpi=700)
+plt.title("Confusion Matrix => [x : Pred, y : True]")
+plt.savefig("confmat.png", dpi=700)
