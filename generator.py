@@ -80,11 +80,7 @@ class Generator:
                         segments = self.generate_segments(mid)  # list of segments
                         if type(segments) is int:
                             self.errors[segments].append(file_name)
-                            # print(
-                            #     "ERROR occurred while generating segments {}\tSKIPPING...".format(
-                            #         file_name
-                            #     )
-                            # )
+                            self.print_error(segments, file_name)
                             continue
                     except:
                         print(
@@ -100,8 +96,8 @@ class Generator:
                         fsave_dir = (
                             input_path + "composer" + str(i) + "/midi" + str(track_id)
                         )
-
                         # self.save_input(segments, fsave_dir, version)
+
                         self.name_id_map = self.name_id_map.append(
                             {
                                 "composer": composer,
@@ -121,7 +117,7 @@ class Generator:
                         )
 
         # save mapped list
-        self.name_id_map.to_csv(input_path + "name_id_map.csv", sep=",")
+        # self.name_id_map.to_csv(input_path + "name_id_map.csv", sep=",")
 
         # print error records
         print("#####ERROR RECORDS#####")
@@ -146,24 +142,6 @@ class Generator:
 
         return data_list, composers
 
-    def fetch_version(self, track):
-        track = track.lower()  # case-insensitive comparison
-        track = track.translate(str.maketrans(self.chars))  # remove symbols
-        if track in self.song_dict:
-            self.song_dict[track] = self.song_dict[track] + 1  # update
-        else:
-            self.song_dict.update({track: 0})
-
-        return self.song_dict[track]
-
-    def fetch_id(self, lookup, name):
-        name = name.lower()  # case-insensitive comparison
-        name = name.translate(str.maketrans(self.chars))  # remove symbols
-        if name not in lookup:
-            lookup.append(name)
-
-        return lookup.index(name)
-
     def open_midi(self, file):
         mf = midi.MidiFile()
         mf.open(file)
@@ -175,7 +153,6 @@ class Generator:
 
         stm_instr = instrument.partitionByInstrument(mid)
         if stm_instr == None:  # 1. no tracks in stream
-            print("ERROR1: No tracks found...")
             return 1
 
         generated_input = []
@@ -194,28 +171,24 @@ class Generator:
             ##segmentation
             track_dur = off[len(off) - 1]
             seg_loc_list = self.get_seg_loc(self.config.overlap, track_dur)
-            track_seg = len(seg_loc_list)
-            seg_length = 400  # 20 seconds = 400 x 0.05sec
 
-            if track_seg < self.config.segment_num:  # 4. not enough segments
+            if len(seg_loc_list) < self.config.segment_num:  # 4. not enough segments
                 return 4
             else:
                 rnd_selected = random.sample(
-                    track_seg, self.config.segment_num
+                    seg_loc_list, self.config.segment_num
                 )  # randomly select n segments
                 rnd_selected.sort()
+                print(rnd_selected)
 
                 for pair in rnd_selected:  # iterate: each segment tuple (start, end)
                     segment = [
-                        [[0 for k in range(128)] for i in range(seg_length)]
-                        for j in range(2)
+                        [[0 for k in range(128)] for i in range(400)] for j in range(2)
                     ]  # 2 x 400 x 128
 
-                    # start, end = i * 20, (i + 1) * 20  # segment's start & end seconds
                     start, end = pair[0], pair[1]
-                    for j, note in enumerate(
-                        zip(on, off, dur, pitch, vel)
-                    ):  # iterate: each note
+                    # iterate: each note
+                    for j, note in enumerate(zip(on, off, dur, pitch, vel)):
 
                         x_index = int((note[0] - start) / 0.05)  # time
                         y_index = int(note[3])  # pitch
@@ -276,6 +249,24 @@ class Generator:
 
         return seg_pairs
 
+    def fetch_version(self, track):
+        track = track.lower()  # case-insensitive comparison
+        track = track.translate(str.maketrans(self.chars))  # remove symbols
+        if track in self.song_dict:
+            self.song_dict[track] = self.song_dict[track] + 1  # update
+        else:
+            self.song_dict.update({track: 0})
+
+        return self.song_dict[track]
+
+    def fetch_id(self, lookup, name):
+        name = name.lower()  # case-insensitive comparison
+        name = name.translate(str.maketrans(self.chars))  # remove symbols
+        if name not in lookup:
+            lookup.append(name)
+
+        return lookup.index(name)
+
     def save_input(self, matrices, save_dir, vn):
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
@@ -284,13 +275,24 @@ class Generator:
             np.save(save_dir + "/ver" + str(vn) + "_seg" + str(i), mat)  # save as .npy
         return
 
+    def print_error(self, code, fname):
+        if code == 1:
+            print("ERROR{}: no tracks found".format(code, fname))
+        if code == 2:
+            print("ERROR{}: instr not mapped to piano".format(code, fname))
+        if code == 3:
+            print("ERROR{}: no notes found".format(code, fname))
+        if code == 4:
+            print("ERROR{}: not enough segments".format(code, fname))
+        return
+
 
 ########################################
 # Testing
-# config, unparsed = get_config()
+config, unparsed = get_config()
 # for arg in vars(config):
 #     argname = arg
 #     contents = str(getattr(config, arg))
 # print(argname + " = " + contents)
-# temp = Generator(config)
-# temp.run()
+temp = Generator(config)
+temp.run()

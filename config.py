@@ -171,13 +171,13 @@ parser.add_argument(
 )
 parser.add_argument(
     "--input_save_path",
-    default="/data/inputs/",
+    default="/data/inputs_overlap/",
     type=str,
     help="save path (absolute dir)",
 )
 
 parser.add_argument(
-    "--overlap", default=False, type=bool, help="enable 50% overlap?",
+    "--overlap", default=True, type=bool, help="enable 50% overlap?",
 )
 
 parser.add_argument(
