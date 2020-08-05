@@ -83,20 +83,17 @@ class Generator:
                             self.print_error(segments, file_name)
                             continue
                     except:
-                        print(
-                            "ERROR occurred while opening {}\tSKIPPING...".format(
-                                file_name
-                            )
-                        )
+                        print("ERROR: failed to open {}\t".format(file_name))
                     else:
                         version = self.fetch_version(orig_name)
                         track_id = self.fetch_id(
                             track_list, orig_name
                         )  # assign uniq id to midi
+
                         fsave_dir = (
                             input_path + "composer" + str(i) + "/midi" + str(track_id)
                         )
-                        # self.save_input(segments, fsave_dir, version)
+                        # self.save_input(segments, fsave_dir, version) #TODO: enable
 
                         self.name_id_map = self.name_id_map.append(
                             {
@@ -117,12 +114,14 @@ class Generator:
                         )
 
         # save mapped list
-        # self.name_id_map.to_csv(input_path + "name_id_map.csv", sep=",")
+        # self.name_id_map.to_csv(input_path + "name_id_map.csv", sep=",") #TODO: enable
 
         # print error records
         print("#####ERROR RECORDS#####")
-        for i, err in enumerate(self.errors):
-            print("error{}: {}".format(i, len(err[1])))
+        for index, (code, names) in enumerate(self.errors.items()):
+            print("error{}: {}".format(code, len(names)))  # value = list()
+            for j, song in enumerate(names):
+                print("{}".format(song))  # print each midi name
 
         return
 
@@ -179,7 +178,6 @@ class Generator:
                     seg_loc_list, self.config.segment_num
                 )  # randomly select n segments
                 rnd_selected.sort()
-                print(rnd_selected)
 
                 for pair in rnd_selected:  # iterate: each segment tuple (start, end)
                     segment = [

@@ -171,14 +171,12 @@ parser.add_argument(
 )
 parser.add_argument(
     "--input_save_path",
-    default="/data/inputs_overlap/",
+    default="/data/inputs_new/",  # to avoid overwriting
     type=str,
     help="save path (absolute dir)",
 )
 
-parser.add_argument(
-    "--overlap", default=True, type=bool, help="enable 50% overlap?",
-)
+parser.add_argument("--overlap", default=False, type=bool, help="enable 50% overlap?")
 
 parser.add_argument(
     "--segment_num", default=10, type=int, help="how many segments per midi?"
