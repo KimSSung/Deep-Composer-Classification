@@ -53,6 +53,39 @@ with torch.no_grad():  # important!!! for validation
 conf = confusion_matrix(y_true, y_pred)
 print(">>> CONFUSION MATRIX:")
 print(conf)
+# print(type(conf))
+
+# Sorting by age
+# ['Scriab','Debus','Scarl','Liszt','Schube','Chop','Bach',
+#  'Brahm','Haydn','Beethov','Schum','Rach','Moza']
+# 1. Baroque: Scarlatti / Bach => [2, 6]
+# 2. Classical: Haydn / Mozart / Beethoven / Schubert => [4, 8, 9, 12]
+# 3. Romanticism: Schumann / Chopin / Liszt / Brahms / Debussy
+#                 / Rachmaninoff / Scriabin => [0, 1, 3, 5, 7, 10, 11]
+axis_labels = np.array(['Scriab','Debus','Scarl','Liszt','Schube','Chop',
+                'Bach','Brahm','Haydn','Beethov','Schum','Rach','Moza'])
+
+want_order = [2, 6, 4, 8, 9, 12, 0, 1, 3, 5, 7, 10, 11]
+
+
+sort = True
+if sort:
+    conf = conf[want_order, :][:, want_order]
+    axis_labels = axis_labels[want_order]
+
+
+normalize = True
+val_format = "" # heatmap print value format
+if normalize:
+    conf= np.round(conf.astype('float') / conf.sum(axis=1)[:, np.newaxis], 2)
+    print(">>> Normalized confusion matrix:")
+    print(conf)
+    val_format = ".2f"
+
+else:
+    print('Confusion matrix, without normalization')
+    val_format = "d"
+
 
 # fig, ax = plt.subplots()
 # im = ax.imshow(conf)
@@ -61,31 +94,7 @@ print(conf)
 # plt.savefig('confmat.png', dpi=300)
 
 
-axis_labels = [
-    "Scriab",
-    "Debus",
-    "Scarl",
-    "Liszt",
-    "Schube",
-    "Chop",
-    "Bach",
-    "Brahm",
-    "Haydn",
-    "Beethov",
-    "Schum",
-    "Rach",
-    "Moza",
-]  # labels for x-axis
+sns.heatmap(conf, annot=True, annot_kws={'size': 7},  fmt=val_format, xticklabels=axis_labels, yticklabels=axis_labels, cmap=plt.cm.bone)
 
-sns.heatmap(
-    conf,
-    annot=True,
-    annot_kws={"size": 10},
-    fmt="d",
-    xticklabels=axis_labels,
-    yticklabels=axis_labels,
-    cmap=plt.cm.bone,
-)
-
-plt.title("Confusion Matrix => [x : Pred, y : True]")
-plt.savefig("confmat.png", dpi=700)
+plt.title('Confusion Matrix => [x : Pred, y : True]')
+plt.savefig('confmat.png', dpi=700)
