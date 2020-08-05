@@ -47,10 +47,10 @@ class Generator:
             columns=["composer", "composer_id", "orig_name", "midi_id"]
         )  # df to store mapped info
         self.errors = {
-            "1": list(),
-            "2": list(),
-            "3": list(),
-            "4": list(),
+            1: list(),
+            2: list(),
+            3: list(),
+            4: list(),
         }  # mark errors
 
     def run(self):
@@ -78,13 +78,13 @@ class Generator:
                     try:
                         mid = self.open_midi(dataset_dir + data[2])
                         segments = self.generate_segments(mid)  # list of segments
-                        if type(segments) is int:
-                            self.errors[segments].append(file_name)
-                            self.print_error(segments, file_name)
-                            continue
                     except:
                         print("ERROR: failed to open {}\t".format(file_name))
                     else:
+                        if isinstance(segments, int):
+                            self.errors[segments].append(file_name)
+                            self.print_error(segments, file_name)
+                            continue
                         version = self.fetch_version(orig_name)
                         track_id = self.fetch_id(
                             track_list, orig_name
@@ -93,7 +93,7 @@ class Generator:
                         fsave_dir = (
                             input_path + "composer" + str(i) + "/midi" + str(track_id)
                         )
-                        # self.save_input(segments, fsave_dir, version) #TODO: enable
+                        self.save_input(segments, fsave_dir, version)  # TODO: enable
 
                         self.name_id_map = self.name_id_map.append(
                             {
@@ -114,10 +114,10 @@ class Generator:
                         )
 
         # save mapped list
-        # self.name_id_map.to_csv(input_path + "name_id_map.csv", sep=",") #TODO: enable
+        self.name_id_map.to_csv(input_path + "name_id_map.csv", sep=",")  # TODO: enable
 
         # print error records
-        print("#####ERROR RECORDS#####")
+        print("\n\n#####ERROR RECORDS#####")
         for index, (code, names) in enumerate(self.errors.items()):
             print("error{}: {}".format(code, len(names)))  # value = list()
             for j, song in enumerate(names):
