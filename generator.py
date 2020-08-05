@@ -46,6 +46,12 @@ class Generator:
         self.name_id_map = pd.DataFrame(
             columns=["composer", "composer_id", "orig_name", "midi_id"]
         )  # df to store mapped info
+        self.errors = {
+            "1": list(),
+            "2": list(),
+            "3": list(),
+            "4": list(),
+        }  # mark errors
 
     def run(self):
 
@@ -72,12 +78,13 @@ class Generator:
                     try:
                         mid = self.open_midi(dataset_dir + data[2])
                         segments = self.generate_segments(mid)  # list of segments
-                        if segments == -1:  # TODO: reformat as error
-                            print(
-                                "ERROR occurred while generating segments {}\tSKIPPING...".format(
-                                    file_name
-                                )
-                            )
+                        if type(segments) is int:
+                            self.errors[segments].append(file_name)
+                            # print(
+                            #     "ERROR occurred while generating segments {}\tSKIPPING...".format(
+                            #         file_name
+                            #     )
+                            # )
                             continue
                     except:
                         print(
@@ -94,7 +101,7 @@ class Generator:
                             input_path + "composer" + str(i) + "/midi" + str(track_id)
                         )
 
-                        self.save_input(segments, fsave_dir, version)
+                        # self.save_input(segments, fsave_dir, version)
                         self.name_id_map = self.name_id_map.append(
                             {
                                 "composer": composer,
@@ -114,8 +121,12 @@ class Generator:
                         )
 
         # save mapped list
-        # print(self.name_id_map)
         self.name_id_map.to_csv(input_path + "name_id_map.csv", sep=",")
+
+        # print error records
+        print("#####ERROR RECORDS#####")
+        for i, err in enumerate(self.errors):
+            print("error{}: {}".format(i, len(err[1])))
 
         return
 
@@ -160,55 +171,48 @@ class Generator:
         mf.close()
         return midi.translate.midiFileToStream(mf)
 
-    def save_input(self, matrices, save_dir, vn):
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
-
-        for i, mat in enumerate(matrices):
-            np.save(save_dir + "/ver" + str(vn) + "_seg" + str(i), mat)  # save as .npy
-        return
-
     def generate_segments(self, mid):  # mid = each track(song)
 
         stm_instr = instrument.partitionByInstrument(mid)
         if stm_instr == None:  # 1. no tracks in stream
-            print("SKIP: No tracks found...")
-            return -1
+            print("ERROR1: No tracks found...")
+            return 1
 
         generated_input = []
         for pt in stm_instr:  # each part(instrument) -> piano
             instr_index = pt.getInstrument().midiProgram
 
             if instr_index != 0:  # 2. not piano track
-                return -1
+                return 2
 
             on, off, dur, pitch, vel = self.extract_notes(
                 pt
             )  # send track -> get lists of info
             if len(on) < 1:  # 3. no notes in this track
-                return -1
+                return 3
 
             ##segmentation
-            # 10 segments each song -> 200 seconds
             track_dur = off[len(off) - 1]
-            track_seg = int(track_dur / 20)
-            seg_length = 400  # 20 seconds
+            seg_loc_list = self.get_seg_loc(self.config.overlap, track_dur)
+            track_seg = len(seg_loc_list)
+            seg_length = 400  # 20 seconds = 400 x 0.05sec
 
-            if track_seg < 10:  # 4. not enough segments
-                return -1
-            elif track_seg >= 10:
+            if track_seg < self.config.segment_num:  # 4. not enough segments
+                return 4
+            else:
                 rnd_selected = random.sample(
-                    range(track_seg), 10
-                )  # randomly select 10 segments
+                    track_seg, self.config.segment_num
+                )  # randomly select n segments
                 rnd_selected.sort()
 
-                for i in rnd_selected:  # iterate: each segment
+                for pair in rnd_selected:  # iterate: each segment tuple (start, end)
                     segment = [
                         [[0 for k in range(128)] for i in range(seg_length)]
                         for j in range(2)
-                    ]
+                    ]  # 2 x 400 x 128
 
-                    start, end = i * 20, (i + 1) * 20  # segment's start & end seconds
+                    # start, end = i * 20, (i + 1) * 20  # segment's start & end seconds
+                    start, end = pair[0], pair[1]
                     for j, note in enumerate(
                         zip(on, off, dur, pitch, vel)
                     ):  # iterate: each note
@@ -254,6 +258,31 @@ class Generator:
                     vel.append(nt.volume.velocity)
 
         return on, off, dur, pitch, vel
+
+    # return tuple of all possible start-end pairs (in Seconds)
+    def get_seg_loc(self, overlap, dur):
+        seg_pairs = list()  # list of tuples
+        seg_length = 20
+        total_seg = int(dur / seg_length)
+        for i in range(total_seg):
+            seg_pairs.append((i * seg_length, (i + 1) * seg_length))
+            if overlap and i < (total_seg - 1):
+                seg_pairs.append(
+                    (
+                        i * seg_length + 0.5 * seg_length,
+                        (i + 1) * seg_length + 0.5 * seg_length,
+                    )
+                )
+
+        return seg_pairs
+
+    def save_input(self, matrices, save_dir, vn):
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        for i, mat in enumerate(matrices):
+            np.save(save_dir + "/ver" + str(vn) + "_seg" + str(i), mat)  # save as .npy
+        return
 
 
 ########################################

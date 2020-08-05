@@ -162,6 +162,7 @@ parser.add_argument(
 )
 
 ##input generator
+
 parser.add_argument(
     "--midi_files_path",
     default="/data/MAESTRO/maestro-v2.0.0/",
@@ -173,6 +174,14 @@ parser.add_argument(
     default="/data/inputs/",
     type=str,
     help="save path (absolute dir)",
+)
+
+parser.add_argument(
+    "--overlap", default=False, type=bool, help="enable 50% overlap?",
+)
+
+parser.add_argument(
+    "--segment_num", default=10, type=int, help="how many segments per midi?"
 )
 
 ##converter
