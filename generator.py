@@ -93,8 +93,7 @@ class Generator:
                         fsave_dir = (
                             input_path + "composer" + str(i) + "/midi" + str(track_id)
                         )
-                        self.save_input(segments, fsave_dir, version)  # TODO: enable
-
+                        # self.save_input(segments, fsave_dir, version)  # TODO: enable
                         self.name_id_map = self.name_id_map.append(
                             {
                                 "composer": composer,
@@ -114,7 +113,7 @@ class Generator:
                         )
 
         # save mapped list
-        self.name_id_map.to_csv(input_path + "name_id_map.csv", sep=",")  # TODO: enable
+        # self.name_id_map.to_csv(input_path + "name_id_map.csv", sep=",")  # TODO: enable
 
         # print error records
         print("\n\n#####ERROR RECORDS#####")
@@ -180,32 +179,80 @@ class Generator:
                 rnd_selected.sort()
 
                 for pair in rnd_selected:  # iterate: each segment tuple (start, end)
-                    segment = [
-                        [[0 for k in range(128)] for i in range(400)] for j in range(2)
-                    ]  # 2 x 400 x 128
-
                     start, end = pair[0], pair[1]
-                    # iterate: each note
-                    for j, note in enumerate(zip(on, off, dur, pitch, vel)):
 
-                        x_index = int((note[0] - start) / 0.05)  # time
-                        y_index = int(note[3])  # pitch
+                    if self.config.augmentation == "transpose":
+                        segment = [
+                            [
+                                [[0 for k in range(128)] for i in range(400)]
+                                for j in range(2)
+                            ]
+                            for l in range(13)
+                        ]  # 13 x 2 x 400 x 128 (augmentation: +-6 semitones)
 
-                        if (note[0] >= start and note[0] < end) or (
-                            note[1] > start and note[1] <= end
-                        ):  # if note belongs to current segment
-                            for t in range(
-                                int(note[2] / 0.05)
-                            ):  # iterate: each 0.05 unit of a single note's duration
-                                if (x_index + t) >= 400:
-                                    break
-                                segment[1][x_index + t][y_index] = int(note[4])
+                        # iterate: each note
+                        for j, note in enumerate(zip(on, off, dur, pitch, vel)):
 
-                        # onset (binary)
-                        if note[0] >= start and note[0] < end:
-                            segment[0][x_index][y_index] = 1
+                            x_index = int((note[0] - start) / 0.05)  # time
+                            y_index = int(note[3])  # pitch
 
-                    generated_input.append(segment)
+                            if (note[0] >= start and note[0] < end) or (
+                                note[1] > start and note[1] <= end
+                            ):  # if note belongs to current segment
+                                for t in range(
+                                    int(note[2] / 0.05)
+                                ):  # iterate: each 0.05 unit of a single note's duration
+                                    if (x_index + t) >= 400:
+                                        break
+                                    segment[6][1][x_index + t][y_index] = int(note[4])
+                                    for r in range(1, 6):
+                                        segment[6 - r][1][x_index + t][
+                                            max(0, min(y_index - r, 128))
+                                        ] = int(note[4])
+                                        segment[6 + r][1][x_index + t][
+                                            max(0, min(y_index + r, 128))
+                                        ] = int(note[4])
+
+                            # onset (binary)
+                            if note[0] >= start and note[0] < end:
+                                segment[6][0][x_index][y_index] = 1
+                                for r in range(1, 6):
+                                    segment[6 - r][0][x_index][
+                                        max(0, min(y_index - r, 128))
+                                    ] = 1  # 0~5
+                                    segment[6 + r][0][x_index][
+                                        max(0, min(y_index + r, 128))
+                                    ] = 1  # 7~12
+
+                        generated_input.append(segment)
+
+                    else:
+                        segment = [
+                            [[0 for k in range(128)] for i in range(400)]
+                            for j in range(2)
+                        ]  # 2 x 400 x 128
+
+                        # iterate: each note
+                        for j, note in enumerate(zip(on, off, dur, pitch, vel)):
+
+                            x_index = int((note[0] - start) / 0.05)  # time
+                            y_index = int(note[3])  # pitch
+
+                            if (note[0] >= start and note[0] < end) or (
+                                note[1] > start and note[1] <= end
+                            ):  # if note belongs to current segment
+                                for t in range(
+                                    int(note[2] / 0.05)
+                                ):  # iterate: each 0.05 unit of a single note's duration
+                                    if (x_index + t) >= 400:
+                                        break
+                                    segment[1][x_index + t][y_index] = int(note[4])
+
+                            # onset (binary)
+                            if note[0] >= start and note[0] < end:
+                                segment[0][x_index][y_index] = 1
+
+                        generated_input.append(segment)
 
         return generated_input  # list of matrices
 
@@ -266,11 +313,22 @@ class Generator:
         return lookup.index(name)
 
     def save_input(self, matrices, save_dir, vn):
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
+        if self.config.augmentation == "transpose":
+            for i in range(13):  # 0-12 (0~5 / 6 / 7~12)
+                aug_dir = save_dir + "_aug" + str(i)
+                if not os.path.exists(aug_dir):
+                    os.makedirs(aug_dir)
+                for j, mat in enumerate(matrices):
+                    np.save(aug_dir + "/ver" + str(vn) + "_seg" + str(j), mat[i])
 
-        for i, mat in enumerate(matrices):
-            np.save(save_dir + "/ver" + str(vn) + "_seg" + str(i), mat)  # save as .npy
+        else:
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+
+            for i, mat in enumerate(matrices):
+                np.save(
+                    save_dir + "/ver" + str(vn) + "_seg" + str(i), mat
+                )  # save as .npy
         return
 
     def print_error(self, code, fname):
@@ -283,14 +341,3 @@ class Generator:
         if code == 4:
             print("ERROR{}: not enough segments".format(code, fname))
         return
-
-
-########################################
-# Testing
-config, unparsed = get_config()
-# for arg in vars(config):
-#     argname = arg
-#     contents = str(getattr(config, arg))
-# print(argname + " = " + contents)
-temp = Generator(config)
-temp.run()
