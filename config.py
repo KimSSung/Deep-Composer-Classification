@@ -189,7 +189,7 @@ parser.add_argument(
     "--augmentation",
     default="None",
     type=str,
-    help="(default=None / transpose / tempo)",
+    help="(default=None / transpose / tempo_stretch)",
 )
 
 ##converter

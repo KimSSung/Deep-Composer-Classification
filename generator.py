@@ -44,7 +44,7 @@ class Generator:
         }
         self.song_dict = dict()
         self.name_id_map = pd.DataFrame(
-            columns=["composer", "composer_id", "orig_name", "midi_id"]
+            columns=["composer", "composer_id", "orig_name", "midi_id", "saved_fname"]
         )  # df to store mapped info
         self.errors = {
             1: list(),
@@ -100,6 +100,7 @@ class Generator:
                                 "composer_id": i,
                                 "orig_name": orig_name,
                                 "midi_id": track_id,
+                                "saved_fname": file_name,
                             },
                             ignore_index=True,
                         )
@@ -156,7 +157,6 @@ class Generator:
         generated_input = []
         for pt in stm_instr:  # each part(instrument) -> piano
             instr_index = pt.getInstrument().midiProgram
-
             if instr_index != 0:  # 2. not piano track
                 return 2
 
@@ -169,92 +169,120 @@ class Generator:
             ##segmentation
             track_dur = off[len(off) - 1]
             seg_loc_list = self.get_seg_loc(self.config.overlap, track_dur)
-
             if len(seg_loc_list) < self.config.segment_num:  # 4. not enough segments
                 return 4
-            else:
-                rnd_selected = random.sample(
-                    seg_loc_list, self.config.segment_num
-                )  # randomly select n segments
-                rnd_selected.sort()
+            rnd_selected = random.sample(
+                seg_loc_list, self.config.segment_num
+            )  # randomly select n segments
+            rnd_selected.sort()
 
-                for pair in rnd_selected:  # iterate: each segment tuple (start, end)
-                    start, end = pair[0], pair[1]
-
-                    if self.config.augmentation == "transpose":
-                        segment = [
-                            [
-                                [[0 for k in range(128)] for i in range(400)]
-                                for j in range(2)
-                            ]
-                            for l in range(13)
-                        ]  # 13 x 2 x 400 x 128 (augmentation: +-6 semitones)
-
-                        # iterate: each note
-                        for j, note in enumerate(zip(on, off, dur, pitch, vel)):
-
-                            x_index = int((note[0] - start) / 0.05)  # time
-                            y_index = int(note[3])  # pitch
-
-                            if (note[0] >= start and note[0] < end) or (
-                                note[1] > start and note[1] <= end
-                            ):  # if note belongs to current segment
-                                for t in range(
-                                    int(note[2] / 0.05)
-                                ):  # iterate: each 0.05 unit of a single note's duration
-                                    if (x_index + t) >= 400:
-                                        break
-                                    segment[6][1][x_index + t][y_index] = int(note[4])
-                                    for r in range(1, 6):
-                                        segment[6 - r][1][x_index + t][
-                                            max(0, min(y_index - r, 128))
-                                        ] = int(note[4])
-                                        segment[6 + r][1][x_index + t][
-                                            max(0, min(y_index + r, 128))
-                                        ] = int(note[4])
-
-                            # onset (binary)
-                            if note[0] >= start and note[0] < end:
-                                segment[6][0][x_index][y_index] = 1
-                                for r in range(1, 6):
-                                    segment[6 - r][0][x_index][
-                                        max(0, min(y_index - r, 128))
-                                    ] = 1  # 0~5
-                                    segment[6 + r][0][x_index][
-                                        max(0, min(y_index + r, 128))
-                                    ] = 1  # 7~12
-
-                        generated_input.append(segment)
-
-                    else:
-                        segment = [
-                            [[0 for k in range(128)] for i in range(400)]
-                            for j in range(2)
-                        ]  # 2 x 400 x 128
-
-                        # iterate: each note
-                        for j, note in enumerate(zip(on, off, dur, pitch, vel)):
-
-                            x_index = int((note[0] - start) / 0.05)  # time
-                            y_index = int(note[3])  # pitch
-
-                            if (note[0] >= start and note[0] < end) or (
-                                note[1] > start and note[1] <= end
-                            ):  # if note belongs to current segment
-                                for t in range(
-                                    int(note[2] / 0.05)
-                                ):  # iterate: each 0.05 unit of a single note's duration
-                                    if (x_index + t) >= 400:
-                                        break
-                                    segment[1][x_index + t][y_index] = int(note[4])
-
-                            # onset (binary)
-                            if note[0] >= start and note[0] < end:
-                                segment[0][x_index][y_index] = 1
-
-                        generated_input.append(segment)
+            for pair in rnd_selected:  # iterate: each segment tuple (start, end)
+                zipped = zip(on, off, dur, pitch, vel)
+                segment = self.get_matrix(
+                    pair[0], pair[1], zipped, self.config.augmentation
+                )
+                generated_input.append(segment)
 
         return generated_input  # list of matrices
+
+    def get_matrix(self, start, end, notes, augmentation):
+        if augmentation == "transpose":
+            segment = [
+                [[[0 for k in range(128)] for i in range(400)] for j in range(2)]
+                for l in range(13)
+            ]  # 13 x 2 x 400 x 128 (augmentation: +-6 semitones + original)
+
+            # iterate: each note
+            for j, note in enumerate(notes):
+
+                x_index = int((note[0] - start) / 0.05)  # time
+                y_index = int(note[3])  # pitch
+
+                if (note[0] >= start and note[0] < end) or (
+                    note[1] > start and note[1] <= end
+                ):  # if note belongs to current segment
+                    for t in range(
+                        int(note[2] / 0.05)
+                    ):  # iterate: each 0.05 unit of a single note's duration
+                        if (x_index + t) >= 400:
+                            break
+                        segment[6][1][x_index + t][y_index] = int(note[4])
+                        for r in range(1, 6):
+                            segment[6 - r][1][x_index + t][
+                                max(0, min(y_index - r, 128))
+                            ] = int(note[4])
+                            segment[6 + r][1][x_index + t][
+                                max(0, min(y_index + r, 128))
+                            ] = int(note[4])
+
+                # onset (binary)
+                if note[0] >= start and note[0] < end:
+                    segment[6][0][x_index][y_index] = 1
+                    for r in range(1, 6):
+                        segment[6 - r][0][x_index][
+                            max(0, min(y_index - r, 128))
+                        ] = 1  # 0~5
+                        segment[6 + r][0][x_index][
+                            max(0, min(y_index + r, 128))
+                        ] = 1  # 7~12
+            return segment
+
+        elif augmentation == "tempo_stretch":  # TODO: sunjong
+            segment = [
+                [[0 for k in range(128)] for i in range(400)] for j in range(2)
+            ]  # 2 x 400 x 128 (filled with 0 -> default)
+
+            # iterate: each note event ([0]:on [1]:off [2]:dur [3]:pitch [4]:vel)
+            for j, note in enumerate(notes):
+
+                """ this is where note events are MARKED in matrix cells
+                    play around with this loop to implement tempo stretch
+                    this is the only part you'll need to modify."""
+                x_index = int((note[0] - start) / 0.05)  # time
+                y_index = int(note[3])  # pitch
+
+                if (note[0] >= start and note[0] < end) or (
+                    note[1] > start and note[1] <= end
+                ):  # if note belongs to current segment
+                    for t in range(
+                        int(note[2] / 0.05)
+                    ):  # iterate: each 0.05 unit of a single note's duration
+                        if (x_index + t) >= 400:
+                            break
+                        segment[1][x_index + t][y_index] = int(note[4])
+
+                # onset (binary)
+                if note[0] >= start and note[0] < end:
+                    segment[0][x_index][y_index] = 1
+
+            return segment
+
+        else:  # no augmentation
+            segment = [
+                [[0 for k in range(128)] for i in range(400)] for j in range(2)
+            ]  # 2 x 400 x 128
+
+            # iterate: each note
+            for j, note in enumerate(notes):
+
+                x_index = int((note[0] - start) / 0.05)  # time
+                y_index = int(note[3])  # pitch
+
+                if (note[0] >= start and note[0] < end) or (
+                    note[1] > start and note[1] <= end
+                ):  # if note belongs to current segment
+                    for t in range(
+                        int(note[2] / 0.05)
+                    ):  # iterate: each 0.05 unit of a single note's duration
+                        if (x_index + t) >= 400:
+                            break
+                        segment[1][x_index + t][y_index] = int(note[4])
+
+                # onset (binary)
+                if note[0] >= start and note[0] < end:
+                    segment[0][x_index][y_index] = 1
+
+            return segment
 
     def extract_notes(self, track):
         offset_list = track.secondsMap
@@ -341,3 +369,9 @@ class Generator:
         if code == 4:
             print("ERROR{}: not enough segments".format(code, fname))
         return
+
+
+if __name__ == "__main__":
+    config, unparsed = get_config()
+    temp = Generator(config)
+    temp.run()
