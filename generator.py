@@ -93,7 +93,7 @@ class Generator:
                         fsave_dir = (
                             input_path + "composer" + str(i) + "/midi" + str(track_id)
                         )
-                        # self.save_input(segments, fsave_dir, version)  # TODO: enable
+                        self.save_input(segments, fsave_dir, version)  # TODO: enable
                         self.name_id_map = self.name_id_map.append(
                             {
                                 "composer": composer,
@@ -113,7 +113,7 @@ class Generator:
                         )
 
         # save mapped list
-        # self.name_id_map.to_csv(input_path + "name_id_map.csv", sep=",")  # TODO: enable
+        self.name_id_map.to_csv(input_path + "name_id_map.csv", sep=",")  # TODO: enable
 
         # print error records
         print("\n\n#####ERROR RECORDS#####")
@@ -341,3 +341,9 @@ class Generator:
         if code == 4:
             print("ERROR{}: not enough segments".format(code, fname))
         return
+
+
+if __name__ == "__main__":
+    config, unparsed = get_config()
+    temp = Generator(config)
+    temp.run()
