@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import csv
 import sys
+from config import get_config
 
 
 class Converter:
@@ -16,10 +17,17 @@ class Converter:
 
         ### Set File directory
         # Get the Header and other data at original Midi Data
-        self.npy_path = self.config.to_convert_path
+        self.npy_root_path = self.config.to_convert_path
+        self.npy_path_list = [] #String list object /data/inputs/composer#/...
+        self.midi_header_path_list = [] #Save matched version composer#/midi# -> "/data/3 Etudes, Op.65"
         self.origin_midi_dir = "/data/genres/"  # Classical/...
         self.output_file_dir = "/data/temp_converter/midi/"
         self.csv_output_dir = "/data/temp_converter/csv/"
+        self.mapping_csv_dir = "/data/inputs/name_id_map.csv"
+
+        # To get original Header with matching
+        self.composer = ""
+        self.midi_name = ""
 
     # --------------------------------------------------------------------------
     # functions
@@ -74,7 +82,10 @@ class Converter:
     def run(self):
 
         print(">>>>>> Converting <<<<<<")
-        print("PATH: " + self.npy_path + "\n")
+
+        for index, cur_npy in enumerate(self.npy_path_list):
+
+            print("PATH: " + cur_npy + "\n")
 
         self.convert_file()
 
@@ -371,3 +382,75 @@ class Converter:
             index=False,
         )
         print(".csv saved!")
+
+    def load_npy_path (self):
+        '''
+        return: list of all the npy_path(abs_path)
+        '''
+
+        root_npy_path = os.path.abspath('/data/inputs/')
+
+        self.npy_path_list = []
+        mapping_csv_df = pd.read_csv(self.mapping_csv_dir, encoding = "UTF-8", index_col= False) # read mapping csv
+        mapping_csv_df = mapping_csv_df.drop(mapping_csv_df.columns[[0]], axis='columns')
+        print(mapping_csv_df)
+
+        # Find all of the npy converted files
+
+        for dirpath, dirnames, filenames in os.walk(root_npy_path):
+
+            for filename in filenames:
+
+                if(filename.endswith('.npy')):
+
+                    current_npy_path = str(dirpath) + '/' + str(filename)
+                    self.npy_path_list.append(current_npy_path)
+                    print('Saved file path: ',current_npy_path) # Debug
+
+
+        print('hello')
+
+        return self.npy_path_list
+
+    def name_id_map_restore(self, cur_npy_string):
+
+
+        split_string_list = cur_npy_string.split('/') #List
+        composer_num = -1
+        midi_num = -1
+
+        #Find the composer num, midi num position
+        for index, dir in enumerate(split_string_list):
+
+            if 'composer' in dir:
+
+                temp = list(filter(str.isdigit, dir))
+                temp_str = ""
+
+                for st in temp:
+                    temp_str = temp_str + st
+
+                composer_num = int(temp_str)
+
+            if 'midi' in dir:
+
+                temp = list(filter(str.isdigit, dir))
+                temp_str = ""
+
+                for st in temp:
+                    temp_str = temp_str + st
+
+                midi_num = int(temp_str)
+
+        mapping_csv_df = pd.read_csv(self.mapping_csv_dir, encoding="UTF-8", index_col=False)  # read mapping csv
+        mapping_csv_df = mapping_csv_df.drop(mapping_csv_df.columns[[0]], axis='columns')
+
+        is_composer = mapping_csv_df['composer_id'] == composer_num
+        is_song = mapping_csv_df['midi'] == midi_num
+
+####### Test Code #######
+
+if __name__ == '__main__':
+    config, unparsed = get_config()
+    temp = Converter(config)
+    temp.load_npy_path()
