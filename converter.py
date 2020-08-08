@@ -20,14 +20,15 @@ class Converter:
         self.npy_root_path = self.config.to_convert_path
         self.npy_path_list = [] #String list object /data/inputs/composer#/...
         self.midi_header_path_list = [] #Save matched version composer#/midi# -> "/data/3 Etudes, Op.65"
-        self.origin_midi_dir = "/data/genres/"  # Classical/...
-        self.output_file_dir = "/data/temp_converter/midi/"
-        self.csv_output_dir = "/data/temp_converter/csv/"
+        self.origin_midi_dir = "/data/MAESTRO/maestro_midi_all/"  # Classical/...
+        self.output_file_dir = "/data/converted_music/midi/"
+        self.csv_output_dir = "/data/converted_music/csv/"
         self.mapping_csv_dir = "/data/inputs/name_id_map.csv"
 
         # To get original Header with matching
         self.composer = ""
-        self.midi_name = ""
+        self.orig_midi_name = ""
+        self.maestro_midi_name = ""
 
     # --------------------------------------------------------------------------
     # functions
@@ -106,28 +107,37 @@ class Converter:
         pitch = 60
         velocity = 90
 
-        for file in os.listdir(self.npy_path):
+        for file in self.npy_path_list:
 
             # FOR CHECKING
             if success_num == 5:
                 break
 
-            if os.path.isfile(os.path.join(self.npy_path, file)):
+            if os.path.isfile(file):
 
-                if "vel" in file:
+                file_name = file.split('/')[-1]
+                if "vel" in file_name:
                     self.atype = "vel"
-                elif "noise" in file:
+                elif "noise" in file_name:
                     self.atype = "noise"
                 else:  # origin input2midi
                     self.atype = "origin"
 
-                only_file_name = file.replace(self.atype + "_", "").replace(".npy", "")
+                if self.atype in file_name:
+
+                    only_file_name = file_name.replace(self.atype + "_", "").replace(".npy", "")
+
+                else:
+
+                    only_file_name = file_name.replace(".npy","")
 
                 this_genre = ""  # genre of this midi
-                for genre in self.config.genres:
-                    if genre in self.config.to_convert_path:
-                        this_genre = genre
-                        break
+
+                # Genre UNUSED FOR NOW
+                # for genre in self.config.genres:
+                #     if genre in self.config.to_convert_path:
+                #         this_genre = genre
+                #         break
                 # if 'to_convert_path' contains genre name -> this_genre = genre name
                 # else this_genre = ''
                 # print(this_genre)
@@ -139,9 +149,11 @@ class Converter:
                 # print(only_file_name)
 
                 new_csv_string = []
-                load_data = np.load(os.path.join(self.npy_path, file))
+                load_data = np.load(file)
 
                 if this_genre == "":  # 'to_convert_path' not contain genre name
+
+
                     origin_file = self.origin_midi_dir + only_file_name
                 else:  # 'to_convert_path' contains genre name
                     origin_file = (
@@ -405,10 +417,7 @@ class Converter:
 
                     current_npy_path = str(dirpath) + '/' + str(filename)
                     self.npy_path_list.append(current_npy_path)
-                    print('Saved file path: ',current_npy_path) # Debug
-
-
-        print('hello')
+                    # print('Saved file path: ',current_npy_path) # Debug
 
         return self.npy_path_list
 
@@ -446,11 +455,45 @@ class Converter:
         mapping_csv_df = mapping_csv_df.drop(mapping_csv_df.columns[[0]], axis='columns')
 
         is_composer = mapping_csv_df['composer_id'] == composer_num
-        is_song = mapping_csv_df['midi'] == midi_num
+        is_song = mapping_csv_df['midi_id'] == midi_num
+
+        subset_df = mapping_csv_df[is_composer & is_song]
+
+        self.composer = subset_df.iloc[0].loc['composer']
+        self.orig_midi_name = subset_df.iloc[0].loc['orig_name']
+
+
+    def get_origin_file_name(self, composer, orig_midi_name):
+        '''
+        Get midi_filename at MAESTRO Dataset CSV
+
+        composer : (str) composer name for csv
+        orig_midi_name : (str) Restored Canonical_tilte for csv matching
+
+        return : (str) MAESTRO Midi File name mapped
+        '''
+
+
+        maestro_csv_df = pd.read_csv('/data/MAESTRO/maestro-v2.0.0/maestro-v2.0.0_cleaned.csv', encoding = 'euc-kr')
+
+        is_composer = maestro_csv_df['canonical_composer'] == composer
+        is_title = maestro_csv_df['canonical_title'] == orig_midi_name
+
+        subset_df = maestro_csv_df[is_composer & is_title]
+
+        self.maestro_midi_name = subset_df.iloc[0].loc['midi_filename']
+
+        return self.maestro_midi_name
+
 
 ####### Test Code #######
 
 if __name__ == '__main__':
     config, unparsed = get_config()
     temp = Converter(config)
-    temp.load_npy_path()
+    # temp.load_npy_path()
+    print(temp.name_id_map_restore('/data/inputs/composer10/midi17/ver4_seg7.npy'))
+    print(temp.composer)
+    print(temp.orig_midi_name)
+    print(temp.get_origin_file_name(temp.composer,temp.orig_midi_name))
+    print(temp.maestro_midi_name)
