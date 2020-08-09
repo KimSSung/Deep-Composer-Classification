@@ -13,7 +13,7 @@ class Converter:
 
         self.atype = ""  # default
 
-        self.csv_printable = False
+        self.csv_printable = True
 
         ### Set File directory
         # Get the Header and other data at original Midi Data
@@ -32,7 +32,7 @@ class Converter:
         self.orig_midi_name = ""
         self.maestro_midi_name = ""
         self.success_num = 0
-        self.limit_success_num = 200
+        self.limit_success_num = 10
 
     # --------------------------------------------------------------------------
     # functions
@@ -96,13 +96,7 @@ class Converter:
             self.name_id_map_restore(cur_npy)
             print("PATH: " + cur_npy + "\n")
 
-            try:
-                self.convert_file(cur_npy)
-
-            except:
-
-                print("Convert_file Error Occured!", cur_npy)
-                continue
+            self.convert_file(cur_npy)
 
             if self.success_num == self.limit_success_num:
                 break
@@ -281,6 +275,12 @@ class Converter:
                                     velocity = int(
                                         load_data[channel_instrument][row][col]
                                     )
+
+                                    # Check if the note is continuous or not
+
+                                    # Append Note_on when before event don't exist
+
+                                    # if (load_data[channel_instrument][row-1][col] == 0) and row!=0:
                                     note_on_list[track_num].append(
                                         [
                                             track_num,
@@ -290,6 +290,9 @@ class Converter:
                                             velocity,
                                         ]
                                     )
+
+                                    # Append Note_off when after event don't exist
+                                    # if (load_data[channel_instrument][row+1][col] == 0) and row!= (load_data.shape[1]-2):
                                     note_off_list[track_num].append(
                                         [
                                             track_num,
@@ -299,6 +302,7 @@ class Converter:
                                             velocity,
                                         ]
                                     )
+
                                 else:
                                     # Set the track_string_list new track header - program_c event
                                     track_num = current_used_instrument.index(
@@ -388,6 +392,8 @@ class Converter:
                     + "New_"
                     + self.atype
                     + "_"
+                    + self.orig_midi_name
+                    + "_"
                     + only_file_name
                     + ".mid",
                     "wb",
@@ -404,7 +410,14 @@ class Converter:
 
     def checking_csv(self, only_file_name):
         csv_string = py_midicsv.midi_to_csv(
-            self.output_file_dir + "New_" + self.atype + "_" + only_file_name
+            self.output_file_dir
+            + "New_"
+            + self.atype
+            + "_"
+            + self.orig_midi_name
+            + "_"
+            + only_file_name
+            + ".mid"
         )
         tmp_list = []
         for i in range(0, len(csv_string)):
@@ -412,7 +425,12 @@ class Converter:
             tmp_list.append(temp)
         data = pd.DataFrame(tmp_list)
         data.to_csv(
-            self.csv_output_dir + "New_" + only_file_name[:-4] + ".csv",
+            self.csv_output_dir
+            + "New_"
+            + self.orig_midi_name
+            + "_"
+            + only_file_name
+            + ".csv",
             header=False,
             index=False,
         )
