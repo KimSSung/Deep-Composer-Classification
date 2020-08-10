@@ -77,7 +77,7 @@ parser.add_argument(
     "--mode",
     default="foo",  # force to input mode ^_^
     type=str,
-    help="Mode (basetrain / advtrain / attack / generate / converter)",
+    help="Mode (basetrain / advtrain / attack / generate / convert / split)",
 )
 parser.add_argument(
     "--model_save_path", default="/data/drum/model/", type=str, help="Model saving path"
@@ -198,6 +198,22 @@ parser.add_argument(
     default="/data/attacks/",
     type=str,
     help="Path for 'only MIDIs' to convert. MUST NOT contain any folder !!",
+)
+
+
+##spliter
+# use --input_save_path
+parser.add_argument(
+    "--train_percentage",
+    default=0.7,
+    type=float,
+    help="Train data percentage (0 ~ 1)",
+)
+parser.add_argument(
+    "--aug_mode",
+    default="before",
+    type=str,
+    help="Augmentation mode (before / after). Defualt: before",
 )
 
 

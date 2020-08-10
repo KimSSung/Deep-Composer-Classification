@@ -8,6 +8,7 @@ from trainer import Trainer
 from attacker import Attacker
 from generator import Generator
 from converter import Converter
+from spliter import Spliter
 
 
 def main(args):
@@ -31,9 +32,13 @@ def main(args):
         net = Converter(args)
         net.run()
 
+    elif args.mode == "split":
+        net = Spliter(args)
+        net.run()
+
     else:
         print('#### Please execute with mode: ex) --mode "basetrain"')
-        print("#### MODE: [basetrain / advtrain / attack / generate / converter]")
+        print("#### MODE: [basetrain / advtrain / attack / generate / converter / split]")
 
 
 if __name__ == "__main__":
