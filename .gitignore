@@ -10,6 +10,8 @@ old_versions/
 train/train_options/
 *.git/
 
+ts-1.0/
+
 # files #
 .wav
 .pkl

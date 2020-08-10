@@ -17,11 +17,14 @@ class MIDIDataset(Dataset):
         self.y = []
 
         f = open(split_path, "r")
-
+        label = -1 # init
         for line in f:
             # find composer num
             temp = line.split("/")
-            label = int(temp[3].replace("composer", ""))  # composer num (0-13)
+            for element in temp:
+                if 'composer' in element:
+                    label = int(element.replace("composer", ""))  # composer num (0-13)
+                    break
 
             self.x_path.append(line.replace("\n", ""))
             self.y.append(label)

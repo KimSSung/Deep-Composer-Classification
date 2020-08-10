@@ -29,6 +29,7 @@ from tools.data_loader import MIDIDataset
 
 # score metric
 from sklearn.metrics import f1_score
+from sklearn.metrics import precision_recall_fscore_support
 
 class Trainer:
 	def __init__(self, args):
@@ -45,7 +46,8 @@ class Trainer:
 		# Define model
 		self.model = self.model_selection()
 		# model = convnet(self.config.input_shape[0], self.config.composers)
-		self.model = self.model.to(self.device)
+		self.model = nn.DataParallel(self.model)
+		self.model.cuda()
 
 		self.criterion = nn.CrossEntropyLoss()
 		self.criterion = self.criterion.to(self.device)
@@ -228,8 +230,8 @@ class Trainer:
 			trn_running_loss, trn_acc = 0.0, 0.0
 			train_preds = []
 			ground_truths = []
-			# trn_correct = 0
-			# trn_total = 0
+			trn_correct = 0
+			trn_total = 0
 			for i, trainset in enumerate(self.train_loader):
 				# train_mode
 
@@ -260,11 +262,11 @@ class Trainer:
 				_, label_pred = torch.max(train_pred.data, 1)
 				
 				# accuracy
-				# trn_total = train_out.size(0)
-				# trn_correct = (label_pred == train_out).sum().item()
-				# trn_acc += trn_correct / trn_total * 100
+				trn_total += train_out.size(0)
+				trn_correct += (label_pred == train_out).sum().item()
+				
 
-				# f1 score
+				# f1 accuracy
 				train_preds.extend(label_pred.tolist())
 				ground_truths.extend(train_out.tolist())
 
@@ -277,14 +279,24 @@ class Trainer:
 
 				trn_running_loss += t_loss.item()
 
-			trn_acc = f1_score(ground_truths, train_preds, average='weighted') * 100
+			# score
+			# 1. accuracy
+			trn_acc = trn_correct / trn_total
+
+			# 2. weighted f1-score
+			w_f1score = f1_score(ground_truths, train_preds, average='weighted')
+
+			precision, recall, f1, supports = precision_recall_fscore_support(
+				ground_truths, train_preds, average=None, labels=list(range(self.config.composers)), warn_for=tuple())
 			# print learning process
 			print(
-				"Epoch:  %d | Train Loss: %.4f | Train Accuracy: %.2f"
-				% (
-					epoch, trn_running_loss / self.num_batches, trn_acc
+				"Epoch:  %d | Train Loss: %.4f | f1-score: %.4f | accuracy: %.4f" % (
+					epoch, trn_running_loss / self.num_batches, w_f1score, trn_acc
 				)
 			)
+			# print("Train accuracy: %.2f" % (trn_acc))
+			# print("Precision:", precision)
+			# print("Recall:", recall)
 
 			################## TEST ####################
 			val_term = 10
@@ -330,15 +342,11 @@ class Trainer:
 
 				if mode == "basetrain":
 					print(
-						"""epoch: {}/{} | trn loss: {:.4f} | trn acc: {:.2f}%| lr: {:.6f} |
-	  val loss: {:.4f} | val acc: {:.2f}%""".format(
+						"""epoch: {}/{} | trn loss: {:.4f} | lr: {:.6f}""".format(
 							epoch + 1,
 							self.config.epochs,
 							trn_running_loss / self.num_batches,
-							trn_acc,
-							lr,
-							avg_valloss,
-							avg_valacc
+							lr
 						)
 					)
 
@@ -412,7 +420,8 @@ class Trainer:
 			val_loss, val_acc = 0.0, 0.0
 			val_preds = []
 			val_ground_truths = []
-			
+			val_total = 0
+			val_correct = 0
 
 			for j, valset in enumerate(test_loader):
 				val_in, val_out = valset
@@ -442,8 +451,8 @@ class Trainer:
 				# accuracy
 				_, val_label_pred = torch.max(val_pred.data, 1)
 			
-				val_total = val_out.size(0)
-				val_correct = (val_label_pred == val_out).sum().item()
+				val_total += val_out.size(0)
+				val_correct += (val_label_pred == val_out).sum().item()
 
 				# f1 score
 				val_preds.extend(val_label_pred.tolist())
@@ -457,12 +466,29 @@ class Trainer:
 				# )
 				
 			avg_valloss = val_loss / len(test_loader)
-			avg_valacc = f1_score(val_ground_truths, val_preds, average='weighted') * 100
+			
+			# score
+			# 1. accuracy
+			val_acc = val_correct / val_total
+
+			# 2. weighted f1-score
+			w_f1score = f1_score(val_ground_truths, val_preds, average='weighted')
+			
+			precision, recall, f1, supports = precision_recall_fscore_support(
+				val_ground_truths, val_preds, average=None, labels=list(range(self.config.composers)), warn_for=tuple())
+			# print learning process
+			print("######## Valid #########")
+			# print("Valid Accuracy: %.2f" % (val_acc))
+			print("Accuracy: %.4f" % (val_acc))
+			print("F1-score: %.4f" % (w_f1score))
+			print("Precision:", precision)
+			print("Recall:", recall)
+
 
 
 		self.set_mode("train")  # model.train()
 
-		return avg_valloss, avg_valacc
+		return avg_valloss, w_f1score
 
 
 # # Testing
