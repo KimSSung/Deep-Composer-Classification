@@ -43,9 +43,14 @@ class Trainer:
 		self.data_load(self.config.mode)
 		self.num_batches = len(self.train_loader)
 
+		self.label_num = self.config.composers
+		# if age == True ==> label: 0, 1, 2
+		if self.config.age:
+			self.label_num = 3
+
+
 		# Define model
 		self.model = self.model_selection()
-		# model = convnet(self.config.input_shape[0], self.config.composers)
 		self.model = nn.DataParallel(self.model)
 		self.model.cuda()
 
@@ -65,25 +70,25 @@ class Trainer:
 
 	def model_selection(self):
 		if self.config.model_name == 'resnet18':
-			return resnet18(int(self.config.input_shape[0]), self.config.composers)
+			return resnet18(int(self.config.input_shape[0]), self.label_num)
 		elif self.config.model_name == 'resnet34':
-			return resnet34(int(self.config.input_shape[0]), self.config.composers)
+			return resnet34(int(self.config.input_shape[0]), self.label_num)
 		elif self.config.model_name == 'resnet50':
-			return resnet50(int(self.config.input_shape[0]), self.config.composers)
+			return resnet50(int(self.config.input_shape[0]), self.label_num)
 		elif self.config.model_name == 'resnet101':
-			return resnet101(int(self.config.input_shape[0]), self.config.composers)
+			return resnet101(int(self.config.input_shape[0]), self.label_num)
 		elif self.config.model_name == 'resnet152':
-			return resnet152(int(self.config.input_shape[0]), self.config.composers)
+			return resnet152(int(self.config.input_shape[0]), self.label_num)
 		elif self.config.model_name == 'convnet':
-			return convnet(int(self.config.input_shape[0]), self.config.composers)
+			return convnet(int(self.config.input_shape[0]), self.label_num)
 
 	def data_load(self, mode):
 		if mode == "basetrain":
 			print(">>>>>> Base Training <<<<<<\n")
 
 			# Loader for base training
-			t = MIDIDataset(self.config.train_split_path)
-			v = MIDIDataset(self.config.test_split_path)
+			t = MIDIDataset(self.config.train_split_path, age=self.config.age)
+			v = MIDIDataset(self.config.test_split_path, age=self.config.age)
 
 			# create batch
 			self.train_loader = DataLoader(
@@ -287,7 +292,7 @@ class Trainer:
 			w_f1score = f1_score(ground_truths, train_preds, average='weighted')
 
 			precision, recall, f1, supports = precision_recall_fscore_support(
-				ground_truths, train_preds, average=None, labels=list(range(self.config.composers)), warn_for=tuple())
+				ground_truths, train_preds, average=None, labels=list(range(self.label_num)), warn_for=tuple())
 			# print learning process
 			print(
 				"Epoch:  %d | Train Loss: %.4f | f1-score: %.4f | accuracy: %.4f" % (
@@ -475,7 +480,7 @@ class Trainer:
 			w_f1score = f1_score(val_ground_truths, val_preds, average='weighted')
 			
 			precision, recall, f1, supports = precision_recall_fscore_support(
-				val_ground_truths, val_preds, average=None, labels=list(range(self.config.composers)), warn_for=tuple())
+				val_ground_truths, val_preds, average=None, labels=list(range(self.label_num)), warn_for=tuple())
 			# print learning process
 			print("######## Valid #########")
 			# print("Valid Accuracy: %.2f" % (val_acc))

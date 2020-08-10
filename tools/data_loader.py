@@ -12,7 +12,7 @@ from os import listdir, path
 
 
 class MIDIDataset(Dataset):
-    def __init__(self, split_path):  # start
+    def __init__(self, split_path, age=False):  # start
         self.x_path = []
         self.y = []
 
@@ -23,7 +23,12 @@ class MIDIDataset(Dataset):
             temp = line.split("/")
             for element in temp:
                 if 'composer' in element:
-                    label = int(element.replace("composer", ""))  # composer num (0-13)
+                    label = int(element.replace("composer", ""))  # composer num (0-12)
+                    if age: # age == True
+                        if label in [2, 6]: label = 0 # Baroque
+                        elif label in [4, 8, 9, 12]: label = 1 # Classical
+                        else: label = 2 # Romanticism
+
                     break
 
             self.x_path.append(line.replace("\n", ""))

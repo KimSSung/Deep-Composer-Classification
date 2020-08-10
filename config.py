@@ -63,7 +63,7 @@ parser.add_argument(
     help="Total number of epochs to run. Not actual epoch.",
 )
 parser.add_argument(
-    "--train_batch", default=40, type=int, help="Batch size for training"
+    "--train_batch", default=20, type=int, help="Batch size for training"
 )
 parser.add_argument("--valid_batch", default=20, type=int, help="Batch size for valid.")
 
@@ -215,6 +215,13 @@ parser.add_argument(
     type=str,
     help="Augmentation mode (before / after). Defualt: before",
 )
+parser.add_argument(
+    "--age",
+    default=False,
+    type=bool,
+    help="Classification of Age? (True / False)",
+)
+
 
 
 def get_config():
