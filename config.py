@@ -67,9 +67,9 @@ parser.add_argument(
 )
 parser.add_argument("--valid_batch", default=20, type=int, help="Batch size for valid.")
 
-parser.add_argument("--gpu", default="0", type=str, help="GPU id to use.")
+parser.add_argument("--gpu", default="0,1,2,3", type=str, help="GPU id to use.")
 
-parser.add_argument("--lr", default=0.00005, type=float, help="Model learning rate.")
+parser.add_argument("--lr", default=0.0005, type=float, help="Model learning rate.")
 
 
 ##shared parameters (train & attack)
@@ -197,7 +197,7 @@ parser.add_argument(
     "--to_convert_path",
     default="/data/attacks/",
     type=str,
-    help="Path for 'only MIDIs' to convert. MUST NOT contain any folder !!",
+    help="Path for 'only MIDIs' to convert. Path CAN contain any folder !!",
 )
 
 
