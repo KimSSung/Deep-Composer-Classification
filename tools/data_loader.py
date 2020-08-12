@@ -48,13 +48,9 @@ class MIDIDataset(Dataset):
         # F = self.x_path[idx].replace(self.path, "")
         # print(F)
 
-        data = {"X": X, "Y": Y}
+        data = (X, Y)
         if self.transform:
             data = self.transform(data)
-        # return (
-        #     torch.tensor(X, dtype=torch.float32),
-        #     torch.tensor(Y, dtype=torch.long),
-        # )
         return data
 
 

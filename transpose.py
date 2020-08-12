@@ -15,8 +15,8 @@ class Transpose(object):
         self.semitone = semitone
 
     def __call__(self, segment):
-        """segment = {'X': X, 'Y':Y}"""
-        X, Y = segment["X"], segment["Y"]  # X.shape = (2,400,128)
+        """segment = (X,Y)"""
+        X, Y = segment[0], segment[1]  # X.shape = (2,400,128)
         new_X = list()
         for i in range(2):
             tmp = np.roll(X[i], self.semitone, axis=1)  # X[i].shape = (400,128)
@@ -26,7 +26,7 @@ class Transpose(object):
                 tmp[:, self.semitone :] = 0
             new_X.append(tmp)
         new_X = np.array(new_X)  # (2,400,128)
-        new_segment = {"X": new_X, "Y": Y}
+        new_segment = (new_X, Y)
 
         return new_segment
 
@@ -35,8 +35,8 @@ class ToTensor(object):
     """Convert numpy.ndarray to tensor"""
 
     def __call__(self, segment):
-        """segment = {'X': X, 'Y':Y}"""
-        X, Y = segment["X"], segment["Y"]
+        """segment = (X,Y)"""
+        X, Y = segment[0], segment[1]
         return (
             torch.tensor(X, dtype=torch.float32),
             torch.tensor(Y, dtype=torch.long),
@@ -47,7 +47,8 @@ class ToTensor(object):
 # v = MIDIDataset(
 #     "/data/split/test.txt",
 #     age=False,
-#     transform=torchvision.transforms.Compose([Transpose(3), ToTensor()]),
+#     # transform=torchvision.transforms.Compose([Transpose(3), ToTensor()]),
+#     transform=torchvision.transforms.Compose([ToTensor()]),
 # )
 # v_loader = DataLoader(v, batch_size=1, shuffle=True)
 # for batch in v_loader:
