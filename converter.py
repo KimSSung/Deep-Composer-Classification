@@ -32,7 +32,7 @@ class Converter:
         self.orig_midi_name = ""
         self.maestro_midi_name = ""
         self.success_num = 0
-        self.limit_success_num = 10
+        self.limit_success_num = 300
 
     # --------------------------------------------------------------------------
     # functions
@@ -65,6 +65,21 @@ class Converter:
             + ", "
             + str(velocity)
             + "\n"
+        )
+
+    def control_change_event_string(self, track_num, delta_time, channel, pitch, velocity):
+
+        return (
+                str(track_num)
+                + ", "
+                + str(delta_time)
+                + ", Control_c, "
+                + str(channel)
+                + ", "
+                + str(pitch)
+                + ", "
+                + str(velocity)
+                + "\n"
         )
 
     def note_off_event_string(self, track_num, delta_time, channel, pitch, velocity):
@@ -200,7 +215,7 @@ class Converter:
                 # slower by 4.8
                 header = origin_file_csv[0].split(", ")
                 # print('Before header:', header)
-                header[-1] = str(int(int(header[-1][:-1]) / 2.0)) + "\n"
+                header[-1] = str(int(int(header[-1][:-1]) *1.3)) + "\n"
                 header[-2] = str(int(total_track))
                 # print('After header:', header)
                 new_csv_string.append(
@@ -241,6 +256,10 @@ class Converter:
                 note_on_list[0].append(-1)
                 note_on_list[1].append(-1)
 
+                control_change_list = [[] for i in range(0, total_track)]
+                control_change_list[0].append(-1)
+                control_change_list[1].append(-1)
+
                 note_off_list = [[] for i in range(0, total_track)]
                 note_off_list[0].append(-1)
                 note_off_list[1].append(-1)
@@ -280,28 +299,41 @@ class Converter:
 
                                     # Append Note_on when before event don't exist
 
-                                    # if (load_data[channel_instrument][row-1][col] == 0) and row!=0:
-                                    note_on_list[track_num].append(
-                                        [
-                                            track_num,
-                                            delta_time,
-                                            channel,
-                                            pitch,
-                                            velocity,
-                                        ]
-                                    )
+                                    if row!=0 and (load_data[channel_instrument][row-1][col] == 0) :
+                                        note_on_list[track_num].append(
+                                            [
+                                                track_num,
+                                                delta_time,
+                                                channel,
+                                                pitch,
+                                                velocity,
+                                            ]
+                                        )
+
+                                    elif row!=0 and (load_data[channel_instrument][row-1][col] != 0) :
+
+                                        control_change_list[track_num].append(
+                                            [
+                                                track_num,
+                                                delta_time,
+                                                channel,
+                                                pitch,
+                                                velocity,
+                                            ]
+                                        )
 
                                     # Append Note_off when after event don't exist
-                                    # if (load_data[channel_instrument][row+1][col] == 0) and row!= (load_data.shape[1]-2):
-                                    note_off_list[track_num].append(
-                                        [
-                                            track_num,
-                                            end_delta_time,
-                                            channel,
-                                            pitch,
-                                            velocity,
-                                        ]
-                                    )
+
+                                    if row!= (load_data.shape[1]-1) and (load_data[channel_instrument][row+1][col] == 0):
+                                        note_off_list[track_num].append(
+                                            [
+                                                track_num,
+                                                end_delta_time,
+                                                channel,
+                                                pitch,
+                                                velocity,
+                                            ]
+                                        )
 
                                 else:
                                     # Set the track_string_list new track header - program_c event
@@ -330,24 +362,41 @@ class Converter:
                                             track_num, channel, program_num
                                         )
                                     )
-                                    note_on_list[track_num].append(
-                                        [
-                                            track_num,
-                                            delta_time,
-                                            channel,
-                                            pitch,
-                                            velocity,
-                                        ]
-                                    )
-                                    note_off_list[track_num].append(
-                                        [
-                                            track_num,
-                                            end_delta_time,
-                                            channel,
-                                            pitch,
-                                            velocity,
-                                        ]
-                                    )
+
+                                    if row != 0 and (load_data[channel_instrument][row - 1][col] == 0):
+                                        note_on_list[track_num].append(
+                                            [
+                                                track_num,
+                                                delta_time,
+                                                channel,
+                                                pitch,
+                                                velocity,
+                                            ]
+                                        )
+
+                                    elif row!=0 and (load_data[channel_instrument][row-1][col] != 0) :
+
+                                        control_change_list[track_num].append(
+                                            [
+                                                track_num,
+                                                delta_time,
+                                                channel,
+                                                pitch,
+                                                velocity,
+                                            ]
+                                        )
+
+                                    if row != (load_data.shape[1] - 1) and (
+                                            load_data[channel_instrument][row + 1][col] == 0):
+                                        note_off_list[track_num].append(
+                                            [
+                                                track_num,
+                                                end_delta_time,
+                                                channel,
+                                                pitch,
+                                                velocity,
+                                            ]
+                                        )
 
                         for num in range(2, len(note_on_list)):  # num = track num
                             for notes in range(0, len(note_on_list[num])):
@@ -360,6 +409,19 @@ class Converter:
                                         note_on_list[num][notes][4],
                                     )
                                 )
+
+                        for num in range(2, len(control_change_list)):  # num = track num
+                            for notes in range(0, len(control_change_list[num])):
+                                track_string_list[num].append(
+                                    self.control_change_event_string(
+                                        control_change_list[num][notes][0],
+                                        control_change_list[num][notes][1],
+                                        control_change_list[num][notes][2],
+                                        control_change_list[num][notes][3],
+                                        control_change_list[num][notes][4],
+                                    )
+                                )
+
                         for num in range(2, len(note_off_list)):
                             for notes in range(0, len(note_off_list[num])):
                                 track_string_list[num].append(
@@ -371,7 +433,9 @@ class Converter:
                                         note_off_list[num][notes][4],
                                     )
                                 )
+
                         note_on_list = [[] for i in range(0, total_track)]
+                        control_change_list = [[] for i in range(0, total_track)]
                         note_off_list = [[] for i in range(0, total_track)]
 
                 end_delta_time = 400 * 50
