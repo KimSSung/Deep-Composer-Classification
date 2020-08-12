@@ -204,10 +204,7 @@ parser.add_argument(
 ##spliter
 # use --input_save_path
 parser.add_argument(
-    "--train_percentage",
-    default=0.7,
-    type=float,
-    help="Train data percentage (0 ~ 1)",
+    "--train_percentage", default=0.7, type=float, help="Train data percentage (0 ~ 1)",
 )
 parser.add_argument(
     "--aug_mode",
@@ -216,12 +213,8 @@ parser.add_argument(
     help="Augmentation mode (before / after). Defualt: before",
 )
 parser.add_argument(
-    "--age",
-    default=False,
-    type=bool,
-    help="Classification of Age? (True / False)",
+    "--age", default=False, type=bool, help="Classification of Age? (True / False)",
 )
-
 
 
 def get_config():

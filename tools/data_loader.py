@@ -2,7 +2,7 @@
 
 
 from torch.utils.data import DataLoader, Dataset
-
+from torchvision import transforms
 
 import torch
 import numpy as np
@@ -12,22 +12,26 @@ from os import listdir, path
 
 
 class MIDIDataset(Dataset):
-    def __init__(self, split_path, age=False):  # start
+    def __init__(self, split_path, age=False, transform=None):  # start
         self.x_path = []
         self.y = []
+        self.transform = transform
 
         f = open(split_path, "r")
-        label = -1 # init
+        label = -1  # init
         for line in f:
             # find composer num
             temp = line.split("/")
             for element in temp:
-                if 'composer' in element:
+                if "composer" in element:
                     label = int(element.replace("composer", ""))  # composer num (0-12)
-                    if age: # age == True
-                        if label in [2, 6]: label = 0 # Baroque
-                        elif label in [4, 8, 9, 12]: label = 1 # Classical
-                        else: label = 2 # Romanticism
+                    if age:  # age == True
+                        if label in [2, 6]:
+                            label = 0  # Baroque
+                        elif label in [4, 8, 9, 12]:
+                            label = 1  # Classical
+                        else:
+                            label = 2  # Romanticism
 
                     break
 
@@ -43,10 +47,15 @@ class MIDIDataset(Dataset):
         Y = self.y[idx]
         # F = self.x_path[idx].replace(self.path, "")
         # print(F)
-        return (
-            torch.tensor(X, dtype=torch.float32),
-            torch.tensor(Y, dtype=torch.long),
-        )
+
+        data = {"X": X, "Y": Y}
+        if self.transform:
+            data = self.transform(data)
+        # return (
+        #     torch.tensor(X, dtype=torch.float32),
+        #     torch.tensor(Y, dtype=torch.long),
+        # )
+        return data
 
 
 # @ TEST
