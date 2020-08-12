@@ -20,9 +20,6 @@ class MIDIDataset(Dataset):
         self.x_path = []
         self.y = []
         self.transform = transform
-        chance = random.random()
-        if chance > 0.3:  # no augmentation (70% of data)
-            self.transform = transforms.Compose([ToTensor()])
 
         f = open(split_path, "r")
         label = -1  # init
@@ -53,6 +50,11 @@ class MIDIDataset(Dataset):
         X = np.load(self.x_path[idx], allow_pickle=True)
         Y = self.y[idx]
         data = (X, Y)
+
+        chance = random.random()
+        if chance > 0.3:  # no augmentation (70% of data)
+            self.transform = transforms.Compose([ToTensor()])
+
         if self.transform:
             data = self.transform(data)
 
