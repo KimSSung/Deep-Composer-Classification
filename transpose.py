@@ -1,14 +1,13 @@
 import torchvision
-from tools.data_loader import MIDIDataset
 import torch
 import numpy as np
-from torch.utils.data import DataLoader, TensorDataset, ConcatDataset
+
+# from torch.utils.data import DataLoader, TensorDataset, ConcatDataset
 
 
 class Transpose(object):
     """ augmentation: [-6, +6] semitones
-        Args: semitone
-    """
+        Args: semitone (int)"""
 
     def __init__(self, semitone):
         assert isinstance(semitone, int)
@@ -29,6 +28,21 @@ class Transpose(object):
         new_segment = (new_X, Y)
 
         return new_segment
+
+
+# class Tempo_Stretch(object):
+#     """ augmentation :
+#         Args: """
+#
+#     def __init__(self):
+#
+#
+#     def __call__(self, segment):
+#         X,Y = segment[0], segment[1]
+#         new_X = X #TODO: implement tempo stretch here
+#
+#         new_segment = (new_X, Y)
+#         return new_segment
 
 
 class ToTensor(object):
