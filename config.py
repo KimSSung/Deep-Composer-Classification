@@ -34,8 +34,6 @@ parser.add_argument(
 )
 
 
-
-
 # attacked input
 parser.add_argument(
     "--attacked_train_input_path",
@@ -170,22 +168,6 @@ parser.add_argument(
     help="save path (absolute dir)",
 )
 
-parser.add_argument("--overlap", default=False, type=bool, help="enable 50% overlap?")
-
-parser.add_argument(
-    "--segment_num",
-    default=10,
-    type=int,
-    help="how many segments per midi?(discard below)",
-)
-
-parser.add_argument(
-    "--augmentation",
-    default="None",
-    type=str,
-    help="(default=None / transpose / tempo_stretch)",
-)
-
 ##converter
 parser.add_argument(
     "--to_convert_path",
@@ -198,24 +180,17 @@ parser.add_argument(
 ##spliter
 # use --input_save_path
 parser.add_argument(
-    "--train_percentage",
-    default=0.7,
-    type=float,
-    help="Train data percentage (0 ~ 1)",
+    "--train_percentage", default=0.7, type=float, help="Train data percentage (0 ~ 1)",
 )
 parser.add_argument(
     "--aug_mode",
     default="before",
     type=str,
-    help="Augmentation mode (before / after). Defualt: before",
+    help="Augmentation mode (before / after). Default: before",
 )
 parser.add_argument(
-    "--age",
-    default=False,
-    type=bool,
-    help="Classification of Age? (True / False)",
+    "--age", default=False, type=bool, help="Classification of Age? (True / False)",
 )
-
 
 
 def get_config():
