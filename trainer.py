@@ -44,7 +44,7 @@ class Trainer:
         self.omitlist = []
         if self.config.omit:
             self.omitlist = self.config.omit.split(',') # ['2', '5']. str list.
-            
+
         self.label_num = self.config.composers - len(self.omitlist)
         print("==> Total label # :", self.label_num)
         print()
@@ -177,7 +177,7 @@ class Trainer:
                 classes=self.label_num,
                 omit=self.config.omit, # str
                 seg_num=self.seg_num, age=self.config.age,
-                transform=torchvision.transforms.Compose([Segmentation(), Transpose(), ToTensor()])
+                transform=torchvision.transforms.Compose([Segmentation(), ToTensor()])
             )
             v = MIDIDataset(
                 self.config.test_split_path,
@@ -367,6 +367,11 @@ class Trainer:
                 # accuracy
                 trn_total += train_out.size(0)
                 trn_correct += (label_pred == train_out).sum().item()
+
+                print('-------------------------')
+                print("pred:",label_pred)
+                print("true:",train_out)
+                print()
 
                 # f1 accuracy
                 train_preds.extend(label_pred.tolist())
