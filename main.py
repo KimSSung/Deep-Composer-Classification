@@ -38,7 +38,9 @@ def main(args):
 
     else:
         print('#### Please execute with mode: ex) --mode "basetrain"')
-        print("#### MODE: [basetrain / advtrain / attack / generate / converter / split]")
+        print(
+            "#### MODE: [basetrain / advtrain / attack / generate / converter / split]"
+        )
 
 
 if __name__ == "__main__":

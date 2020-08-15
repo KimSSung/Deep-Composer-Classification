@@ -3,20 +3,18 @@
 from torchvision import transforms
 from torch.utils.data import DataLoader, Dataset
 import numpy as np
-from glob import glob
+from glob import glob, iglob
 from tools.transforms import ToTensor, Transpose, Segmentation
 import random
 
 
 class MIDIDataset(Dataset):
     def __init__(
-        self, path, classes=13, omit=None, seg_num=20, age=False, transform=None
+        self, txt_file, classes=13, omit=None, seg_num=20, age=False, transform=None
     ):
-        self.path = path
+        self.txt_file = txt_file
+        self.classes = classes
         self.classes = [x for x in range(classes)]
-        if omit is not None:  # ex) omit = [2, 10]
-            for el in omit:
-                self.classes.remove(el)
 
         self.seg_num = seg_num  # seg num per song
         self.transform = transform
@@ -24,16 +22,23 @@ class MIDIDataset(Dataset):
         self.x_path = []
         self.y = []
 
-        for i, label in enumerate(self.classes):
-            comp_dir = self.path + "composer" + str(label) + "/"
-            for comp in glob(comp_dir):
-                for midi_dir in glob(comp + "*/"):
-                    ver_npy = glob(midi_dir + "/*.npy")
-                    # randomly select n segments pth
-                    tmp = [random.choice(ver_npy) for j in range(self.seg_num)]
-                    self.x_path.extend(tmp)
-                    self.y.append(i)
-                    """ 중간에 composer 뺄 경우 i가 그만큼 당겨서 label 됨"""
+        self.map = dict()
+        if omit is not None:
+            for c in self.classes:
+                if c in omit:
+                    continue
+                label = c - sum(c > o for o in omit)
+                self.map[c] = label
+
+        txt_list = open(self.txt_file, "r")
+        for midi_pth in txt_list:  # each midi
+            label = midi_pth[midi_pth.find("composer") + 8]
+            ver_npy = glob(midi_pth.replace("\n", "") + "*.npy")  # list
+            # randomly select n segments pth
+            tmp = [random.choice(ver_npy) for j in range(self.seg_num)]
+            self.x_path.extend(tmp)
+            self.y.append(self.map[int(label)])
+            """ 중간에 composer 뺄 경우 i가 그만큼 당겨서 label 됨"""
 
     def __len__(self):
         return len(self.y)
@@ -54,12 +59,12 @@ class MIDIDataset(Dataset):
 
 
 ##TEST
+# if __name__ == "__main__":
 # v = MIDIDataset(
-#     path="/data/inputs_full/",
+#     txt_file="/data/split/train.txt",
 #     transform=transforms.Compose([Segmentation(), Transpose(), ToTensor()]),  # checked
-#     classes = self.config!~~
 #     omit=[2],  # checked
-#     seg_num=10, #checked
+#     # seg_num=10, #checked
 # )
 # v_loader = DataLoader(v, batch_size=1, shuffle=True)
 # for batch in v_loader:

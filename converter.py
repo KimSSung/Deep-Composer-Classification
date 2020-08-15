@@ -67,19 +67,21 @@ class Converter:
             + "\n"
         )
 
-    def control_change_event_string(self, track_num, delta_time, channel, pitch, velocity):
+    def control_change_event_string(
+        self, track_num, delta_time, channel, pitch, velocity
+    ):
 
         return (
-                str(track_num)
-                + ", "
-                + str(delta_time)
-                + ", Control_c, "
-                + str(channel)
-                + ", "
-                + str(pitch)
-                + ", "
-                + str(velocity)
-                + "\n"
+            str(track_num)
+            + ", "
+            + str(delta_time)
+            + ", Control_c, "
+            + str(channel)
+            + ", "
+            + str(pitch)
+            + ", "
+            + str(velocity)
+            + "\n"
         )
 
     def note_off_event_string(self, track_num, delta_time, channel, pitch, velocity):
@@ -215,7 +217,7 @@ class Converter:
                 # slower by 4.8
                 header = origin_file_csv[0].split(", ")
                 # print('Before header:', header)
-                header[-1] = str(int(int(header[-1][:-1]) *1.3)) + "\n"
+                header[-1] = str(int(int(header[-1][:-1]) * 1.3)) + "\n"
                 header[-2] = str(int(total_track))
                 # print('After header:', header)
                 new_csv_string.append(
@@ -299,7 +301,9 @@ class Converter:
 
                                     # Append Note_on when before event don't exist
 
-                                    if row!=0 and (load_data[channel_instrument][row-1][col] == 0) :
+                                    if row != 0 and (
+                                        load_data[channel_instrument][row - 1][col] == 0
+                                    ):
                                         note_on_list[track_num].append(
                                             [
                                                 track_num,
@@ -310,7 +314,9 @@ class Converter:
                                             ]
                                         )
 
-                                    elif row!=0 and (load_data[channel_instrument][row-1][col] != 0) :
+                                    elif row != 0 and (
+                                        load_data[channel_instrument][row - 1][col] != 0
+                                    ):
 
                                         control_change_list[track_num].append(
                                             [
@@ -324,7 +330,9 @@ class Converter:
 
                                     # Append Note_off when after event don't exist
 
-                                    if row!= (load_data.shape[1]-1) and (load_data[channel_instrument][row+1][col] == 0):
+                                    if row != (load_data.shape[1] - 1) and (
+                                        load_data[channel_instrument][row + 1][col] == 0
+                                    ):
                                         note_off_list[track_num].append(
                                             [
                                                 track_num,
@@ -363,7 +371,9 @@ class Converter:
                                         )
                                     )
 
-                                    if row != 0 and (load_data[channel_instrument][row - 1][col] == 0):
+                                    if row != 0 and (
+                                        load_data[channel_instrument][row - 1][col] == 0
+                                    ):
                                         note_on_list[track_num].append(
                                             [
                                                 track_num,
@@ -374,7 +384,9 @@ class Converter:
                                             ]
                                         )
 
-                                    elif row!=0 and (load_data[channel_instrument][row-1][col] != 0) :
+                                    elif row != 0 and (
+                                        load_data[channel_instrument][row - 1][col] != 0
+                                    ):
 
                                         control_change_list[track_num].append(
                                             [
@@ -387,7 +399,8 @@ class Converter:
                                         )
 
                                     if row != (load_data.shape[1] - 1) and (
-                                            load_data[channel_instrument][row + 1][col] == 0):
+                                        load_data[channel_instrument][row + 1][col] == 0
+                                    ):
                                         note_off_list[track_num].append(
                                             [
                                                 track_num,
@@ -410,7 +423,9 @@ class Converter:
                                     )
                                 )
 
-                        for num in range(2, len(control_change_list)):  # num = track num
+                        for num in range(
+                            2, len(control_change_list)
+                        ):  # num = track num
                             for notes in range(0, len(control_change_list[num])):
                                 track_string_list[num].append(
                                     self.control_change_event_string(
