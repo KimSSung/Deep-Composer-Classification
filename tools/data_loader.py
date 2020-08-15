@@ -4,7 +4,7 @@ from torchvision import transforms
 from torch.utils.data import DataLoader, Dataset
 import numpy as np
 from glob import glob
-from transforms import ToTensor, Transpose, Segmentation
+from tools.transformation import ToTensor, Transpose, Segmentation
 import random
 
 
@@ -35,11 +35,12 @@ class MIDIDataset(Dataset):
                 label = c - sum(c > int(o) for o in self.omitlist)
                 self.map[c] = label
 
-        print(self.map)
+        # print(self.map)
 
         txt_list = open(self.txt_file, "r")
         for midi_pth in txt_list:  # each midi
             temp = midi_pth.split('/')
+            comp_num = -1
             for i in temp:
                 if 'composer' in i:
                     comp_num = int(i.replace('composer', ''))
@@ -82,4 +83,4 @@ if __name__ == "__main__":
     v_loader = DataLoader(v, batch_size=1, shuffle=True)
     for batch in v_loader:
         random.seed(123)
-        print("{} {}".format(batch["Y"], batch["loc"]))
+        print("{} {}".form
