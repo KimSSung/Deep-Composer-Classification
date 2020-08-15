@@ -183,7 +183,7 @@ parser.add_argument(
     "--train_percentage", default=0.7, type=float, help="Train data percentage (0 ~ 1)",
 )
 parser.add_argument(
-    "--omit", default='', type=str, help="List of omitted composers' indices.",
+    "--omit", default="", type=str, help="List of omitted composers' indices.",
 )
 parser.add_argument(
     "--age", default=False, type=bool, help="Classification of Age? (True / False)",
