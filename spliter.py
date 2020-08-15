@@ -13,7 +13,10 @@ class Spliter:
         self.input_path = self.config.input_save_path
 
         # print(self.config.omit)
-        self.omitlist = self.config.omit.split(',') # ['2', '5']. str list.
+        self.omitlist = []
+        if self.config.omit:
+            self.omitlist = self.config.omit.split(',') # ['2', '5']. str list.
+
         # print("omit:", self.omitlist)
 
         self.composer = []

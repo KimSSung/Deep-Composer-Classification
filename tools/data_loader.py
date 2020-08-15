@@ -4,7 +4,7 @@ from torchvision import transforms
 from torch.utils.data import DataLoader, Dataset
 import numpy as np
 from glob import glob
-from tools.transforms import ToTensor, Transpose, Segmentation
+from transforms import ToTensor, Transpose, Segmentation
 import random
 
 
@@ -35,16 +35,22 @@ class MIDIDataset(Dataset):
                 label = c - sum(c > int(o) for o in self.omitlist)
                 self.map[c] = label
 
-        # print(self.map)
+        print(self.map)
 
         txt_list = open(self.txt_file, "r")
         for midi_pth in txt_list:  # each midi
-            label = midi_pth[midi_pth.find("composer") + len("composer")]
+            temp = midi_pth.split('/')
+            for i in temp:
+                if 'composer' in i:
+                    comp_num = int(i.replace('composer', ''))
+                    break
+            # print(comp_num)
+            
             ver_npy = glob(midi_pth.replace("\n", "") + "*.npy")  # list
             # randomly select n segments pth
             tmp = [random.choice(ver_npy) for j in range(self.seg_num)]
             self.x_path.extend(tmp)
-            self.y.append(self.map[int(label)])
+            self.y.append(self.map[comp_num])
             """ 중간에 composer 뺄 경우 i가 그만큼 당겨서 label 됨"""
 
     def __len__(self):
