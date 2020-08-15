@@ -306,12 +306,12 @@ class Attacker:
             plt.show()
         return
 
-
-# Testing
-config, unparsed = get_config()
-# for arg in vars(config):
-#     argname = arg
-#     contents = str(getattr(config, arg))
-#     print(argname + " = " + contents)
-temp = Attacker(config)
-temp.run()
+if __name__ == "__main__":
+    # Testing
+    config, unparsed = get_config()
+    # for arg in vars(config):
+    #     argname = arg
+    #     contents = str(getattr(config, arg))
+    #     print(argname + " = " + contents)
+    temp = Attacker(config)
+    temp.run()
