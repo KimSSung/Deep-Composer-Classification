@@ -25,7 +25,7 @@ from sklearn.metrics import precision_recall_fscore_support
 
 # transform
 import torchvision
-from tools.transforms import ToTensor
+from tools.transforms import ToTensor, Segmentation, Transpose
 
 
 class Trainer:
@@ -34,19 +34,23 @@ class Trainer:
 
         # 0 : acc / 1: loss / 2: f1 / 3: precision / 4: recall
         self.best_valid = [-1.0, 30000.0, -1.0, [], []]
+        self.seg_num = 20 # change this
 
         # for GPU use
         # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID" # moved to main
         # os.environ["CUDA_VISIBLE_DEVICES"] = self.config.gpu # moved to main
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        self.data_load(self.config.mode)
-        self.num_batches = len(self.train_loader)
-
-        self.label_num = self.config.composers
+        self.label_num = self.config.composers - len(self.config.omit.split(','))
+        print("==> Total label # :", self.label_num)
+        print()
         # if age == True ==> label: 0, 1, 2
         if self.config.age:
             self.label_num = 3
+
+
+        self.data_load(self.config.mode)
+        self.num_batches = len(self.train_loader)
 
         # Define model
         self.model = self.model_selection()
@@ -166,13 +170,17 @@ class Trainer:
             # Loader for base training
             t = MIDIDataset(
                 self.config.train_split_path,
-                age=self.config.age,
-                transform=torchvision.transforms.Compose([ToTensor()]),
+                classes=self.label_num,
+                omit=self.config.omit, # str
+                seg_num=self.seg_num, age=self.config.age,
+                transform=torchvision.transforms.Compose([Segmentation(), ToTensor()])
             )
             v = MIDIDataset(
                 self.config.test_split_path,
-                age=self.config.age,
-                transform=torchvision.transforms.Compose([ToTensor()]),
+                classes=self.label_num,
+                omit=self.config.omit,
+                seg_num=self.seg_num, age=self.config.age,
+                transform=torchvision.transforms.Compose([Segmentation(), ToTensor()])
             )
 
             # create batch
@@ -326,7 +334,9 @@ class Trainer:
                 # train_mode
 
                 # unpack
-                train_in, train_out = trainset
+                # train_in, train_out = trainset
+                train_in = trainset["X"]
+                train_out = trainset["Y"]
 
                 ##### Optional: Remove onset channel = [0]
                 ##### Run here when --input_shape 1,400,128
@@ -527,7 +537,9 @@ class Trainer:
             val_correct = 0
 
             for j, valset in enumerate(test_loader):
-                val_in, val_out = valset
+                # val_in, val_out = valset
+                val_in = valset["X"]
+                val_out = valset["Y"]
 
                 ##### Optional: Remove onset channel = [0]
                 ##### Run here when --input_shape 1,400,128

@@ -3,7 +3,7 @@
 from torchvision import transforms
 from torch.utils.data import DataLoader, Dataset
 import numpy as np
-from glob import glob, iglob
+from glob import glob
 from tools.transforms import ToTensor, Transpose, Segmentation
 import random
 
@@ -21,13 +21,19 @@ class MIDIDataset(Dataset):
         self.x_path = []
         self.y = []
 
-        self.map = dict()
-        if omit is not None:
+        self.map = {}
+
+        self.omitlist = omit.split(',')
+
+        # omit = list of string
+        if self.omitlist is not None:
             for c in self.classes:
-                if c in omit:
+                if str(c) in self.omitlist:
                     continue
-                label = c - sum(c > o for o in omit)
+                label = c - sum(c > int(o) for o in self.omitlist)
                 self.map[c] = label
+
+        # print(self.map)
 
         txt_list = open(self.txt_file, "r")
         for midi_pth in txt_list:  # each midi
@@ -58,14 +64,14 @@ class MIDIDataset(Dataset):
 
 
 ##TEST
-# if __name__ == "__main__":
-# v = MIDIDataset(
-#     txt_file="/data/split/train.txt",
-#     transform=transforms.Compose([Segmentation(), Transpose(), ToTensor()]),  # checked
-#     omit=[2],  # checked
-#     # seg_num=10, #checked
-# )
-# v_loader = DataLoader(v, batch_size=1, shuffle=True)
-# for batch in v_loader:
-#     random.seed(123)
-#     print("{} {}".format(batch["Y"], batch["loc"]))
+if __name__ == "__main__":
+    v = MIDIDataset(
+        txt_file="/data/split/train.txt",
+        transform=transforms.Compose([Segmentation(), Transpose(), ToTensor()]),  # checked
+        omit='2,5,10',  # checked
+        # seg_num=10, #checked
+    )
+    v_loader = DataLoader(v, batch_size=1, shuffle=True)
+    for batch in v_loader:
+        random.seed(123)
+        print("{} {}".format(batch["Y"], batch["loc"]))
