@@ -8,12 +8,12 @@ import matplotlib.pyplot as plt
 import csv
 import pandas as pd
 
-input_dir = "/data/composer3/"
+input_dir = "/data/inputs_full/composer0/"
 midi_list = os.listdir(input_dir)
 for midi in midi_list:
     for data in glob.glob(input_dir + midi + "/*.npy"):
         mat = np.load(data)
-        mat_notes = mat[1]
+        mat_notes = mat[1]  # note channel
         nzero = mat_notes.nonzero()
         x = nzero[0]
         y = nzero[1]

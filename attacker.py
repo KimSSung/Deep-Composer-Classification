@@ -1,7 +1,5 @@
 # Attacker class
 
-# from config import get_config
-
 import os
 import sys
 import copy
@@ -11,12 +9,12 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 import torch.nn as nn
+from config import get_config
+
 
 # to import from sibling folders
 # sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-from models.resnet import resnet18, resnet101, resnet152, resnet50
-
-# dataloader
+from models.resnet import resnet18, resnet34, resnet101, resnet152, resnet50
 from tools.data_loader import MIDIDataset
 
 
@@ -24,25 +22,38 @@ class Attacker:
     def __init__(self, args):
         self.config = args
 
-        # for GPU use
-        # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-        # os.environ["CUDA_VISIBLE_DEVICES"] = self.config.gpu
+        # for GPU use #TODO: remove
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+        os.environ["CUDA_VISIBLE_DEVICES"] = self.config.gpu
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        num_genres = len(self.config.genres)
+        self.label_num = self.config.composers
         self.data_load(self.config.specific_files, self.config.t_or_v, self.config.orig)
 
-        # TODO: get model + loss f from main.py(train + attack)
-        self.model = resnet50(self.config.input_shape[0], num_genres)
+        self.model_type = None
+        self.model = self.get_model()
         self.model_load()
 
         self.criterion = nn.CrossEntropyLoss()
         self.criterion = self.criterion.to(self.device)
 
+    def get_model(self):
+        model_fname = os.listdir(self.config.atk_path + "model/")
+        self.model_type = model_fname[0].split("_")[0]  # ex: resnet50
+        if self.model_type == "resnet18":
+            return resnet18(int(self.config.input_shape[0]), self.label_num)
+        elif self.model_type == "resnet34":
+            return resnet34(int(self.config.input_shape[0]), self.label_num)
+        elif self.model_type == "resnet50":
+            return resnet50(int(self.config.input_shape[0]), self.label_num)
+        elif self.model_type == "resnet101":
+            return resnet101(int(self.config.input_shape[0]), self.label_num)
+        elif self.model_type == "resnet152":
+            return resnet152(int(self.config.input_shape[0]), self.label_num)
+
     def model_load(self):
         self.model.eval()
-        model_fname = os.listdir(self.config.atk_path + "model/")
-        checkpoint = torch.load(self.config.atk_path + "model/" + model_fname[0])  # 명시
+        checkpoint = torch.load(self.config.atk_path + "model/" + self.model_type)  # 명시
         self.model.load_state_dict(checkpoint["model.state_dict"])
         print("==> MODEL LOADED")
         self.model = self.model.to(self.device)
@@ -297,10 +308,10 @@ class Attacker:
 
 
 # Testing
-# config, unparsed = get_config()
+config, unparsed = get_config()
 # for arg in vars(config):
 #     argname = arg
 #     contents = str(getattr(config, arg))
 #     print(argname + " = " + contents)
-# temp = Attacker(config)
-# temp.run()
+temp = Attacker(config)
+temp.run()
