@@ -41,7 +41,11 @@ class Trainer:
         # os.environ["CUDA_VISIBLE_DEVICES"] = self.config.gpu # moved to main
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        self.label_num = self.config.composers - len(self.config.omit.split(','))
+        self.omitlist = []
+        if self.config.omit:
+            self.omitlist = self.config.omit.split(',') # ['2', '5']. str list.
+            
+        self.label_num = self.config.composers - len(self.omitlist)
         print("==> Total label # :", self.label_num)
         print()
         # if age == True ==> label: 0, 1, 2
@@ -173,14 +177,14 @@ class Trainer:
                 classes=self.label_num,
                 omit=self.config.omit, # str
                 seg_num=self.seg_num, age=self.config.age,
-                transform=torchvision.transforms.Compose([Segmentation(), ToTensor()])
+                transform=torchvision.transforms.Compose([Segmentation(), Transpose(), ToTensor()])
             )
             v = MIDIDataset(
                 self.config.test_split_path,
                 classes=self.label_num,
                 omit=self.config.omit,
                 seg_num=self.seg_num, age=self.config.age,
-                transform=torchvision.transforms.Compose([Segmentation(), ToTensor()])
+                transform=None
             )
 
             # create batch

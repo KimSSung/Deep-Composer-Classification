@@ -34,5 +34,5 @@ midi_files_path = /data/MAESTRO/maestro-v2.0.0/
 input_save_path = /data/which_dir/
 to_convert_path = /data/attacks/
 train_percentage = 0.7
-omit = 2,10
+omit = 
 age = False

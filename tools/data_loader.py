@@ -23,8 +23,10 @@ class MIDIDataset(Dataset):
 
         self.map = {}
 
-        self.omitlist = omit.split(',')
-
+        self.omitlist = []
+        if omit:
+            self.omitlist = omit.split(',') # ['2', '5']. str list.
+        
         # omit = list of string
         if self.omitlist is not None:
             for c in self.classes:
