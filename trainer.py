@@ -25,7 +25,7 @@ from sklearn.metrics import precision_recall_fscore_support
 
 # transform
 import torchvision
-from tools.transforms import ToTensor, Segmentation, Transpose
+from tools.transformation import ToTensor, Segmentation, Transpose
 
 
 class Trainer:
@@ -368,10 +368,10 @@ class Trainer:
                 trn_total += train_out.size(0)
                 trn_correct += (label_pred == train_out).sum().item()
 
-                print('-------------------------')
-                print("pred:",label_pred)
-                print("true:",train_out)
-                print()
+                # print('-------------------------')
+                # print("pred:",label_pred)
+                # print("true:",train_out)
+                # print()
 
                 # f1 accuracy
                 train_preds.extend(label_pred.tolist())

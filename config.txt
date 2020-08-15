@@ -1,18 +1,18 @@
-Parameters for split:
+Parameters for basetrain:
 
 composers = 13
 model_name = resnet50
 train_split_path = /data/split/train.txt
 test_split_path = /data/split/test.txt
-optim = optimizer
+optim = SGD
 attacked_train_input_path = /data/attacks/vel_deepfool/train/
 attacked_valid_input_path = /data/attacks/vel_deepfool/valid/
-epochs = 100
-train_batch = 20
-valid_batch = 20
+epochs = 50
+train_batch = 40
+valid_batch = 40
 gpu = 0,1,2,3
-lr = 0.0005
-mode = split
+lr = 0.01
+mode = basetrain
 model_save_path = /data/drum/model/
 input_shape = (2, 400, 128)
 trainloader_save_path = /data/drum/dataset/train/
@@ -31,8 +31,8 @@ overshoot = 5
 plot = False
 tempo_range = 1
 midi_files_path = /data/MAESTRO/maestro-v2.0.0/
-input_save_path = /data/inputs_full/
+input_save_path = /data/which_dir/
 to_convert_path = /data/attacks/
 train_percentage = 0.7
-omit = 2,5,10
+omit = None
 age = False
