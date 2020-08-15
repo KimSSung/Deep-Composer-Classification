@@ -4,7 +4,7 @@ from torchvision import transforms
 from torch.utils.data import DataLoader, Dataset
 import numpy as np
 from glob import glob
-from .transforms import ToTensor, Transpose, Segmentation
+from tools.transforms import ToTensor, Transpose, Segmentation
 import random
 
 
@@ -24,15 +24,16 @@ class MIDIDataset(Dataset):
         self.x_path = []
         self.y = []
 
-        for i, label in enumerate(classes):
+        for i, label in enumerate(self.classes):
             comp_dir = self.path + "composer" + str(label) + "/"
-            for midi_dir in glob(comp_dir):
-                ver_npy = glob(midi_dir + "/*.npy")
-                # randomly select n segments pth
-                tmp = [random.choice(ver_npy) for j in range(self.seg_num)]
-                self.x_path.extend(tmp)
-                self.y.append(i)
-                """ 중간에 composer 뺄 경우 i가 그만큼 당겨서 label 됨"""
+            for comp in glob(comp_dir):
+                for midi_dir in glob(comp + "*/"):
+                    ver_npy = glob(midi_dir + "/*.npy")
+                    # randomly select n segments pth
+                    tmp = [random.choice(ver_npy) for j in range(self.seg_num)]
+                    self.x_path.extend(tmp)
+                    self.y.append(i)
+                    """ 중간에 composer 뺄 경우 i가 그만큼 당겨서 label 됨"""
 
     def __len__(self):
         return len(self.y)
@@ -49,10 +50,14 @@ class MIDIDataset(Dataset):
         return data
 
 
-# @ TEST
-# MyDataset = MIDIDataset('test')
-# MyDataLoader = DataLoader(MyDataset, batch_size=10, shuffle=True)
-# print(len(MyDataLoader))
-# for data in MyDataLoader:
-# 	print(len(data[0]))
-# 	break
+##TEST
+# v = MIDIDataset(
+#     path="/data/inputs_full/",
+#     transform=transforms.Compose([Segmentation(), Transpose(), ToTensor()]),  # checked
+#     omit=[2],  # checked
+#     seg_num=10, #checked
+# )
+# v_loader = DataLoader(v, batch_size=1, shuffle=True)
+# for batch in v_loader:
+#     random.seed(123)
+#     print("{} {}".format(batch["Y"], batch["loc"]))

@@ -2,8 +2,8 @@ import torchvision
 import torch
 import numpy as np
 import random
-from .data_loader import MIDIDataset
-from torch.utils.data import DataLoader, Dataset
+
+# from .data_loader import MIDIDataset
 
 
 class Segmentation(object):
@@ -71,15 +71,3 @@ class ToTensor(object):
             "loc": loc,
         }
         return new_segment
-
-
-##TEST
-v = MIDIDataset(
-    path="/data/inputs_full/",
-    # transform=torchvision.transforms.Compose([ToTensor()]),
-)
-v_loader = DataLoader(v, batch_size=1, shuffle=True)
-for batch in v_loader:
-    print(batch[0])
-    print(batch[0].size())
-    break
