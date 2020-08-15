@@ -8,7 +8,7 @@ import random
 
 class Segmentation(object):
     """ basic segmentation
-        - randomly crop 128 x 400
+        - randomly crop (2x) 400 x 128
         - overlap is NOT restricted or handled
         - save (start, end) in seconds
         - returns {X, Y, (start,end)}

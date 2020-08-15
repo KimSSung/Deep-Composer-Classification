@@ -15,7 +15,7 @@ class MIDIDataset(Dataset):
         self.path = path
         self.classes = [x for x in range(classes)]
         if omit is not None:  # ex) omit = [2, 10]
-            for _, el in enumerate(omit):
+            for el in omit:
                 self.classes.remove(el)
 
         self.seg_num = seg_num  # seg num per song
@@ -41,7 +41,10 @@ class MIDIDataset(Dataset):
     def __getitem__(self, idx):
         X = np.load(self.x_path[idx], allow_pickle=True)
         Y = self.y[idx]
-        data = {"X": X, "Y": Y}
+        data = {
+            "X": X,
+            "Y": Y,
+        }
 
         if self.transform is None:
             self.transform = transforms.Compose([Segmentation(), ToTensor()])
@@ -54,6 +57,7 @@ class MIDIDataset(Dataset):
 # v = MIDIDataset(
 #     path="/data/inputs_full/",
 #     transform=transforms.Compose([Segmentation(), Transpose(), ToTensor()]),  # checked
+#     classes = self.config!~~
 #     omit=[2],  # checked
 #     seg_num=10, #checked
 # )
