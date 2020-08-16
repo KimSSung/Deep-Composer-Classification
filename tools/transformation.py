@@ -5,6 +5,9 @@ import random
 
 # from .data_loader import MIDIDataset
 
+# torch.manual_seed(333)
+# random.seed(333)
+
 
 class Segmentation(object):
     """ basic segmentation
@@ -20,6 +23,7 @@ class Segmentation(object):
         end = start + 400
 
         X_crop = data["X"][:, start:end, :].copy()  # IMPORTANT: NOT A VIEW BUT A "COPY"
+
         return {"X": X_crop, "Y": data["Y"], "loc": (start, end)}
 
 

@@ -4,7 +4,7 @@ import os
 import random
 
 
-random.seed(333)  # change this
+# random.seed(333)  # change this
 
 
 class Spliter:

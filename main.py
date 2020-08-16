@@ -2,6 +2,7 @@ from config import get_config
 
 import numpy as np
 import torch
+import random
 import os
 
 from trainer import Trainer
@@ -10,7 +11,9 @@ from generator import Generator
 from converter import Converter
 from spliter import Spliter
 
+# seed
 torch.manual_seed(333)
+random.seed(333)
 
 
 def main(args):
