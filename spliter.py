@@ -15,7 +15,7 @@ class Spliter:
         # print(self.config.omit)
         self.omitlist = []
         if self.config.omit:
-            self.omitlist = self.config.omit.split(',') # ['2', '5']. str list.
+            self.omitlist = self.config.omit.split(",")  # ['2', '5']. str list.
 
         # print("omit:", self.omitlist)
 
@@ -45,7 +45,7 @@ class Spliter:
             if folder == "name_id_map.csv":
                 continue
 
-            comp_idx = folder.replace("composer", "") # str
+            comp_idx = folder.replace("composer", "")  # str
 
             # Optional: omit some composers
             if comp_idx in self.omitlist:

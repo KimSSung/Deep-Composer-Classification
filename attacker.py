@@ -10,10 +10,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch.nn as nn
 from config import get_config
-
-
-# to import from sibling folders
-# sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from models.resnet import resnet18, resnet34, resnet101, resnet152, resnet50
 from tools.data_loader import MIDIDataset
 
@@ -305,6 +301,7 @@ class Attacker:
             plt.ylabel("Accuracy")
             plt.show()
         return
+
 
 if __name__ == "__main__":
     # Testing

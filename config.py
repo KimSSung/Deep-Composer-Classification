@@ -33,10 +33,7 @@ parser.add_argument(
     help="Optimizer [Adadelta, Adagrad, Adam, AdamW, SparseAdam, Adamax, ASGD, RMSprop, Rprop, SGD, Nesterov]",
 )
 parser.add_argument(
-    "--transform",
-    type=bool,
-    default=False,
-    help="Add transform [True / False]",
+    "--transform", type=bool, default=False, help="Add transform [True / False]",
 )
 
 

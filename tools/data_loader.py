@@ -3,13 +3,15 @@
 import torch
 from torchvision import transforms
 from torch.utils.data import DataLoader, Dataset
+import matplotlib.pyplot as plt
 import numpy as np
 from glob import glob
 from tools.transformation import ToTensor, Transpose, Segmentation
 import random
 
-random.seed(333)  # change this
-torch.manual_seed(333)
+# random.seed(333)  # change this
+# torch.manual_seed(333)
+
 
 class MIDIDataset(Dataset):
     def __init__(
@@ -28,8 +30,8 @@ class MIDIDataset(Dataset):
 
         self.omitlist = []
         if omit:
-            self.omitlist = omit.split(',') # ['2', '5']. str list.
-        
+            self.omitlist = omit.split(",")  # ['2', '5']. str list.
+
         # omit = list of string
         if self.omitlist is not None:
             for c in self.classes:
@@ -42,14 +44,14 @@ class MIDIDataset(Dataset):
 
         txt_list = open(self.txt_file, "r")
         for midi_pth in txt_list:  # each midi
-            temp = midi_pth.split('/')
+            temp = midi_pth.split("/")
             comp_num = -1
             for i in temp:
-                if 'composer' in i:
-                    comp_num = int(i.replace('composer', ''))
+                if "composer" in i:
+                    comp_num = int(i.replace("composer", ""))
                     break
             # print(comp_num)
-            
+
             ver_npy = glob(midi_pth.replace("\n", "") + "*.npy")  # list
             # randomly select n segments pth
             tmp = [random.choice(ver_npy) for j in range(self.seg_num)]
@@ -63,10 +65,7 @@ class MIDIDataset(Dataset):
     def __getitem__(self, idx):
         X = np.load(self.x_path[idx], allow_pickle=True)
         Y = self.y[idx]
-        data = {
-            "X": X,
-            "Y": Y,
-        }
+        data = {"X": X, "Y": Y}
 
         if self.transform is None:
             self.transform = transforms.Compose([Segmentation(), ToTensor()])
@@ -76,14 +75,29 @@ class MIDIDataset(Dataset):
 
 
 ##TEST
-if __name__ == "__main__":
-    v = MIDIDataset(
-        txt_file="/data/split/train.txt",
-        transform=transforms.Compose([Segmentation(), Transpose(), ToTensor()]),  # checked
-        omit='2,5,10',  # checked
-        # seg_num=10, #checked
-    )
-    v_loader = DataLoader(v, batch_size=1, shuffle=True)
-    for batch in v_loader:
-        random.seed(123)
-        print("{} {}".format(batch["Y"], batch["loc"]))
+# if __name__ == "__main__":
+#     v = MIDIDataset(
+#         txt_file="/data/split/train.txt",
+#         transform=transforms.Compose([Segmentation(), ToTensor()]),  # checked
+#         # omit="2,5,10",  # checked
+#         # seg_num=10, #checked
+#     )
+#     v_loader = DataLoader(v, batch_size=1, shuffle=True)
+#     for i, batch in enumerate(v_loader):
+#         print("{} {}".format(batch["Y"], batch["loc"]))
+#
+#         mat_notes = np.array(batch["X"][0][1])  # note channel
+#         nzero = mat_notes.nonzero()
+#         x = nzero[0]
+#         y = nzero[1]
+#
+#         # draw plot
+#         plt.ylim(0, 128)
+#         # plt.xlim(0, 400)
+#         plt.title(batch["Y"])
+#         plt.xlabel("/0.05 sec")
+#         plt.ylabel("pitch")
+#         plt.scatter(x=x, y=y, c="red", s=2)
+#         plt.show()
+#
+#         break

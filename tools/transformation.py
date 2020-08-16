@@ -5,9 +5,6 @@ import random
 
 # from .data_loader import MIDIDataset
 
-torch.manual_seed(333)
-random.seed(333)  # change this
-
 
 class Segmentation(object):
     """ basic segmentation
@@ -23,7 +20,6 @@ class Segmentation(object):
         end = start + 400
 
         X_crop = data["X"][:, start:end, :].copy()  # IMPORTANT: NOT A VIEW BUT A "COPY"
-
         return {"X": X_crop, "Y": data["Y"], "loc": (start, end)}
 
 
@@ -51,15 +47,16 @@ class Transpose(object):
 
 # class Tempo_Stretch(object):
 #     TODO: implement tempo stretch here
+#     """ segment = {X, Y, (start,end)}"""
 #
-#     def __init__(self):
-#
+#     def __init__(self, arg):
+#       self.arg
 #
 #     def __call__(self, segment):
 #         X, Y, loc = segment["X"], segment["Y"], segment["loc"]
 #         new_X =
 #
-#         return {}
+#         return {"X": new_X, "Y": Y, "loc": loc}
 
 
 class ToTensor(object):
