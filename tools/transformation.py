@@ -5,6 +5,9 @@ import random
 
 # from .data_loader import MIDIDataset
 
+torch.manual_seed(333)
+random.seed(333)  # change this
+
 
 class Segmentation(object):
     """ basic segmentation

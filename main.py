@@ -10,10 +10,9 @@ from generator import Generator
 from converter import Converter
 from spliter import Spliter
 
+torch.manual_seed(333)
 
 def main(args):
-
-    torch.manual_seed(123)
 
     # mode: [basetrain / advtrain / attack / generate]
     if args.mode == "basetrain" or args.mode == "advtrain":

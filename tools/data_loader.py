@@ -7,6 +7,8 @@ from glob import glob
 from tools.transformation import ToTensor, Transpose, Segmentation
 import random
 
+random.seed(333)  # change this
+torch.manual_seed(333)
 
 class MIDIDataset(Dataset):
     def __init__(
@@ -51,7 +53,7 @@ class MIDIDataset(Dataset):
             # randomly select n segments pth
             tmp = [random.choice(ver_npy) for j in range(self.seg_num)]
             self.x_path.extend(tmp)
-            self.y.append(self.map[comp_num])
+            self.y.extend([self.map[comp_num]] * self.seg_num)
             """ 중간에 composer 뺄 경우 i가 그만큼 당겨서 label 됨"""
 
     def __len__(self):
@@ -83,4 +85,4 @@ if __name__ == "__main__":
     v_loader = DataLoader(v, batch_size=1, shuffle=True)
     for batch in v_loader:
         random.seed(123)
-        print("{} {}".form
+        print("{} {}".format(batch["Y"], batch["loc"]))

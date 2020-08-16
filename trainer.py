@@ -27,6 +27,7 @@ from sklearn.metrics import precision_recall_fscore_support
 import torchvision
 from tools.transformation import ToTensor, Segmentation, Transpose
 
+torch.manual_seed(333)
 
 class Trainer:
     def __init__(self, args):
@@ -177,7 +178,7 @@ class Trainer:
                 classes=self.label_num,
                 omit=self.config.omit, # str
                 seg_num=self.seg_num, age=self.config.age,
-                transform=torchvision.transforms.Compose([Segmentation(), ToTensor()])
+                transform=torchvision.transforms.Compose([Segmentation(), Transpose(), ToTensor()])
             )
             v = MIDIDataset(
                 self.config.test_split_path,
