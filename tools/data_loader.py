@@ -1,5 +1,6 @@
 # MIDIDataset
 
+import torch
 from torchvision import transforms
 from torch.utils.data import DataLoader, Dataset
 import numpy as np

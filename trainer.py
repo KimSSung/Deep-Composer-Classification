@@ -173,12 +173,15 @@ class Trainer:
             print(">>>>>> Base Training <<<<<<\n")
 
             # Loader for base training
+            trans = None
+            if self.config.transform:
+                trans = torchvision.transforms.Compose([Segmentation(), Transpose(), ToTensor()])
             t = MIDIDataset(
                 self.config.train_split_path,
                 classes=self.label_num,
                 omit=self.config.omit, # str
                 seg_num=self.seg_num, age=self.config.age,
-                transform=torchvision.transforms.Compose([Segmentation(), Transpose(), ToTensor()])
+                transform=trans
             )
             v = MIDIDataset(
                 self.config.test_split_path,
