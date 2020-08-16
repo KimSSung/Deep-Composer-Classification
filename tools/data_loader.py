@@ -8,8 +8,8 @@ from glob import glob
 from tools.transformation import ToTensor, Transpose, Segmentation
 import random
 
-random.seed(333)  # change this
-torch.manual_seed(333)
+# random.seed(333)
+# torch.manual_seed(333)
 
 class MIDIDataset(Dataset):
     def __init__(

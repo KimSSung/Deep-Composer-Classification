@@ -27,7 +27,7 @@ from sklearn.metrics import precision_recall_fscore_support
 import torchvision
 from tools.transformation import ToTensor, Segmentation, Transpose
 
-torch.manual_seed(333)
+# torch.manual_seed(333)
 
 class Trainer:
     def __init__(self, args):
