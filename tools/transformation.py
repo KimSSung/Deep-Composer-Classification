@@ -53,10 +53,14 @@ class TempoStretch(object):
 
         try:
             # Stretch Variable
+            multiplier_rand = random.randint(0,4)
+            print(multiplier_rand)
             stretch_start = random.randint(1,200)
             stretch_duration = random.randint(30,100)
             stretch_end = stretch_start + stretch_duration
-            tempo_mul = 1.3
+            tempo_list = [1.2, 1.1, 1.0, 1.3, 1.4]
+            tempo_mul = tempo_list[multiplier_rand]
+            print("Current Tempo_mul: ", tempo_mul)
             segment_tree = [[{} for i in range(0,128)] for i in range(0,X.shape[0])]
             #[[{start: [duration,veclocity]},{start: [durariont, velocity}] ....
 
@@ -116,7 +120,7 @@ class TempoStretch(object):
 
             #make numpy
 
-            mod_X = ([[[0 for i in range(0, 128)] for j in range(0, int(mod_npy.shape[1] * 1.3) + 1)] for k in range(0,X.shape[0])])
+            mod_X = ([[[0 for i in range(0, 128)] for j in range(0, int(mod_npy.shape[1] * tempo_mul) + 1)] for k in range(0,X.shape[0])])
             mod_X = np.array(mod_X)
             for track in range(0, len(mod_X)):
                 for time in range(0, len(mod_X[0])):
@@ -148,7 +152,7 @@ class TempoStretch(object):
                             iterator = 0
 
                         else:
-                            after_index = int(stretch_duration *0.3) - 1
+                            after_index = int(stretch_duration *(tempo_mul-1)) - 1
                             new_X[track][time][note] = X[track][time - after_index][note]
 
             new_X = np.array(new_X)
@@ -157,7 +161,7 @@ class TempoStretch(object):
             return {"X": X, "Y": Y, "loc": loc}
 
         else:
-            # Plot after tempo stretched version
+            #Plot after tempo stretched version
             # nzero = new_X[1].nonzero()
             # x1 = nzero[0]
             # y1 = nzero[1]
