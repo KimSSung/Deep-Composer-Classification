@@ -8,8 +8,6 @@ from glob import glob
 from tools.transformation import ToTensor, Transpose, Segmentation
 import random
 
-# random.seed(333)
-# torch.manual_seed(333)
 
 class MIDIDataset(Dataset):
     def __init__(
@@ -28,8 +26,8 @@ class MIDIDataset(Dataset):
 
         self.omitlist = []
         if omit:
-            self.omitlist = omit.split(',') # ['2', '5']. str list.
-        
+            self.omitlist = omit.split(",")  # ['2', '5']. str list.
+
         # omit = list of string
         if self.omitlist is not None:
             for c in self.classes:
@@ -42,14 +40,14 @@ class MIDIDataset(Dataset):
 
         txt_list = open(self.txt_file, "r")
         for midi_pth in txt_list:  # each midi
-            temp = midi_pth.split('/')
+            temp = midi_pth.split("/")
             comp_num = -1
             for i in temp:
-                if 'composer' in i:
-                    comp_num = int(i.replace('composer', ''))
+                if "composer" in i:
+                    comp_num = int(i.replace("composer", ""))
                     break
             # print(comp_num)
-            
+
             ver_npy = glob(midi_pth.replace("\n", "") + "*.npy")  # list
             # randomly select n segments pth
             tmp = [random.choice(ver_npy) for j in range(self.seg_num)]

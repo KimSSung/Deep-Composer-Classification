@@ -4,9 +4,7 @@ import numpy as np
 import random
 
 # from .data_loader import MIDIDataset
-
-# torch.manual_seed(333)
-# random.seed(333)
+import random
 
 
 class Segmentation(object):
