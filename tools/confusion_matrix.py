@@ -8,11 +8,10 @@ import torch
 
 import torch.nn as nn
 import numpy as np
-from _collections import OrderedDict
 
 
-# from data_loader import MIDIDataset
-from tools.data_loader import MIDIDataset
+from data_loader import MIDIDataset
+
 
 # to import from sibling folders
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
@@ -20,24 +19,18 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
 from models.resnet import resnet18, resnet34, resnet101, resnet152, resnet50
 
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
-model_fname = os.listdir("/data/drum/bestmodel_noaug/model/")
-# print(model_fname)
-checkpoint = torch.load("/data/drum/bestmodel_noaug/model/" + model_fname[0])
 model = resnet50(2, 13)
-state_dict = checkpoint["model.state_dict"]
-new_state_dict = OrderedDict()
-for k, v in state_dict.items():
-    if k.startswith("module."):
-        k = k[7:]  # discard module
-        new_state_dict[k] = v
+model = nn.DataParallel(model).cuda()
+model_fname = os.listdir("/data/drum/bestmodel_noaug/model/")
+checkpoint = torch.load("/data/drum/bestmodel_noaug/model/" + model_fname[0])
+model.load_state_dict(checkpoint["model.state_dict"])
 
-model.load_state_dict(new_state_dict)
-print(model)
 print(">>> MODEL LOADED.")
 
 test_loader = torch.load("/data/drum/bestmodel_noaug/dataset/test/valid_loader.pt")
-print(test_loader)
 print(">>> TEST LOADER LOADED.")
 
 
@@ -73,23 +66,8 @@ print(conf)
 # 2. Classical: Haydn / Mozart / Beethoven / Schubert => [4, 8, 9, 12]
 # 3. Romanticism: Schumann / Chopin / Liszt / Brahms / Debussy
 #                 / Rachmaninoff / Scriabin => [0, 1, 3, 5, 7, 10, 11]
-axis_labels = np.array(
-    [
-        "Scriab",
-        "Debus",
-        "Scarl",
-        "Liszt",
-        "Schube",
-        "Chop",
-        "Bach",
-        "Brahm",
-        "Haydn",
-        "Beethov",
-        "Schum",
-        "Rach",
-        "Moza",
-    ]
-)
+axis_labels = np.array(['Scriab','Debus','Scarl','Liszt','Schube','Chop',
+                'Bach','Brahm','Haydn','Beethov','Schum','Rach','Moza'])
 
 want_order = [2, 6, 4, 8, 9, 12, 0, 1, 3, 5, 7, 10, 11]
 
@@ -101,15 +79,15 @@ if sort:
 
 
 normalize = True
-val_format = ""  # heatmap print value format
+val_format = "" # heatmap print value format
 if normalize:
-    conf = np.round(conf.astype("float") / conf.sum(axis=1)[:, np.newaxis], 2)
+    conf= np.round(conf.astype('float') / conf.sum(axis=1)[:, np.newaxis], 2)
     print(">>> Normalized confusion matrix:")
     print(conf)
     val_format = ".2f"
 
 else:
-    print("Confusion matrix, without normalization")
+    print('Confusion matrix, without normalization')
     val_format = "d"
 
 
@@ -120,16 +98,7 @@ else:
 # plt.savefig('confmat.png', dpi=300)
 
 
-sns.heatmap(
-    conf,
-    annot=True,
-    annot_kws={"size": 7},
-    fmt=val_format,
-    xticklabels=axis_labels,
-    yticklabels=axis_labels,
-    cmap=plt.cm.bone,
-)
+sns.heatmap(conf, annot=True, annot_kws={'size': 7},  fmt=val_format, xticklabels=axis_labels, yticklabels=axis_labels, cmap=plt.cm.bone)
 
-plt.title("Confusion Matrix => [x : Pred, y : True]")
-plt.show()
-plt.savefig("confmat.png", dpi=700)
+plt.title('Confusion Matrix => [x : Pred, y : True]')
+plt.savefig('confmat.png', dpi=700)

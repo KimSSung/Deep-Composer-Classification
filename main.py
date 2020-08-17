@@ -15,7 +15,6 @@ from spliter import Spliter
 torch.manual_seed(333)
 random.seed(333)
 
-
 def main(args):
 
     # mode: [basetrain / advtrain / attack / generate]
