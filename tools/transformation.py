@@ -46,7 +46,7 @@ class Transpose(object):
         return {"X": new_X, "Y": Y, "loc": loc}
 
 
-class Tempo_Stretch(object):
+class TempoStretch(object):
 
     def __call__(self, segment):
         X, Y, loc = segment["X"], segment["Y"], segment["loc"]
