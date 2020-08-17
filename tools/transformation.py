@@ -64,6 +64,10 @@ class TempoStretch(object):
 
             #Find stretch numpy, Cut Numpy for stretch
 
+            if(tempo_mul <= 1.0):
+                # print('Tempo no changed')
+                return {"X": X, "Y": Y, "loc": loc}
+
             mod_npy = X[:,stretch_start:stretch_end,:].copy() # len(mod_npy) duration
 
 
