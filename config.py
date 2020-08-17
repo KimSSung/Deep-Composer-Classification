@@ -33,10 +33,7 @@ parser.add_argument(
     help="Optimizer [Adadelta, Adagrad, Adam, AdamW, SparseAdam, Adamax, ASGD, RMSprop, Rprop, SGD, Nesterov]",
 )
 parser.add_argument(
-    "--transform",
-    type=bool,
-    default=False,
-    help="Add transform [True / False]",
+    "--transform", type=bool, default=False, help="Add transform [True / False]",
 )
 
 
@@ -126,15 +123,6 @@ parser.add_argument(
 
 # 2. data related
 parser.add_argument(
-    "--specific_files",
-    default=[],
-    type=list,
-    help="List file names to attack(default = [])",
-)
-parser.add_argument(
-    "--t_or_v", default="v", type=str, help="dataset to attack (t: train / v: valid)"
-)
-parser.add_argument(
     "--orig",
     default=True,
     type=bool,
@@ -144,7 +132,7 @@ parser.add_argument(
 # 3. specific attack related
 parser.add_argument(
     "--epsilons",
-    default=[0.0],
+    default=[0.0],  # TODO: fix
     type=list,
     help="list of epsilons [ep0, ep1, ep2..] (default: [0.0])",
 )

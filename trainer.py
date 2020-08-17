@@ -59,7 +59,7 @@ class Trainer:
 
         # Define model
         self.model = self.model_selection()
-        self.model = nn.DataParallel(self.model)
+        # self.model = nn.DataParallel(self.model)
         self.model.cuda()
 
         self.criterion = nn.CrossEntropyLoss()

@@ -10,12 +10,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch.nn as nn
 from config import get_config
-
-
-# to import from sibling folders
-# sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from models.resnet import resnet18, resnet34, resnet101, resnet152, resnet50
-from tools.data_loader import MIDIDataset
+from _collections import OrderedDict
+from sklearn.metrics import f1_score
+from sklearn.metrics import precision_recall_fscore_support
+import pprint
 
 
 class Attacker:
@@ -23,13 +22,16 @@ class Attacker:
         self.config = args
 
         # for GPU use #TODO: remove
-        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-        os.environ["CUDA_VISIBLE_DEVICES"] = self.config.gpu
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.label_num = self.config.composers
-        self.data_load(self.config.specific_files, self.config.t_or_v, self.config.orig)
+        self.data_loader = None
+        self.input_total = []
+        self.output_total = []
+        self.loc_total = []
+        self.data_load(self.config.orig)
 
+        self.model_fname = None
         self.model_type = None
         self.model = self.get_model()
         self.model_load()
@@ -37,9 +39,46 @@ class Attacker:
         self.criterion = nn.CrossEntropyLoss()
         self.criterion = self.criterion.to(self.device)
 
+    def data_load(self, orig):
+        if orig:
+            self.data_loader = torch.load(
+                self.config.atk_path + "dataset/test/valid_loader.pt"
+            )
+            print("attack on VALID")
+        else:
+            pass
+            # self.valid_loader_1 = torch.load(
+            #     self.config.validloader_save_path + "adv_valid_loader_TandAT.pt"
+            # )
+            # print("adv_valid_loader_TandAT loaded!")
+            # self.valid_loader_2 = torch.load(
+            #     self.config.validloader_save_path + "adv_valid_loader_T.pt"
+            # )
+            # print("adv_valid_loader_T loaded!")
+        self.split_data()  # split into single batch (for attack)
+        print("==> DATA LOADED")
+        return
+
+    def split_data(self):
+
+        for v in self.data_loader:
+            for i in range(len(v["Y"])):
+                self.input_total.append(torch.unsqueeze(v["X"][i], 0))
+                # unsqueeze -> torch [1,2,400,128]
+                self.output_total.append(torch.unsqueeze(v["Y"][i], 0))
+                # tensor [(#)]
+                self.loc_total.append(
+                    (
+                        torch.unsqueeze(v["loc"][0][i], 0),
+                        torch.unsqueeze(v["loc"][1][i], 0),
+                    )
+                )
+
+        return
+
     def get_model(self):
-        model_fname = os.listdir(self.config.atk_path + "model/")
-        self.model_type = model_fname[0].split("_")[0]  # ex: resnet50
+        self.model_fname = os.listdir(self.config.atk_path + "model/")[0]
+        self.model_type = self.model_fname.split("_")[0]  # ex: resnet50
         if self.model_type == "resnet18":
             return resnet18(int(self.config.input_shape[0]), self.label_num)
         elif self.model_type == "resnet34":
@@ -53,79 +92,43 @@ class Attacker:
 
     def model_load(self):
         self.model.eval()
-        checkpoint = torch.load(self.config.atk_path + "model/" + self.model_type)  # 명시
+        self.model = nn.DataParallel(self.model).to(self.device)
+        # self.model.to(self.device)
+        checkpoint = torch.load(
+            self.config.atk_path + "model/" + str(self.model_fname)
+        )  # 명시
         self.model.load_state_dict(checkpoint["model.state_dict"])
-        print("==> MODEL LOADED")
-        self.model = self.model.to(self.device)
-        print("==> MODEL ON GPU")
-        return
-
-    def data_load(self, spec_files, option, orig):
-        if option is "t":
-            print("attack on TRAIN data")
-            if orig:
-                self.data_loader = torch.load(
-                    self.config.atk_path + "dataset/train/train_loader.pt"
-                )
-            else:
-                self.data_loader = torch.load(
-                    self.config.atk_path + "dataset/train/adv_train_loader.pt"
-                )
-        elif option is "v":
-            print("attack on VALID data")
-            if orig:
-                self.data_loader = torch.load(
-                    self.config.atk_path
-                    + "dataset/test/valid_loader.pt"  # default config (orig + valid)
-                )
-            else:
-                self.data_loader = torch.load(
-                    self.config.atk_path + "dataset/test/adv_valid_loader_TandAT.pt"
-                )
-
-        self.split_data(spec_files)  # split into single batch (for attack)
-        print("==> DATA LOADED")
-        return
-
-    def split_data(self, spec_files):
-        self.input_total = []
-        self.output_total = []
-        self.fname_total = []
-
-        for v in self.data_loader:
-            for i in range(len(v[0])):  # 20
-                self.input_total.append(
-                    torch.unsqueeze(v[0][i], 0)
-                )  # torch [1,129,400,128]
-                self.output_total.append(torch.unsqueeze(v[1][i], 0))  # tensor [(#)]
-            self.fname_total.extend(v[2])
-
-        if not spec_files:  # list not empty
-            tin, tout, tfn = [], [], []
-            for f in spec_files:
-                i = self.fname_total.index(f)  # find index
-                tin.append(self.input_total[i])
-                tout.append(self.output_total[i])
-                tfn.append(self.fname_total[i])
-                self.input_total, self.output_total, self.fname_total = tin, tout, tfn
+        print("==> MODEL LOADED: {}".format(self.model_type))
         return
 
     def run(self):
         self.accuracies = []
         for ep in tqdm(self.config.epsilons):  # iteration: fgsm(n) others(1)
-            orig_correct, atk_correct = self.test(ep)
-            orig_acc = orig_correct / len(self.input_total)
-            atk_acc = atk_correct / len(self.input_total)
+            preds, truths, orig_correct, atk_correct = self.test(ep)
+            orig_acc = orig_correct / len(self.output_total)
+            atk_acc = atk_correct / len(self.output_total)
+
+            w_f1score = f1_score(truths, preds, average="weighted")
+            precision, recall, f1, supports = precision_recall_fscore_support(
+                truths, preds, average=None, labels=list(range(13)), warn_for=tuple()
+            )
 
             print("Epsilon: {}".format(ep))
+            print("#########Before########")
             print(
-                "Before: {} / {} = {}".format(
-                    orig_correct, len(self.input_total), orig_acc
+                "Accuracy: {} / {} = {:4f}".format(
+                    orig_correct, len(self.output_total), orig_acc
                 )
             )
+            print("F1 score: {:4f}".format(w_f1score))
+            print("{:<30}{:<}".format("Precision", "Recall"))
+            for p, r in zip(precision, recall):
+                print("{:<30}{:<}".format(p, r))
+
+            print("\n#########After#########")
             print(
-                "After: {} / {} = {}".format(
-                    atk_correct, len(self.input_total), atk_acc
+                "Accuracy: {} / {} = {:4f}".format(
+                    atk_correct, len(self.output_total), atk_acc
                 )
             )
             self.accuracies.append(atk_acc)
@@ -138,16 +141,21 @@ class Attacker:
     def test(self, epsilon):  # call this function to run attack
         orig_wrong = 0
         atk_correct = 0
-        for i, (X, truth, name) in enumerate(
-            zip(self.input_total, self.output_total, self.fname_total)
+        ground_truth = []
+        output_pred = []
+        for i, (X, truth, pair) in enumerate(
+            zip(self.input_total, self.output_total, self.loc_total)
         ):
-            name = name.replace("/", "_")
             X, truth = X.to(self.device), truth.to(self.device)
             X = X.detach()
             X.requires_grad = True  # for attack
             # check initial performance
             init_out = self.model(X)
             init_pred = torch.max(init_out, 1)[1].view(truth.size()).data
+
+            # for f1 score
+            ground_truth.append(truth.item())
+            output_pred.append(init_pred.item())
 
             # if correct, skip
             if init_pred.item() != truth.item():
@@ -175,11 +183,17 @@ class Attacker:
             else:
                 # TODO: save successful attacks
                 if self.config.save_atk:
-                    np.save(self.config.save_atk_path + name, attack)
-                    print("saved: {}".format(name))
+                    pass
+                    # np.save(self.config.save_atk_path + name, attack)
+                    # print("saved: {}".format(name))
                 pass
 
-        return len(self.input_total) - orig_wrong, atk_correct
+        return (
+            ground_truth,
+            output_pred,
+            len(self.output_total) - orig_wrong,
+            atk_correct,
+        )
 
     def generate(self, atk, data, data_grad, init_out, eps):
         if atk is "fgsm":
@@ -217,9 +231,8 @@ class Attacker:
         indices = torch.nonzero(data)
 
         f_out = model_out.detach().numpy().flatten()
-        I = (np.array(f_out)).argsort()[
-            ::-1
-        ]  # index of greatest->least  ex:[2, 0, 1, 3]
+        I = (np.array(f_out)).argsort()[::-1]
+        # index of greatest->least  ex:[2, 0, 1, 3]
         label = I[0]  # true class index
 
         # initialize variables
@@ -306,12 +319,13 @@ class Attacker:
             plt.show()
         return
 
-if __name__ == "__main__":
-    # Testing
-    config, unparsed = get_config()
-    # for arg in vars(config):
-    #     argname = arg
-    #     contents = str(getattr(config, arg))
-    #     print(argname + " = " + contents)
-    temp = Attacker(config)
-    temp.run()
+
+# if __name__ == "__main__":
+#     # Testing
+#     config, unparsed = get_config()
+#     # for arg in vars(config):
+#     #     argname = arg
+#     #     contents = str(getattr(config, arg))
+#     #     print(argname + " = " + contents)
+#     temp = Attacker(config)
+#     temp.run()

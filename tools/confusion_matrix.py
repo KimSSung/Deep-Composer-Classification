@@ -19,14 +19,18 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
 from models.resnet import resnet18, resnet34, resnet101, resnet152, resnet50
 
-model = resnet18(2, 13)
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
-model_fname = os.listdir("/data/drum/bestmodel/model/")
-checkpoint = torch.load("/data/drum/bestmodel/model/" + model_fname[0])
+model = resnet50(2, 13)
+model = nn.DataParallel(model).cuda()
+model_fname = os.listdir("/data/drum/bestmodel_noaug/model/")
+checkpoint = torch.load("/data/drum/bestmodel_noaug/model/" + model_fname[0])
 model.load_state_dict(checkpoint["model.state_dict"])
+
 print(">>> MODEL LOADED.")
 
-test_loader = torch.load("/data/drum/bestmodel/dataset/test/valid_loader.pt")
+test_loader = torch.load("/data/drum/bestmodel_noaug/dataset/test/valid_loader.pt")
 print(">>> TEST LOADER LOADED.")
 
 
