@@ -12,6 +12,9 @@ import torch.nn as nn
 from config import get_config
 from models.resnet import resnet18, resnet34, resnet101, resnet152, resnet50
 from _collections import OrderedDict
+from sklearn.metrics import f1_score
+from sklearn.metrics import precision_recall_fscore_support
+import pprint
 
 
 class Attacker:
@@ -96,26 +99,36 @@ class Attacker:
         )  # 명시
         self.model.load_state_dict(checkpoint["model.state_dict"])
         print("==> MODEL LOADED: {}".format(self.model_type))
-        # self.model = self.model.to(self.device)
-        # print("==> MODEL ON GPU")
         return
 
     def run(self):
         self.accuracies = []
         for ep in tqdm(self.config.epsilons):  # iteration: fgsm(n) others(1)
-            orig_correct, atk_correct = self.test(ep)
+            preds, truths, orig_correct, atk_correct = self.test(ep)
             orig_acc = orig_correct / len(self.output_total)
             atk_acc = atk_correct / len(self.output_total)
 
+            w_f1score = f1_score(truths, preds, average="weighted")
+            precision, recall, f1, supports = precision_recall_fscore_support(
+                truths, preds, average=None, labels=list(range(13)), warn_for=tuple()
+            )
+
             print("Epsilon: {}".format(ep))
+            print("#########Before########")
             print(
-                "Before: {} / {} = {}".format(
-                    orig_correct, len(self.input_total), orig_acc
+                "Accuracy: {} / {} = {:4f}".format(
+                    orig_correct, len(self.output_total), orig_acc
                 )
             )
+            print("F1 score: {:4f}".format(w_f1score))
+            print("{:<30}{:<}".format("Precision", "Recall"))
+            for p, r in zip(precision, recall):
+                print("{:<30}{:<}".format(p, r))
+
+            print("\n#########After#########")
             print(
-                "After: {} / {} = {}".format(
-                    atk_correct, len(self.input_total), atk_acc
+                "Accuracy: {} / {} = {:4f}".format(
+                    atk_correct, len(self.output_total), atk_acc
                 )
             )
             self.accuracies.append(atk_acc)
@@ -128,6 +141,8 @@ class Attacker:
     def test(self, epsilon):  # call this function to run attack
         orig_wrong = 0
         atk_correct = 0
+        ground_truth = []
+        output_pred = []
         for i, (X, truth, pair) in enumerate(
             zip(self.input_total, self.output_total, self.loc_total)
         ):
@@ -137,6 +152,10 @@ class Attacker:
             # check initial performance
             init_out = self.model(X)
             init_pred = torch.max(init_out, 1)[1].view(truth.size()).data
+
+            # for f1 score
+            ground_truth.append(truth.item())
+            output_pred.append(init_pred.item())
 
             # if correct, skip
             if init_pred.item() != truth.item():
@@ -169,7 +188,12 @@ class Attacker:
                     # print("saved: {}".format(name))
                 pass
 
-        return len(self.output_total) - orig_wrong, atk_correct
+        return (
+            ground_truth,
+            output_pred,
+            len(self.output_total) - orig_wrong,
+            atk_correct,
+        )
 
     def generate(self, atk, data, data_grad, init_out, eps):
         if atk is "fgsm":
