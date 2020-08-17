@@ -53,7 +53,7 @@ class Tempo_Stretch(object):
 
         # Stretch Variable
         stretch_start = random.randint(1,200)
-        stretch_duration = random.randint(20,50)
+        stretch_duration = random.randint(30,100)
         stretch_end = stretch_start + stretch_duration
         tempo_mul = 1.3
         new_X = []
@@ -139,7 +139,7 @@ class Tempo_Stretch(object):
 
                         new_X[track][time][note] = X[track][time][note]
 
-                    elif (stretch_start<= time and time<stretch_end):
+                    elif (stretch_start<= time and time< int(stretch_end * tempo_mul)):
 
                         new_X[track][time][note] = mod_X[track][time - stretch_start][note]
                         flag_end = time
@@ -164,6 +164,8 @@ class Tempo_Stretch(object):
         plt.title('Original')
         plt.xlabel("/0.05 sec")
         plt.ylabel("pitch")
+        plt.axvline(x=stretch_start, color='r', linestyle='--', linewidth=1)
+        plt.axvline(x=stretch_end, color='r', linestyle='--', linewidth=1)
         plt.scatter(x=x2, y=y2, c="green", s=2)
 
         plt.subplot(2,1,2)
@@ -171,11 +173,12 @@ class Tempo_Stretch(object):
         plt.title('Modified')
         plt.xlabel("/0.05 sec")
         plt.ylabel("pitch")
+        plt.axvline(x=stretch_start, color='r', linestyle='--', linewidth=1)
+        plt.axvline(x=stretch_end, color='r', linestyle='--', linewidth=1)
         plt.scatter(x=x1, y=y1, c="green", s=2)
 
         plt.show()
 
-        print("No problem")
         return {"X": new_X, "Y": Y, "loc": loc}
 
 
