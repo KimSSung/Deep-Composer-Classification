@@ -54,13 +54,11 @@ class TempoStretch(object):
         try:
             # Stretch Variable
             multiplier_rand = random.randint(0,4)
-            print(multiplier_rand)
             stretch_start = random.randint(1,200)
             stretch_duration = random.randint(30,100)
             stretch_end = stretch_start + stretch_duration
             tempo_list = [1.2, 1.1, 1.0, 1.3, 1.4]
             tempo_mul = tempo_list[multiplier_rand]
-            print("Current Tempo_mul: ", tempo_mul)
             segment_tree = [[{} for i in range(0,128)] for i in range(0,X.shape[0])]
             #[[{start: [duration,veclocity]},{start: [durariont, velocity}] ....
 
