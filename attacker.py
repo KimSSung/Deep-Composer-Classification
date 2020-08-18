@@ -14,7 +14,6 @@ from models.resnet import resnet18, resnet34, resnet101, resnet152, resnet50
 from _collections import OrderedDict
 from sklearn.metrics import f1_score
 from sklearn.metrics import precision_recall_fscore_support
-import pprint
 
 
 class Attacker:
@@ -28,7 +27,7 @@ class Attacker:
         self.data_loader = None
         self.input_total = []
         self.output_total = []
-        self.loc_total = []
+        self.pth_total = []
         self.data_load(self.config.orig)
 
         self.model_fname = None
@@ -62,18 +61,13 @@ class Attacker:
     def split_data(self):
 
         for v in self.data_loader:
+            print(v["Y"])
             for i in range(len(v["Y"])):
                 self.input_total.append(torch.unsqueeze(v["X"][i], 0))
                 # unsqueeze -> torch [1,2,400,128]
                 self.output_total.append(torch.unsqueeze(v["Y"][i], 0))
                 # tensor [(#)]
-                self.loc_total.append(
-                    (
-                        torch.unsqueeze(v["loc"][0][i], 0),
-                        torch.unsqueeze(v["loc"][1][i], 0),
-                    )
-                )
-
+            self.pth_total.extend(v["pth"])
         return
 
     def get_model(self):
@@ -92,8 +86,8 @@ class Attacker:
 
     def model_load(self):
         self.model.eval()
-        self.model = nn.DataParallel(self.model).to(self.device)
-        # self.model.to(self.device)
+        # self.model = nn.DataParallel(self.model).to(self.device)
+        self.model.to(self.device)
         checkpoint = torch.load(
             self.config.atk_path + "model/" + str(self.model_fname)
         )  # 명시
@@ -104,7 +98,7 @@ class Attacker:
     def run(self):
         self.accuracies = []
         for ep in tqdm(self.config.epsilons):  # iteration: fgsm(n) others(1)
-            preds, truths, orig_correct, atk_correct = self.test(ep)
+            truths, preds, orig_correct, atk_correct = self.test(ep)
             orig_acc = orig_correct / len(self.output_total)
             atk_acc = atk_correct / len(self.output_total)
 
@@ -144,7 +138,7 @@ class Attacker:
         ground_truth = []
         output_pred = []
         for i, (X, truth, pair) in enumerate(
-            zip(self.input_total, self.output_total, self.loc_total)
+            tqdm(zip(self.input_total, self.output_total, self.pth_total))
         ):
             X, truth = X.to(self.device), truth.to(self.device)
             X = X.detach()
@@ -157,12 +151,16 @@ class Attacker:
             ground_truth.append(truth.item())
             output_pred.append(init_pred.item())
 
-            # if correct, skip
+            print("preds:", output_pred)
+            print("truths:", ground_truth)
+            print("-------------------------------------------------")
+
+            # if wrong, skip
             if init_pred.item() != truth.item():
                 orig_wrong += 1
                 continue  # next X
 
-            # if wrong, ATTACK
+            # if correct, ATTACK
             loss = self.criterion(init_out, truth)  # compute loss
             self.model.zero_grad()
             loss.backward()

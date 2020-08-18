@@ -61,7 +61,9 @@ class MIDIDataset(Dataset):
     def __getitem__(self, idx):
         X = np.load(self.x_path[idx], allow_pickle=True)
         Y = self.y[idx]
-        data = {"X": X, "Y": Y}
+        fd = self.x_path[idx].find("composer")
+        pth = self.x_path[idx][fd:]
+        data = {"X": X, "Y": Y, "pth": pth}
 
         if self.transform is None:
             self.transform = transforms.Compose([Segmentation(), ToTensor()])
@@ -80,12 +82,12 @@ class MIDIDataset(Dataset):
 #     )
 #     v_loader = DataLoader(v, batch_size=1, shuffle=True)
 #     for i, batch in enumerate(v_loader):
-#         print("{} {}".format(batch["Y"], batch["loc"]))
-#
-#         mat_notes = np.array(batch["X"][0][1])  # note channel
-#         nzero = mat_notes.nonzero()
-#         x = nzero[0]
-#         y = nzero[1]
+#         print("{} {}".format(batch["Y"], batch["pth"]))
+
+# mat_notes = np.array(batch["X"][0][1])  # note channel
+# nzero = mat_notes.nonzero()
+# x = nzero[0]
+# y = nzero[1]
 #
 #         # draw plot
 #         plt.ylim(0, 128)
