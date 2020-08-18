@@ -1,14 +1,14 @@
 Parameters for basetrain:
 
 composers = 13
-model_name = resnet18
+model_name = resnet50
 train_split_path = /data/split/train.txt
 test_split_path = /data/split/test.txt
 optim = SGD
 transform = True
 attacked_train_input_path = /data/attacks/vel_deepfool/train/
 attacked_valid_input_path = /data/attacks/vel_deepfool/valid/
-epochs = 100
+epochs = 2
 train_batch = 40
 valid_batch = 40
 gpu = 0,1,2,3
@@ -16,15 +16,13 @@ lr = 0.01
 mode = basetrain
 model_save_path = /data/drum/model/
 input_shape = (2, 400, 128)
-trainloader_save_path = /data/drum/4/dataset/train/
-validloader_save_path = /data/drum/4/dataset/test/
+trainloader_save_path = /data/drum/dataset/train/
+validloader_save_path = /data/drum/dataset/test/
 targeted = False
 attack_type = fgsm
 atk_path = /data/drum/bestmodel/
 save_atk = False
 save_atk_path = /data/attacks/
-specific_files = []
-t_or_v = v
 orig = True
 epsilons = [0.0]
 max_iter = 10
