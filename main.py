@@ -2,6 +2,7 @@ from config import get_config
 
 import numpy as np
 import torch
+import torch.backends.cudnn
 import random
 import os
 
@@ -12,11 +13,18 @@ from converter import Converter
 from spliter import Spliter
 
 # seed
-torch.manual_seed(333)
-random.seed(333)
+def set_seed(seed):
+    random.seed(seed)  # python random module
+    np.random.seed(seed)  # np module
+    torch.manual_seed(seed)  # for both CPU & GPU
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+    return
 
 
 def main(args):
+
+    set_seed(333)
 
     # mode: [basetrain / advtrain / attack / generate]
     if args.mode == "basetrain" or args.mode == "advtrain":
