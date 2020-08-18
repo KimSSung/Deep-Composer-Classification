@@ -25,10 +25,9 @@ from sklearn.metrics import precision_recall_fscore_support
 
 # transform
 import torchvision
-from tools.transformation import ToTensor, Segmentation, Transpose
+from tools.transformation import ToTensor, Segmentation, Transpose, TempoStretch
 
 # torch.manual_seed(333)
-
 
 class Trainer:
     def __init__(self, args):
@@ -36,7 +35,7 @@ class Trainer:
 
         # 0 : acc / 1: loss / 2: f1 / 3: precision / 4: recall
         self.best_valid = [-1.0, 30000.0, -1.0, [], []]
-        self.seg_num = 20  # change this
+        self.seg_num = 20 # change this
 
         # for GPU use
         # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID" # moved to main
@@ -45,7 +44,7 @@ class Trainer:
 
         self.omitlist = []
         if self.config.omit:
-            self.omitlist = self.config.omit.split(",")  # ['2', '5']. str list.
+            self.omitlist = self.config.omit.split(',') # ['2', '5']. str list.
 
         self.label_num = self.config.composers - len(self.omitlist)
         print("==> Total label # :", self.label_num)
@@ -53,6 +52,7 @@ class Trainer:
         # if age == True ==> label: 0, 1, 2
         if self.config.age:
             self.label_num = 3
+
 
         self.data_load(self.config.mode)
         self.num_batches = len(self.train_loader)
@@ -174,25 +174,26 @@ class Trainer:
 
             # Loader for base training
             trans = None
-            if self.config.transform:
-                trans = torchvision.transforms.Compose(
-                    [Segmentation(), Transpose(), ToTensor()]
-                )
+            if self.config.transform == 'Transpose':
+                trans = torchvision.transforms.Compose([Segmentation(), Transpose(), ToTensor()])
+                print("+++ Add Transpose\n")
+            elif self.config.transform == 'Tempo':
+                trans = torchvision.transforms.Compose([Segmentation(), TempoStretch(), ToTensor()])
+                print("+++ Add Tempo stretch\n")
+
             t = MIDIDataset(
                 self.config.train_split_path,
                 classes=self.label_num,
-                omit=self.config.omit,  # str
-                seg_num=self.seg_num,
-                age=self.config.age,
-                transform=trans,
+                omit=self.config.omit, # str
+                seg_num=self.seg_num, age=self.config.age,
+                transform=trans
             )
             v = MIDIDataset(
                 self.config.test_split_path,
                 classes=self.label_num,
                 omit=self.config.omit,
-                seg_num=self.seg_num,
-                age=self.config.age,
-                transform=None,
+                seg_num=self.seg_num, age=self.config.age,
+                transform=None
             )
 
             # create batch
@@ -578,7 +579,7 @@ class Trainer:
                 val_loss += v_loss
 
                 # scheduler.step(v_loss)  # for reduceonplateau
-                self.scheduler.step()  # for cos
+                # self.scheduler.step()  # for cos
 
                 # accuracy
                 _, val_label_pred = torch.max(val_pred.data, 1)
