@@ -45,7 +45,7 @@ class Trainer:
 
         self.omitlist = []
         if self.config.omit:
-            self.omitlist = self.config.omit.split(',') # ['2', '5']. str list.
+            self.omitlist = self.config.omit.split(",")  # ['2', '5']. str list.
 
         self.label_num = self.config.composers - len(self.omitlist)
         print("==> Total label # :", self.label_num)
@@ -53,7 +53,6 @@ class Trainer:
         # if age == True ==> label: 0, 1, 2
         if self.config.age:
             self.label_num = 3
-
 
         self.data_load(self.config.mode)
         self.num_batches = len(self.train_loader)
