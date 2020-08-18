@@ -34,7 +34,6 @@ class convnet(nn.Module):
             nn.MaxPool2d(kernel_size=p, stride=p),
             # nn.Dropout(p=0.25),
         )
-        
 
         self.fc = nn.Sequential(
             nn.Flatten(),

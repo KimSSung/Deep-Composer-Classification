@@ -26,7 +26,7 @@ class MIDIDataset(Dataset):
 
         self.omitlist = []
         if omit:
-            self.omitlist = omit.split(',') # ['2', '5']. str list.
+            self.omitlist = omit.split(",")  # ['2', '5']. str list.
 
         # omit = list of string
         if self.omitlist is not None:
@@ -40,11 +40,11 @@ class MIDIDataset(Dataset):
 
         txt_list = open(self.txt_file, "r")
         for midi_pth in txt_list:  # each midi
-            temp = midi_pth.split('/')
+            temp = midi_pth.split("/")
             comp_num = -1
             for i in temp:
-                if 'composer' in i:
-                    comp_num = int(i.replace('composer', ''))
+                if "composer" in i:
+                    comp_num = int(i.replace("composer", ""))
                     break
             # print(comp_num)
 
