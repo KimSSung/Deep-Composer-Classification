@@ -10,30 +10,43 @@ import random
 class Segmentation(object):
     """ basic segmentation
         - randomly crop (2x) 400 x 128
-        - overlap is NOT restricted or handled
+        - window = 600
+        - overlap = 400
         - returns {X, Y, pth}
         - pth: composer#/midi#/ver#.npy
     """
 
-    def __call__(self, data):
-        Y, pth = data["Y"], data["pth"]
-        duration = len(data["X"][0])
-        start = random.randint(0, duration - 401)
-        end = start + 400
+    def __init__(self, n):
+        self.n = n
 
-        X_crop = data["X"][:, start:end, :].copy()  # IMPORTANT: NOT A VIEW BUT A "COPY"
+    def __call__(self, data):
+        X, Y, pth = data["X"], data["Y"], data["pth"]
+        duration = len(X[0])
+        window, overlap = 600, 400
+        windows = list()
+        seg_start = 0
+        while seg_start < (duration - window):
+            windows.append(seg_start)
+            seg_start += window - overlap
+        start = windows[self.n % len(windows)] + random.randint(0, window - 400)
+        X_crop = data["X"][
+            :, start : (start + 400), :
+        ].copy()  # IMPORTANT: NOT A VIEW BUT A "COPY"
 
         return {"X": X_crop, "Y": Y, "pth": pth}
 
 
 class Transpose(object):
-    """ [-6, +6] semitones
+    """ [-n, +n] semitones (default: n=6)
     segment = {X, Y, pth}
     np.roll() COPIES data to a new nd-array"""
 
+    def __init__(self, rng):
+        self.rng = rng
+
     def __call__(self, segment):
         X, Y, pth = segment["X"], segment["Y"], segment["pth"]
-        semitone = random.randint(-6, 6)  # randomly select [-6 ~ +6]
+        semitone = random.randint(-self.rng, self.rng)  # randomly select [-n ~ +n]
         new_X = list()
         for i in range(2):
             tmp = np.roll(X[i], semitone, axis=1)  # X[i].shape = (400,128)

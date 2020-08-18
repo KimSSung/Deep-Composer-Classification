@@ -1,17 +1,18 @@
 # MIDIDataset
 
 import torch
+import matplotlib.pyplot as plt
 from torchvision import transforms
 from torch.utils.data import DataLoader, Dataset
 import numpy as np
 from glob import glob
-from tools.transformation import ToTensor, Transpose, Segmentation
+from tools.transformation import ToTensor, Transpose, Segmentation, TempoStretch
 import random
 
 
 class MIDIDataset(Dataset):
     def __init__(
-        self, txt_file, classes=13, omit=None, seg_num=20, age=False, transform=None
+        self, txt_file, classes=13, omit=None, seg_num=40, age=False, transform=None
     ):
         self.txt_file = txt_file
         self.classes = [x for x in range(classes)]
@@ -21,6 +22,7 @@ class MIDIDataset(Dataset):
 
         self.x_path = []
         self.y = []
+        self.order = []
 
         self.map = {}
 
@@ -52,6 +54,7 @@ class MIDIDataset(Dataset):
             # randomly select n segments pth
             tmp = [random.choice(ver_npy) for j in range(self.seg_num)]
             self.x_path.extend(tmp)
+            self.order.extend([k for k in range(self.seg_num)])  # seg 위치/순서
             self.y.extend([self.map[comp_num]] * self.seg_num)
             """ 중간에 composer 뺄 경우 i가 그만큼 당겨서 label 됨"""
 
@@ -65,29 +68,37 @@ class MIDIDataset(Dataset):
         pth = self.x_path[idx][fd:]
         data = {"X": X, "Y": Y, "pth": pth}
 
-        if self.transform is None:
-            self.transform = transforms.Compose([Segmentation(), ToTensor()])
-        data = self.transform(data)
+        trans = [Segmentation(self.order[idx])]  # cannot be called from outside
+        if self.transform == "Transpose":
+            trans.append(Transpose(6))  # TODO: receive as variable
+        elif self.transform == "Tempo":
+            trans.append(TempoStretch())
+        trans.append(ToTensor())
+        data = transforms.Compose(trans)(data)
 
         return data
 
 
 ##TEST
 # if __name__ == "__main__":
-#     v = MIDIDataset(
-#         txt_file="/data/split/train.txt",
-#         transform=transforms.Compose([Segmentation(), ToTensor()]),  # checked
-#         # omit="2,5,10",  # checked
-#         # seg_num=10, #checked
-#     )
-#     v_loader = DataLoader(v, batch_size=1, shuffle=True)
-#     for i, batch in enumerate(v_loader):
-#         print("{} {}".format(batch["Y"], batch["pth"]))
-
-# mat_notes = np.array(batch["X"][0][1])  # note channel
-# nzero = mat_notes.nonzero()
-# x = nzero[0]
-# y = nzero[1]
+#     # seed = 333
+#     # random.seed(seed)  # python random module
+#     # np.random.seed(seed)  # np module
+#     # torch.manual_seed(seed)  # for both CPU & GPU
+#     # # torch.cuda.manual_seed(seed)
+#     # # torch.cuda.manual_seed_all(seed)
+#     # torch.backends.cudnn.benchmark = False
+#     # torch.backends.cudnn.deterministic = True
+#
+#     t = MIDIDataset(txt_file="/data/split/train.txt", transform="Transpose")
+#     t_loader = DataLoader(t, batch_size=1, shuffle=True)
+#     for i, batch in enumerate(t_loader):
+#         # print("{} {}".format(batch["Y"], batch["pth"]))
+#
+#         mat_notes = np.array(batch["X"][0][1])  # note channel
+#         nzero = mat_notes.nonzero()
+#         x = nzero[0]
+#         y = nzero[1]
 #
 #         # draw plot
 #         plt.ylim(0, 128)
@@ -98,4 +109,5 @@ class MIDIDataset(Dataset):
 #         plt.scatter(x=x, y=y, c="red", s=2)
 #         plt.show()
 #
-#         break
+#         if i > 3:
+#             break

@@ -61,7 +61,7 @@ class Attacker:
     def split_data(self):
 
         for v in self.data_loader:
-            print(v["Y"])
+            # print(v["Y"])
             for i in range(len(v["Y"])):
                 self.input_total.append(torch.unsqueeze(v["X"][i], 0))
                 # unsqueeze -> torch [1,2,400,128]
@@ -151,9 +151,9 @@ class Attacker:
             ground_truth.append(truth.item())
             output_pred.append(init_pred.item())
 
-            print("preds:", output_pred)
-            print("truths:", ground_truth)
-            print("-------------------------------------------------")
+            # print("preds:", output_pred)
+            # print("truths:", ground_truth)
+            # print("-------------------------------------------------")
 
             # if wrong, skip
             if init_pred.item() != truth.item():

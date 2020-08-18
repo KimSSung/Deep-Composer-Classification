@@ -25,7 +25,7 @@ from sklearn.metrics import precision_recall_fscore_support
 
 # transform
 import torchvision
-from tools.transformation import ToTensor, Segmentation, Transpose
+from tools.transformation import ToTensor, Segmentation, Transpose, TempoStretch
 
 # torch.manual_seed(333)
 
@@ -173,18 +173,18 @@ class Trainer:
             print(">>>>>> Base Training <<<<<<\n")
 
             # Loader for base training
-            trans = None
-            if self.config.transform:
-                trans = torchvision.transforms.Compose(
-                    [Segmentation(), Transpose(), ToTensor()]
-                )
+            if self.config.transform is not None:
+                if self.config.transform not in ["Transpose", "Tempo"]:
+                    print("Wrong Augmentation Command!")
+                else:
+                    print("+++ Add {}".format(self.config.transform))
             t = MIDIDataset(
                 self.config.train_split_path,
                 classes=self.label_num,
                 omit=self.config.omit,  # str
                 seg_num=self.seg_num,
                 age=self.config.age,
-                transform=trans,
+                transform=self.config.transform,
             )
             v = MIDIDataset(
                 self.config.test_split_path,
@@ -578,7 +578,7 @@ class Trainer:
                 val_loss += v_loss
 
                 # scheduler.step(v_loss)  # for reduceonplateau
-                self.scheduler.step()  # for cos
+                # self.scheduler.step()  # for cos
 
                 # accuracy
                 _, val_label_pred = torch.max(val_pred.data, 1)
