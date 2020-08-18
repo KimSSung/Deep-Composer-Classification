@@ -15,7 +15,7 @@ class Spliter:
         # print(self.config.omit)
         self.omitlist = []
         if self.config.omit:
-            self.omitlist = self.config.omit.split(",")  # ['2', '5']. str list.
+            self.omitlist = self.config.omit.split(',') # ['2', '5']. str list.
 
         # print("omit:", self.omitlist)
 
@@ -45,7 +45,7 @@ class Spliter:
             if folder == "name_id_map.csv":
                 continue
 
-            comp_idx = folder.replace("composer", "")  # str
+            comp_idx = folder.replace("composer", "") # str
 
             # Optional: omit some composers
             if comp_idx in self.omitlist:
@@ -121,8 +121,8 @@ class Spliter:
 
     def splits(self):
 
-        train_file = open("/data/split/train.txt", "w")
-        test_file = open("/data/split/test.txt", "w")
+        # train_file = open("/data/split/train.txt", "w")
+        # test_file = open("/data/split/test.txt", "w")
 
         midi_idxs = []
 
@@ -156,11 +156,11 @@ class Spliter:
                 if not self.config.age:  # Not Age
                     # Train
                     if this_midi_idx in midi_idxs[composer_idx]:
-                        train_file.write(midi_fold + "\n")
+                        # train_file.write(midi_fold + "\n")
                         total_train_midi += 1
                     # Test
                     else:
-                        test_file.write(midi_fold + "\n")
+                        # test_file.write(midi_fold + "\n")
                         total_test_midi += 1
 
                 else:  # Age
@@ -210,8 +210,8 @@ class Spliter:
         print("total train count:", total_train_midi)
         print("total test count:", total_test_midi)
 
-        train_file.close()
-        test_file.close()
+        # train_file.close()
+        # test_file.close()
 
 
 if __name__ == "__main__":
