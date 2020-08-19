@@ -179,6 +179,7 @@ class Trainer:
                 print("+++ Add {}".format(self.config.transform))
                 if "Transpose" in self.config.transform:
                     transpose_rng = int(self.config.transform[9])
+                    self.config.transform = "Transpose"
                 elif "Tempo" in self.config.transform:
                     pass
                 else:
