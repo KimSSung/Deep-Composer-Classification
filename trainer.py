@@ -170,7 +170,7 @@ class Trainer:
             )
 
     def data_load(self, mode):
-        global transpose_rng
+        transpose_rng = None
         if mode == "basetrain":
             print(">>>>>> Base Training <<<<<<\n")
 
@@ -178,7 +178,7 @@ class Trainer:
             if self.config.transform is not None:
                 print("+++ Add {}".format(self.config.transform))
                 if "Transpose" in self.config.transform:
-                    transpose_rng = int(self.config.transform[9])
+                    transpose_rng = int(self.config.transform.replace("Transpose", ""))
                 elif "Tempo" in self.config.transform:
                     pass
                 else:
