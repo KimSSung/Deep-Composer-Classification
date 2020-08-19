@@ -27,7 +27,8 @@ from sklearn.metrics import precision_recall_fscore_support
 import torchvision
 from tools.transformation import ToTensor, Segmentation, Transpose, TempoStretch
 
-# torch.manual_seed(333)
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 class Trainer:
@@ -169,15 +170,20 @@ class Trainer:
             )
 
     def data_load(self, mode):
+        global transpose_rng
         if mode == "basetrain":
             print(">>>>>> Base Training <<<<<<\n")
 
             # Loader for base training
             if self.config.transform is not None:
-                if self.config.transform not in ["Transpose", "Tempo"]:
-                    print("Wrong Augmentation Command!")
+                print("+++ Add {}".format(self.config.transform))
+                if "Transpose" in self.config.transform:
+                    transpose_rng = int(self.config.transform[9])
+                elif "Tempo" in self.config.transform:
+                    pass
                 else:
-                    print("+++ Add {}".format(self.config.transform))
+                    print("Wrong Augmentation Command!")
+
             t = MIDIDataset(
                 self.config.train_split_path,
                 classes=self.label_num,
@@ -185,6 +191,7 @@ class Trainer:
                 seg_num=self.seg_num,
                 age=self.config.age,
                 transform=self.config.transform,
+                transpose_rng=transpose_rng,
             )
             v = MIDIDataset(
                 self.config.test_split_path,
@@ -197,10 +204,10 @@ class Trainer:
 
             # create batch
             self.train_loader = DataLoader(
-                t, batch_size=self.config.train_batch, shuffle=True
+                t, batch_size=self.config.train_batch, shuffle=False
             )
             self.valid_loader = DataLoader(
-                v, batch_size=self.config.valid_batch, shuffle=True
+                v, batch_size=self.config.valid_batch, shuffle=False
             )
 
             ###################### Loader for base training #############################

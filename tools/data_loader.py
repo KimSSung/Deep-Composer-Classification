@@ -12,13 +12,21 @@ import random
 
 class MIDIDataset(Dataset):
     def __init__(
-        self, txt_file, classes=13, omit=None, seg_num=40, age=False, transform=None
+        self,
+        txt_file,
+        classes=13,
+        omit=None,
+        seg_num=40,
+        age=False,
+        transform=None,
+        transpose_rng=6,
     ):
         self.txt_file = txt_file
         self.classes = [x for x in range(classes)]
 
         self.seg_num = seg_num  # seg num per song
         self.transform = transform
+        self.transpose_rng = transpose_rng
 
         self.x_path = []
         self.y = []
@@ -70,7 +78,7 @@ class MIDIDataset(Dataset):
 
         trans = [Segmentation(self.order[idx])]  # cannot be called from outside
         if self.transform == "Transpose":
-            trans.append(Transpose(6))  # TODO: receive as variable
+            trans.append(Transpose(self.transpose_rng))  # TODO: receive as variable
         elif self.transform == "Tempo":
             trans.append(TempoStretch())
         trans.append(ToTensor())
