@@ -178,7 +178,12 @@ class Trainer:
             if self.config.transform is not None:
                 print("+++ Add {}".format(self.config.transform))
                 if "Transpose" in self.config.transform:
+<<<<<<< HEAD
                     transpose_rng = int(self.config.transform.replace("Transpose", ""))
+=======
+                    transpose_rng = int(self.config.transform[9])
+                    self.config.transform = "Transpose"
+>>>>>>> 0edeb691318aef5c6f7aed1ba02c1eb797e4716e
                 elif "Tempo" in self.config.transform:
                     pass
                 else:
