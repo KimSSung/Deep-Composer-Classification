@@ -214,24 +214,24 @@ class Trainer:
             ###################### Loader for base training #############################
 
             # save train_loader & valid_loader
-            torch.save(
-                self.train_loader, self.config.trainloader_save_path + "train_loader.pt"
-            )
-            print("train_loader saved!")
-            torch.save(
-                self.valid_loader, self.config.validloader_save_path + "valid_loader.pt"
-            )
-            print("valid_loader saved!")
-
-            # load train_loader & valid_loader (to check whether well saved)
-            self.train_loader = torch.load(
-                self.config.trainloader_save_path + "train_loader.pt"
-            )
-            print("train_loader loaded!")
-            self.valid_loader = torch.load(
-                self.config.validloader_save_path + "valid_loader.pt"
-            )
-            print("valid_loader loaded!")
+            # torch.save(
+            #     self.train_loader, self.config.trainloader_save_path + "train_loader.pt"
+            # )
+            # print("train_loader saved!")
+            # torch.save(
+            #     self.valid_loader, self.config.validloader_save_path + "valid_loader.pt"
+            # )
+            # print("valid_loader saved!")
+            #
+            # # load train_loader & valid_loader (to check whether well saved)
+            # self.train_loader = torch.load(
+            #     self.config.trainloader_save_path + "train_loader.pt"
+            # )
+            # print("train_loader loaded!")
+            # self.valid_loader = torch.load(
+            #     self.config.validloader_save_path + "valid_loader.pt"
+            # )
+            # print("valid_loader loaded!")
 
             #############################################################################
 
@@ -295,34 +295,34 @@ class Trainer:
             )
 
             # save adv_train_loader & valid_loader (to check whether well saved)
-            torch.save(
-                self.train_loader,
-                self.config.trainloader_save_path + "adv_train_loader.pt",
-            )
-            print("adv_train_loader saved!")
-            torch.save(
-                self.valid_loader_1,
-                self.config.validloader_save_path + "adv_valid_loader_TandAT.pt",
-            )
-            print("adv_valid_loader_TandAT saved!")
-            torch.save(
-                self.valid_loader_2,
-                self.config.validloader_save_path + "adv_valid_loader_T.pt",
-            )
-            print("adv_valid_loader_T saved!")
-
-            self.train_loader = torch.load(
-                self.config.trainloader_save_path + "adv_train_loader.pt"
-            )
-            print("adv_train_loader loaded!")
-            self.valid_loader_1 = torch.load(
-                self.config.validloader_save_path + "adv_valid_loader_TandAT.pt"
-            )
-            print("adv_valid_loader_TandAT loaded!")
-            self.valid_loader_2 = torch.load(
-                self.config.validloader_save_path + "adv_valid_loader_T.pt"
-            )
-            print("adv_valid_loader_T loaded!")
+            # torch.save(
+            #     self.train_loader,
+            #     self.config.trainloader_save_path + "adv_train_loader.pt",
+            # )
+            # print("adv_train_loader saved!")
+            # torch.save(
+            #     self.valid_loader_1,
+            #     self.config.validloader_save_path + "adv_valid_loader_TandAT.pt",
+            # )
+            # print("adv_valid_loader_TandAT saved!")
+            # torch.save(
+            #     self.valid_loader_2,
+            #     self.config.validloader_save_path + "adv_valid_loader_T.pt",
+            # )
+            # print("adv_valid_loader_T saved!")
+            #
+            # self.train_loader = torch.load(
+            #     self.config.trainloader_save_path + "adv_train_loader.pt"
+            # )
+            # print("adv_train_loader loaded!")
+            # self.valid_loader_1 = torch.load(
+            #     self.config.validloader_save_path + "adv_valid_loader_TandAT.pt"
+            # )
+            # print("adv_valid_loader_TandAT loaded!")
+            # self.valid_loader_2 = torch.load(
+            #     self.config.validloader_save_path + "adv_valid_loader_T.pt"
+            # )
+            # print("adv_valid_loader_T loaded!")
 
             #############################################################################
 
@@ -479,22 +479,22 @@ class Trainer:
                     # save model
                     if avg_valloss < min_valloss:
                         min_valloss = avg_valloss
-                        torch.save(
-                            {
-                                "epoch": epoch,
-                                "model.state_dict": self.model.state_dict(),
-                                "loss": avg_valloss,
-                                "acc": avg_valacc,
-                            },
-                            self.config.model_save_path
-                            + self.config.model_name
-                            + "_valloss_"
-                            + str(float(avg_valloss))
-                            + "_acc_"
-                            + str(float(avg_valacc))
-                            + ".pt",
-                        )
-                        print("model saved!")
+                        # torch.save(
+                        #     {
+                        #         "epoch": epoch,
+                        #         "model.state_dict": self.model.state_dict(),
+                        #         "loss": avg_valloss,
+                        #         "acc": avg_valacc,
+                        #     },
+                        #     self.config.model_save_path
+                        #     + self.config.model_name
+                        #     + "_valloss_"
+                        #     + str(float(avg_valloss))
+                        #     + "_acc_"
+                        #     + str(float(avg_valacc))
+                        #     + ".pt",
+                        # )
+                        # print("model saved!")
 
                 elif mode == "advtrain":
                     print(
@@ -516,22 +516,22 @@ class Trainer:
                     # save model
                     if True:  # avg_valloss_1 < min_valloss:
                         min_valloss = avg_valloss_1
-                        torch.save(
-                            {
-                                "epoch": epoch,
-                                "model.state_dict": self.model.state_dict(),
-                                "loss": avg_valloss_1,
-                                "acc": avg_valacc_1,
-                            },
-                            self.config.model_save_path
-                            + self.config.model_name
-                            + "_val_TandAT_loss_"
-                            + str(float(avg_valloss_1))
-                            + "_acc_"
-                            + str(float(avg_valacc_1))
-                            + ".pt",
-                        )
-                        print("model saved!")
+                        # torch.save(
+                        #     {
+                        #         "epoch": epoch,
+                        #         "model.state_dict": self.model.state_dict(),
+                        #         "loss": avg_valloss_1,
+                        #         "acc": avg_valacc_1,
+                        #     },
+                        #     self.config.model_save_path
+                        #     + self.config.model_name
+                        #     + "_val_TandAT_loss_"
+                        #     + str(float(avg_valloss_1))
+                        #     + "_acc_"
+                        #     + str(float(avg_valacc_1))
+                        #     + ".pt",
+                        # )
+                        # print("model saved!")
 
         # print best valid f1 score
         print()
