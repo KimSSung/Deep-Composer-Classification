@@ -22,7 +22,7 @@ class Segmentation(object):
     def __call__(self, data):
         X, Y, pth = data["X"], data["Y"], data["pth"]
         duration = len(X[0])
-        window, overlap = 600, 400
+        window, overlap = 600, 200
         windows = list()
         seg_start = 0
         while seg_start < (duration - window):
