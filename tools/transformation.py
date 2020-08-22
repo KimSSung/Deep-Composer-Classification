@@ -267,6 +267,65 @@ class TempoStretch(object):
 
             return {"X": new_X, "Y": Y, "pth": pth}
 
+class DoubleTempo(object):
+    def __call__(self, segment):
+        X, Y, pth = segment["X"], segment["Y"], segment["pth"]
+
+        try:
+            # Stretch Variable
+            multiplier_rand = random.randint(0, 4)
+            stretch_start = random.randint(3, 200)
+            stretch_duration = random.randint(10, 30)
+            stretch_end = stretch_start + stretch_duration
+
+            # Find stretch numpy, Cut Numpy for stretch
+
+            mod_npy = X[:, stretch_start:stretch_end, :].copy()  # len(mod_npy) duration
+            double_npy = np.repeat(mod_npy, 2, axis=1)
+            after_npy = X[:, stretch_end : (400 - stretch_duration), :].copy()
+
+            # make numpy
+
+            new_X = np.concatenate(
+                (X[:, :stretch_start, :], double_npy, after_npy), axis=1
+            )
+
+        except:
+            return {"X": X, "Y": Y, "pth": pth}
+
+        else:
+            # # Plot after tempo stretched version
+            # nzero = new_X[1].nonzero()
+            # x1 = nzero[0]
+            # y1 = nzero[1]
+            #
+            # nzero2 = X[1].nonzero()
+            # x2 = nzero2[0]
+            # y2 = nzero2[1]
+            #
+            # plt.subplot(2,1,1)
+            # plt.ylim(20, 100)
+            # plt.title('Original')
+            # plt.xlabel("/0.05 sec")
+            # plt.ylabel("pitch")
+            # plt.axvline(x=stretch_start, color='r', linestyle='--', linewidth=1)
+            # plt.axvline(x=stretch_end, color='r', linestyle='--', linewidth=1)
+            # plt.scatter(x=x2, y=y2, c="green", s=2)
+            #
+            # plt.subplot(2,1,2)
+            # plt.ylim(20, 100)
+            # plt.title('Modified')
+            # plt.xlabel("/0.05 sec")
+            # plt.ylabel("pitch")
+            # plt.axvline(x=stretch_start, color='r', linestyle='--', linewidth=1)
+            # plt.axvline(x=stretch_start + stretch_duration * 2, color='r', linestyle='--', linewidth=1)
+            # plt.scatter(x=x1, y=y1, c="green", s=2)
+            #
+            # plt.show()
+
+            return {"X": new_X, "Y": Y, "pth": pth}
+
+
 
 class ToTensor(object):
     """Convert numpy.ndarray to tensor

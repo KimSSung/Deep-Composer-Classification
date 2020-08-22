@@ -6,7 +6,7 @@ from torchvision import transforms
 from torch.utils.data import DataLoader, Dataset
 import numpy as np
 from glob import glob
-from tools.transformation import ToTensor, Transpose, Segmentation, TempoStretch
+from tools.transformation import ToTensor, Transpose, Segmentation, TempoStretch, DoubleTempo
 import random
 
 
@@ -83,6 +83,8 @@ class MIDIDataset(Dataset):
             trans.append(Transpose(self.transpose_rng))
         elif self.transform == "Tempo":
             trans.append(TempoStretch())
+        elif self.transform == "DoubleTempo":
+            trans.append(DoubleTempo())
         trans.append(ToTensor())
         data = transforms.Compose(trans)(data)
 
