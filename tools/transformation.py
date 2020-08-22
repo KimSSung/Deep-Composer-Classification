@@ -5,33 +5,52 @@ import random
 
 # from .data_loader import MIDIDataset
 import random
+import math
 
 
 class Segmentation(object):
     """ basic segmentation
         - randomly crop (2x) 400 x 128
         - window = 600
-        - overlap = 400
+        - overlap = vary
         - returns {X, Y, pth}
         - pth: composer#/midi#/ver#.npy
     """
 
-    def __init__(self, n):
-        self.n = n
+    def __init__(self, is_train, seg_num, order):
+        self.order = order
+        self.seg_num = seg_num
+        self.is_train = is_train
 
     def __call__(self, data):
         X, Y, pth = data["X"], data["Y"], data["pth"]
         duration = len(X[0])
-        window, overlap = 600, 200
+        window = 500
+
         windows = list()
-        seg_start = 0
-        while seg_start < (duration - window):
-            windows.append(seg_start)
-            seg_start += window - overlap
-        start = windows[self.n % len(windows)] + random.randint(0, window - 400)
-        X_crop = data["X"][
-            :, start : (start + 400), :
-        ].copy()  # IMPORTANT: NOT A VIEW BUT A "COPY"
+        if duration > (window * self.seg_num):
+            gap = int((duration - (window * self.seg_num)) / (self.seg_num - 1))
+            seg_start = 0
+            while seg_start <= (duration - window):
+                windows.append(seg_start)
+                seg_start = seg_start + window + gap
+        else:
+            overlap = int(
+                math.ceil(((window * self.seg_num) - duration) / (self.seg_num - 1))
+            )
+            seg_start = 0
+            while seg_start <= (duration - window):
+                windows.append(seg_start)
+                seg_start = seg_start + window - overlap
+            # print("{}:{}, {}".format("overlap", overlap, len(windows)))
+            # print(duration)
+            # print(windows)
+
+        start = windows[self.order % len(windows)]
+        if self.is_train:
+            start += random.randint(0, window - 400)
+        X_crop = data["X"][:, start : (start + 400), :].copy()
+        # IMPORTANT: NOT A VIEW BUT A "COPY"
 
         return {"X": X_crop, "Y": Y, "pth": pth}
 
