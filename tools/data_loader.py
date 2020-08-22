@@ -6,7 +6,13 @@ from torchvision import transforms
 from torch.utils.data import DataLoader, Dataset
 import numpy as np
 from glob import glob
-from tools.transformation import ToTensor, Transpose, Segmentation, TempoStretch
+from tools.transformation import (
+    ToTensor,
+    Transpose,
+    Segmentation,
+    TempoStretch,
+    DoubleTempo,
+)
 import random
 
 
@@ -81,13 +87,15 @@ class MIDIDataset(Dataset):
             trans.append(Transpose(self.transpose_rng))  # TODO: receive as variable
         elif self.transform == "Tempo":
             trans.append(TempoStretch())
+        elif self.transform == "DoubleTempo":
+            trans.append(DoubleTempo())
         trans.append(ToTensor())
         data = transforms.Compose(trans)(data)
 
         return data
 
 
-##TEST
+# TEST
 # if __name__ == "__main__":
 #     # seed = 333
 #     # random.seed(seed)  # python random module
@@ -98,7 +106,7 @@ class MIDIDataset(Dataset):
 #     # torch.backends.cudnn.benchmark = False
 #     # torch.backends.cudnn.deterministic = True
 #
-#     t = MIDIDataset(txt_file="/data/split/train.txt", transform="Transpose")
+#     t = MIDIDataset(txt_file="/data/split/train.txt", transform="DoubleTempo")
 #     t_loader = DataLoader(t, batch_size=1, shuffle=True)
 #     for i, batch in enumerate(t_loader):
 #         # print("{} {}".format(batch["Y"], batch["pth"]))
