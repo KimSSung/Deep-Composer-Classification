@@ -2,37 +2,55 @@ import torchvision
 import torch
 import numpy as np
 import random
-import matplotlib.pyplot as plt
 
 # from .data_loader import MIDIDataset
 import random
+import math
 
 
 class Segmentation(object):
     """ basic segmentation
         - randomly crop (2x) 400 x 128
         - window = 600
-        - overlap = 400
+        - overlap = vary
         - returns {X, Y, pth}
         - pth: composer#/midi#/ver#.npy
     """
 
-    def __init__(self, n):
-        self.n = 40
+    def __init__(self, is_train, seg_num, order):
+        self.order = order
+        self.seg_num = seg_num
+        self.is_train = is_train
 
     def __call__(self, data):
         X, Y, pth = data["X"], data["Y"], data["pth"]
         duration = len(X[0])
-        window, overlap = 600, 200
+        window = 500
+
         windows = list()
-        seg_start = 0
-        while seg_start < (duration - window):
-            windows.append(seg_start)
-            seg_start += window - overlap
-        start = windows[self.n % len(windows)] + random.randint(0, window - 400)
-        X_crop = data["X"][
-            :, start : (start + 400), :
-        ].copy()  # IMPORTANT: NOT A VIEW BUT A "COPY"
+        if duration > (window * self.seg_num):
+            gap = int((duration - (window * self.seg_num)) / (self.seg_num - 1))
+            seg_start = 0
+            while seg_start <= (duration - window):
+                windows.append(seg_start)
+                seg_start = seg_start + window + gap
+        else:
+            overlap = int(
+                math.ceil(((window * self.seg_num) - duration) / (self.seg_num - 1))
+            )
+            seg_start = 0
+            while seg_start <= (duration - window):
+                windows.append(seg_start)
+                seg_start = seg_start + window - overlap
+            # print("{}:{}, {}".format("overlap", overlap, len(windows)))
+            # print(duration)
+            # print(windows)
+
+        start = windows[self.order % len(windows)]
+        if self.is_train:
+            start += random.randint(0, window - 400)
+        X_crop = data["X"][:, start : (start + 400), :].copy()
+        # IMPORTANT: NOT A VIEW BUT A "COPY"
 
         return {"X": X_crop, "Y": Y, "pth": pth}
 
@@ -243,65 +261,6 @@ class TempoStretch(object):
             # plt.ylabel("pitch")
             # plt.axvline(x=stretch_start, color='r', linestyle='--', linewidth=1)
             # plt.axvline(x=stretch_start + stretch_duration * tempo_mul, color='r', linestyle='--', linewidth=1)
-            # plt.scatter(x=x1, y=y1, c="green", s=2)
-            #
-            # plt.show()
-
-            return {"X": new_X, "Y": Y, "pth": pth}
-
-
-class DoubleTempo(object):
-    def __call__(self, segment):
-        X, Y, pth = segment["X"], segment["Y"], segment["pth"]
-
-        try:
-            # Stretch Variable
-            multiplier_rand = random.randint(0, 4)
-            stretch_start = random.randint(1, 200)
-            stretch_duration = random.randint(10, 30)
-            stretch_end = stretch_start + stretch_duration
-
-            # Find stretch numpy, Cut Numpy for stretch
-
-            mod_npy = X[:, stretch_start:stretch_end, :].copy()  # len(mod_npy) duration
-            double_npy = np.repeat(mod_npy, 2, axis=1)
-            after_npy = X[:, stretch_end : (400 - stretch_duration), :].copy()
-
-            # make numpy
-
-            new_X = np.concatenate(
-                (X[:, :stretch_start, :], double_npy, after_npy), axis=1
-            )
-
-        except:
-            return {"X": X, "Y": Y, "pth": pth}
-
-        else:
-            # # Plot after tempo stretched version
-            # nzero = new_X[1].nonzero()
-            # x1 = nzero[0]
-            # y1 = nzero[1]
-            #
-            # nzero2 = X[1].nonzero()
-            # x2 = nzero2[0]
-            # y2 = nzero2[1]
-            #
-            # plt.subplot(2,1,1)
-            # plt.ylim(20, 100)
-            # plt.title('Original')
-            # plt.xlabel("/0.05 sec")
-            # plt.ylabel("pitch")
-            # plt.axvline(x=stretch_start, color='r', linestyle='--', linewidth=1)
-            # plt.axvline(x=stretch_end, color='r', linestyle='--', linewidth=1)
-            # plt.scatter(x=x2, y=y2, c="green", s=2)
-            #
-            # plt.subplot(2,1,2)
-            # plt.ylim(20, 100)
-            # plt.title('Modified')
-            # plt.xlabel("/0.05 sec")
-            # plt.ylabel("pitch")
-            # plt.axvline(x=stretch_start, color='r', linestyle='--', linewidth=1)
-            # plt.axvline(x=stretch_start + stretch_duration * 2, color='r', linestyle='--', linewidth=1)
             # plt.scatter(x=x1, y=y1, c="green", s=2)
             #
             # plt.show()

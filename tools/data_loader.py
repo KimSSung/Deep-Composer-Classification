@@ -6,27 +6,23 @@ from torchvision import transforms
 from torch.utils.data import DataLoader, Dataset
 import numpy as np
 from glob import glob
-from tools.transformation import (
-    ToTensor,
-    Transpose,
-    Segmentation,
-    TempoStretch,
-    DoubleTempo,
-)
+from tools.transformation import ToTensor, Transpose, Segmentation, TempoStretch
 import random
 
 
 class MIDIDataset(Dataset):
     def __init__(
         self,
-        txt_file,
+        train=True,
+        txt_file="",
         classes=13,
         omit=None,
-        seg_num=40,
+        seg_num=20,
         age=False,
         transform=None,
         transpose_rng=6,
     ):
+        self.is_train = train
         self.txt_file = txt_file
         self.classes = [x for x in range(classes)]
 
@@ -52,8 +48,6 @@ class MIDIDataset(Dataset):
                 label = c - sum(c > int(o) for o in self.omitlist)
                 self.map[c] = label
 
-        # print(self.map)
-
         txt_list = open(self.txt_file, "r")
         for midi_pth in txt_list:  # each midi
             temp = midi_pth.split("/")
@@ -62,7 +56,6 @@ class MIDIDataset(Dataset):
                 if "composer" in i:
                     comp_num = int(i.replace("composer", ""))
                     break
-            # print(comp_num)
 
             ver_npy = glob(midi_pth.replace("\n", "") + "*.npy")  # list
             # randomly select n segments pth
@@ -78,38 +71,45 @@ class MIDIDataset(Dataset):
     def __getitem__(self, idx):
         X = np.load(self.x_path[idx], allow_pickle=True)
         Y = self.y[idx]
+
         fd = self.x_path[idx].find("composer")
         pth = self.x_path[idx][fd:]
+
         data = {"X": X, "Y": Y, "pth": pth}
 
-        trans = [Segmentation(self.order[idx])]  # cannot be called from outside
+        # torch.transforms
+        trans = [Segmentation(self.is_train, self.seg_num, self.order[idx])]
         if self.transform == "Transpose":
-            trans.append(Transpose(self.transpose_rng))  # TODO: receive as variable
+            trans.append(Transpose(self.transpose_rng))
         elif self.transform == "Tempo":
             trans.append(TempoStretch())
-        elif self.transform == "DoubleTempo":
-            trans.append(DoubleTempo())
         trans.append(ToTensor())
         data = transforms.Compose(trans)(data)
 
         return data
 
 
-# TEST
+# ##TEST
 # if __name__ == "__main__":
-#     # seed = 333
-#     # random.seed(seed)  # python random module
-#     # np.random.seed(seed)  # np module
-#     # torch.manual_seed(seed)  # for both CPU & GPU
+#     seed = 333
+#     random.seed(seed)  # python random module
+#     np.random.seed(seed)  # np module
+#     torch.manual_seed(seed)  # for both CPU & GPU
 #     # # torch.cuda.manual_seed(seed)
 #     # # torch.cuda.manual_seed_all(seed)
 #     # torch.backends.cudnn.benchmark = False
 #     # torch.backends.cudnn.deterministic = True
 #
-#     t = MIDIDataset(txt_file="/data/split/train.txt", transform="DoubleTempo")
+#     t = MIDIDataset(
+#         train=True,
+#         txt_file="/data/split/train.txt",
+#         transform="Transpose",
+#         seg_num=20,
+#         transpose_rng=6,
+#     )
 #     t_loader = DataLoader(t, batch_size=1, shuffle=True)
 #     for i, batch in enumerate(t_loader):
-#         # print("{} {}".format(batch["Y"], batch["pth"]))
+#         print("{} {}\n".format(batch["Y"], batch["pth"]))
 #
 #         mat_notes = np.array(batch["X"][0][1])  # note channel
 #         nzero = mat_notes.nonzero()
