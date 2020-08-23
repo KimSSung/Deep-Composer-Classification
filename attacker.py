@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch.nn as nn
 from config import get_config
-from models.resnet import resnet18, resnet34, resnet101, resnet152, resnet50
+from models.resnet_ver2 import resnet18, resnet34, resnet101, resnet152, resnet50
 from _collections import OrderedDict
 from sklearn.metrics import f1_score
 from sklearn.metrics import precision_recall_fscore_support

@@ -29,7 +29,7 @@ parser.add_argument(
 parser.add_argument(
     "--optim",
     type=str,
-    default="optimizer",
+    default="SGD",
     help="Optimizer [Adadelta, Adagrad, Adam, AdamW, SparseAdam, Adamax, ASGD, RMSprop, Rprop, SGD, Nesterov]",
 )
 parser.add_argument(
@@ -58,13 +58,13 @@ parser.add_argument(
     help="Total number of epochs to run. Not actual epoch.",
 )
 parser.add_argument(
-    "--train_batch", default=20, type=int, help="Batch size for training"
+    "--train_batch", default=40, type=int, help="Batch size for training"
 )
-parser.add_argument("--valid_batch", default=20, type=int, help="Batch size for valid.")
+parser.add_argument("--valid_batch", default=40, type=int, help="Batch size for valid.")
 
 parser.add_argument("--gpu", default="0,1,2,3", type=str, help="GPU id to use.")
 
-parser.add_argument("--lr", default=0.0005, type=float, help="Model learning rate.")
+parser.add_argument("--lr", default=0.01, type=float, help="Model learning rate.")
 
 
 ##shared parameters (train & attack)

@@ -13,8 +13,9 @@ from torch.optim import lr_scheduler
 
 # to import from sibling folders
 # sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-from models.resnet import resnet18, resnet34, resnet50, resnet101, resnet152
+from models.resnet_ver2 import resnet18, resnet34, resnet50, resnet101, resnet152
 from models.convnet import convnet
+from models.wresnet import wide_resnet50_2, wide_resnet101_2
 
 # dataloader
 from tools.data_loader import MIDIDataset
@@ -39,7 +40,8 @@ class Trainer:
 
         # 0 : acc / 1: loss / 2: f1 / 3: precision / 4: recall
         self.best_valid = [-1.0, 30000.0, -1.0, [], []]
-        self.seg_num = 30  # change this
+        self.seg_num = 40  # change this
+        print("==> Seg num: ", self.seg_num)
 
         # for GPU use
         # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID" # moved to main
@@ -70,6 +72,9 @@ class Trainer:
 
         # Define optimizer
         self.optimizer = self.optim_selection()
+        print()
+        print("==> Optim: ", self.optimizer)
+        print()
 
         self.scheduler = lr_scheduler.CosineAnnealingLR(
             self.optimizer, T_max=self.config.epochs
@@ -93,6 +98,12 @@ class Trainer:
             return resnet152(int(self.config.input_shape[0]), self.label_num)
         elif self.config.model_name == "convnet":
             return convnet(int(self.config.input_shape[0]), self.label_num)
+
+        elif self.config.model_name == "wresnet50":
+            return wide_resnet50_2(in_channels=int(self.config.input_shape[0]), num_classes=self.label_num)
+        elif self.config.model_name == "wresnet101":
+            return wide_resnet101_2(in_channels=int(self.config.input_shape[0]), num_classes=self.label_num)
+
 
     def optim_selection(self):
         if self.config.optim == "Nesterov":
@@ -350,6 +361,7 @@ class Trainer:
         print()
 
         # train
+        loss_list = {}
         for epoch in range(self.config.epochs + 1):
 
             trn_running_loss, trn_acc = 0.0, 0.0
@@ -483,13 +495,20 @@ class Trainer:
 
                 if mode == "basetrain":
                     print(
-                        """epoch: {}/{} | trn loss: {:.4f} | lr: {:.6f}""".format(
+                        """epoch: {}/{} | lr: {:.6f} |
+        trn f1 score: {:.4f} | trn acc: {:.4f} | trn loss: {:.4f} |
+        val loss: {:.4f} | val acc: {:.4f}""".format(
                             epoch + 1,
-                            self.config.epochs,
+                            self.config.epochs, lr,
+                            w_f1score, trn_acc,
                             trn_running_loss / self.num_batches,
-                            lr,
+                            avg_valloss,
+                            avg_valacc
                         )
                     )
+
+                    # loss list
+                    loss_list[epoch] = avg_valloss
 
                     # save model
                     if avg_valloss < min_valloss:
@@ -559,6 +578,11 @@ class Trainer:
         print("Precision:", self.best_valid[3])
         print("Recall:", self.best_valid[4])
         print()
+
+        # loss
+        sorted_loss = sorted(loss_list.items(), key=lambda x: x[1])
+        print("Sorted loss list:")
+        print(sorted_loss) # epoch-loss
 
     def test(self, test_loader, model):
         #############################

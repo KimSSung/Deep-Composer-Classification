@@ -8,7 +8,7 @@ from functools import partial
 from dataclasses import dataclass
 from collections import OrderedDict
 
-k = (7,3)
+k = (3,3)
 
 def conv_bn(in_channels, out_channels, conv, *args, **kwargs):
     return nn.Sequential(
@@ -124,6 +124,8 @@ class ResNetBasicBlock(ResNetResidualBlock):
 
             ),
             activation(),
+            nn.Dropout(p=0.25),
+            
             conv_bn(
                 self.out_channels,
                 self.expanded_channels,
@@ -131,6 +133,7 @@ class ResNetBasicBlock(ResNetResidualBlock):
                 bias=False,
                 kernel_size=k
             ),
+            nn.Dropout(p=0.25),
         )
 
 # dummy = torch.ones((1, 32, 224, 224))
@@ -152,6 +155,8 @@ class ResNetBottleNeckBlock(ResNetResidualBlock):
                 self.in_channels, self.out_channels, self.conv, kernel_size=1
             ),
             activation(),
+            nn.Dropout(p=0.25),
+
             conv_bn(
                 self.out_channels,
                 self.out_channels,
@@ -160,9 +165,12 @@ class ResNetBottleNeckBlock(ResNetResidualBlock):
                 kernel_size=k,
             ),
             activation(),
+            nn.Dropout(p=0.25),
+
             conv_bn(
                 self.out_channels, self.expanded_channels, self.conv, kernel_size=1
             ),
+            nn.Dropout(p=0.25),
         )
 
 
