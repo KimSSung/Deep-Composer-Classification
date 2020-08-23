@@ -6,7 +6,13 @@ from torchvision import transforms
 from torch.utils.data import DataLoader, Dataset
 import numpy as np
 from glob import glob
-from tools.transformation import ToTensor, Transpose, Segmentation, TempoStretch, DoubleTempo
+from tools.transformation import (
+    ToTensor,
+    Transpose,
+    Segmentation,
+    TempoStretch,
+    DoubleTempo,
+)
 import random
 
 
@@ -92,26 +98,26 @@ class MIDIDataset(Dataset):
 
 
 # ##TEST
-# if __name__ == "__main__":
-#     seed = 333
-#     random.seed(seed)  # python random module
-#     np.random.seed(seed)  # np module
-#     torch.manual_seed(seed)  # for both CPU & GPU
-#     # # torch.cuda.manual_seed(seed)
-#     # # torch.cuda.manual_seed_all(seed)
-#     # torch.backends.cudnn.benchmark = False
-#     # torch.backends.cudnn.deterministic = True
-#
-#     t = MIDIDataset(
-#         train=True,
-#         txt_file="/data/split/train.txt",
-#         transform="Transpose",
-#         seg_num=20,
-#         transpose_rng=6,
-#     )
-#     t_loader = DataLoader(t, batch_size=1, shuffle=True)
-#     for i, batch in enumerate(t_loader):
-#         print("{} {}\n".format(batch["Y"], batch["pth"]))
+if __name__ == "__main__":
+    seed = 333
+    random.seed(seed)  # python random module
+    np.random.seed(seed)  # np module
+    torch.manual_seed(seed)  # for both CPU & GPU
+    # # torch.cuda.manual_seed(seed)
+    # # torch.cuda.manual_seed_all(seed)
+    # torch.backends.cudnn.benchmark = False
+    # torch.backends.cudnn.deterministic = True
+
+    t = MIDIDataset(
+        train=True,
+        txt_file="/data/split/train.txt",
+        transform="Transpose",
+        seg_num=40,
+        transpose_rng=6,
+    )
+    t_loader = DataLoader(t, batch_size=1, shuffle=True)
+    for i, batch in enumerate(t_loader):
+        print("{} {}\n".format(batch["Y"], batch["pth"]))
 #
 #         mat_notes = np.array(batch["X"][0][1])  # note channel
 #         nzero = mat_notes.nonzero()

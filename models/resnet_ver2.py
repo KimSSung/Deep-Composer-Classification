@@ -8,7 +8,8 @@ from functools import partial
 from dataclasses import dataclass
 from collections import OrderedDict
 
-k = (7,3)
+k = (7, 3)
+
 
 def conv_bn(in_channels, out_channels, conv, *args, **kwargs):
     return nn.Sequential(
@@ -20,9 +21,9 @@ def conv_bn(in_channels, out_channels, conv, *args, **kwargs):
         )
     )
 
+
 # print(conv_bn(3, 3, nn.Conv2d, kernel_size=k))
 # print('---------------------------------------------')
-
 
 
 class Conv2dAuto(nn.Conv2d):
@@ -32,7 +33,6 @@ class Conv2dAuto(nn.Conv2d):
             self.kernel_size[0] // 2,
             self.kernel_size[1] // 2,
         )  # dynamic add padding based on the kernel_size
-
 
 
 conv_x_ = partial(Conv2dAuto, kernel_size=k, bias=False)
@@ -62,6 +62,7 @@ class ResidualBlock(nn.Module):
     @property
     def should_apply_shortcut(self):
         return self.in_channels != self.out_channels
+
 
 class ResNetResidualBlock(ResidualBlock):
     def __init__(
@@ -120,8 +121,7 @@ class ResNetBasicBlock(ResNetResidualBlock):
                 conv=self.conv,
                 bias=False,
                 stride=self.downsampling,
-                kernel_size=k
-
+                kernel_size=k,
             ),
             activation(),
             conv_bn(
@@ -129,9 +129,10 @@ class ResNetBasicBlock(ResNetResidualBlock):
                 self.expanded_channels,
                 conv=self.conv,
                 bias=False,
-                kernel_size=k
+                kernel_size=k,
             ),
         )
+
 
 # dummy = torch.ones((1, 32, 224, 224))
 
@@ -141,16 +142,13 @@ class ResNetBasicBlock(ResNetResidualBlock):
 # print('---------------------------------------------')
 
 
-
 class ResNetBottleNeckBlock(ResNetResidualBlock):
     expansion = 4
 
     def __init__(self, in_channels, out_channels, activation=nn.ReLU, *args, **kwargs):
         super().__init__(in_channels, out_channels, expansion=4, *args, **kwargs)
         self.blocks = nn.Sequential(
-            conv_bn(
-                self.in_channels, self.out_channels, self.conv, kernel_size=1
-            ),
+            conv_bn(self.in_channels, self.out_channels, self.conv, kernel_size=1),
             activation(),
             conv_bn(
                 self.out_channels,
@@ -172,7 +170,6 @@ class ResNetBottleNeckBlock(ResNetResidualBlock):
 # block(dummy).shape
 # print(block)
 # print('---------------------------------------------')
-
 
 
 class ResNetLayer(nn.Module):
@@ -235,7 +232,7 @@ class ResNetEncoder(nn.Module):
             nn.Conv2d(
                 in_channels,
                 self.blocks_sizes[0],
-                kernel_size=7, # all resnet codes write 7 here... so fixed it
+                kernel_size=7,  # all resnet codes write 7 here... so fixed it
                 stride=2,
                 padding=3,
                 bias=False,

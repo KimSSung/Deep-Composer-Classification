@@ -14,6 +14,7 @@ from models.resnet import resnet18, resnet34, resnet101, resnet152, resnet50
 from _collections import OrderedDict
 from sklearn.metrics import f1_score
 from sklearn.metrics import precision_recall_fscore_support
+from datetime import date
 
 
 class Attacker:
@@ -37,6 +38,8 @@ class Attacker:
 
         self.criterion = nn.CrossEntropyLoss()
         self.criterion = self.criterion.to(self.device)
+
+        self.date = date.today()
 
     def data_load(self, orig):
         if orig:
@@ -137,7 +140,7 @@ class Attacker:
         atk_correct = 0
         ground_truth = []
         output_pred = []
-        for i, (X, truth, pair) in enumerate(
+        for i, (X, truth, pth) in enumerate(
             tqdm(zip(self.input_total, self.output_total, self.pth_total))
         ):
             X, truth = X.to(self.device), truth.to(self.device)
@@ -182,8 +185,13 @@ class Attacker:
                 # TODO: save successful attacks
                 if self.config.save_atk:
                     pass
-                    # np.save(self.config.save_atk_path + name, attack)
-                    # print("saved: {}".format(name))
+                    save_dir = (
+                        self.config.save_atk_path + self.date.strftime("%b-%d-%Y") + "/"
+                    )
+                    if not os.path.exists(save_dir):
+                        os.makedirs(save_dir)
+                    np.save(save_dir + pth, attack)
+                    print("saved: {} at {}".format(pth, save_dir))
                 pass
 
         return (

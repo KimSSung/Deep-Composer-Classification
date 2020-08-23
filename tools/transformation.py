@@ -34,6 +34,9 @@ class Segmentation(object):
             while seg_start <= (duration - window):
                 windows.append(seg_start)
                 seg_start = seg_start + window + gap
+            # print("{}:{}, {}".format("gap", gap, len(windows)))
+            # print(duration)
+            # print(windows)
         else:
             overlap = int(
                 math.ceil(((window * self.seg_num) - duration) / (self.seg_num - 1))
@@ -267,6 +270,7 @@ class TempoStretch(object):
 
             return {"X": new_X, "Y": Y, "pth": pth}
 
+
 class DoubleTempo(object):
     def __call__(self, segment):
         X, Y, pth = segment["X"], segment["Y"], segment["pth"]
@@ -324,7 +328,6 @@ class DoubleTempo(object):
             # plt.show()
 
             return {"X": new_X, "Y": Y, "pth": pth}
-
 
 
 class ToTensor(object):
