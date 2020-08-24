@@ -27,8 +27,8 @@ For the usage, please refer to the "Download" section of the official website.
 
 ## Code Explanation
 #### Preprocess
-> Collected Midi dataset was preprocessed using [music21][music21_link], a toolkit for computer-aided musicology distributed by MIT. Preprocessing takes the following steps:   
-> 1. Remove drum track (optional)
+> Downloaded MAESTRO Midi dataset was preprocessed using [music21][music21_link], a toolkit for computer-aided musicology distributed by MIT. Preprocessing takes the following steps:   
+> 1. Remove composers with too small number of data.
 > 2. Extract notes from each instrument track
 > 3. Divide into 0.05 second units
 > 4. Mark note information on 3d matrix
@@ -46,7 +46,6 @@ For the usage, please refer to the "Download" section of the official website.
 
 #### Model
 > This dataset was trained using **ResNet50**
-> <img src="https://user-images.githubusercontent.com/56469754/86505899-01a62100-be05-11ea-81bb-174b37f66344.jpg" width="80%" height="50%" title="model"></img><br/>
 
 #### Adversarial Attack
 
