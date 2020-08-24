@@ -18,12 +18,13 @@ Classification task, whether it's concerning genre, style, era, or composer as e
 > * tqdm
 
 #### Dataset
-https://magenta.tensorflow.org/datasets/maestro    
-(MIDI and Audio Edited for Synchronous TRacks and Organization) is a dataset composed of over 200 hours of virtuosic piano performances captured with fine alignment (~3 ms) between note labels and audio waveforms.     
+[MAESTRO][maestro_link]: (MIDI and Audio Edited for Synchronous TRacks and Organization) is a dataset composed of over 200 hours of virtuosic piano performances captured with fine alignment (~3 ms) between note labels and audio waveforms.     
 
 Specifically, we used **v2.0.0** version of the dataset. Although the big advantage of using this dataset is the fine alignment between midi & audio, we only utilize the midi data for this experiment, for the audio part is unecessary for the classification of symbolic music.   
 
 For the usage, please refer to the "Download" section of the official website.
+
+[maestro_link]: https://magenta.tensorflow.org/datasets/maestro    
 
 ## Code Explanation
 #### Preprocess
@@ -42,7 +43,7 @@ For the usage, please refer to the "Download" section of the official website.
 >   * channel[1] (note) = 0-128 velocity
 > * 400 (x-dim) = time (0.05 sec)
 > * 128 (y-dim) = 0-127 pitch 
-<img src="https://user-images.githubusercontent.com/56469754/86505898-feab3080-be04-11ea-8ae6-90d8623352b4.jpg" width="40%" height="30%" title="input"></img><br/>
+<img src="https://user-images.githubusercontent.com/56469754/91077437-06a48580-e67c-11ea-9769-a5c19470a52e.png" width="40%" height="30%" title="input"></img><br/>
 
 #### Model
 > This dataset was trained using **ResNet50**
