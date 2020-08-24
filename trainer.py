@@ -42,7 +42,7 @@ class Trainer:
 
         # 0 : acc / 1: loss / 2: f1 / 3: precision / 4: recall
         self.best_valid = [-1.0, 30000.0, -1.0, [], []]
-        self.seg_num = 50  # change this
+        self.seg_num = self.config.seg_num
         print("==> Seg num: ", self.seg_num)
 
         # for GPU use

@@ -58,6 +58,9 @@ parser.add_argument(
     help="Total number of epochs to run. Not actual epoch.",
 )
 parser.add_argument(
+    "--seg_num", default=20, type=int, help="segment number for each midi#"
+)
+parser.add_argument(
     "--train_batch", default=40, type=int, help="Batch size for training"
 )
 parser.add_argument("--valid_batch", default=40, type=int, help="Batch size for valid.")
