@@ -28,14 +28,16 @@ For the usage, please refer to the "Download" section of the official website.
 
 ## Code Explanation
 #### Preprocess
-> Downloaded MAESTRO Midi dataset was preprocessed using [music21][music21_link], a toolkit for computer-aided musicology distributed by MIT. Preprocessing takes the following steps:   
->
-> Uneven Distribution of data       
-> <img src="https://user-images.githubusercontent.com/56469754/91077423-00160e00-e67c-11ea-8977-01366e0ad5e7.png" width="80%" height="30%" title="duration"></img><br/>       
+> Downloaded MAESTRO Midi dataset was preprocessed using [music21][music21_link], a toolkit for computer-aided musicology distributed by MIT. Preprocessing takes the following steps:           
 > **1. Remove composers with too small number of data.**           
 > **2. Extract notes from each track**        
 > **3. Divide into 0.05 second units**         
 > **4. Mark note information on 3d matrix**        
+
+> Uneven Distribution of data       
+> <img src="https://user-images.githubusercontent.com/56469754/91077423-00160e00-e67c-11ea-8977-01366e0ad5e7.png" width="80%" height="30%" title="duration"></img><br/>  
+> Remaining 14 composers after step(1)    
+> <img src="https://user-images.githubusercontent.com/56469754/91096404-f18a1f80-e698-11ea-8878-a54f3128b384.png" width="30%" height="20%" title="duration"></img><br/> 
 
 
 [music21_link]: http://web.mit.edu/music21/
