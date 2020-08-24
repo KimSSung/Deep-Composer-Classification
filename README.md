@@ -50,12 +50,13 @@ For the usage, please refer to the "Download" section of the official website.
 <img src="https://user-images.githubusercontent.com/56469754/91077437-06a48580-e67c-11ea-9769-a5c19470a52e.png" width="40%" height="30%" title="input"></img><br/>
 
 #### Model
-> This dataset was experimented on different model configurations             
-|  <center>Header1</center> |  <center>Header2</center> |  <center>Header3</center> |       
+> This dataset was experimented on different model configurations:             
+
+|  <center> Model </center> |  <center> Train Acc </center> |  <center> Valid Acc</center> |         
 |:--------|:--------:|--------:|         
-|**cell 1x1** | <center>cell 1x2 </center> |*cell 1x3* |        
-|**cell 2x1** | <center>cell 2x2 </center> |*cell 2x3* |        
-|**cell 3x1** | <center>cell 3x2 </center> |*cell 3x3* |         
+|**Resnet** | <center>cell % </center> | <center>cell % </center> |        
+|**Resnet (7,3)** | <center> % </center> | <center>cell % </center> |        
+|**Wide Resnet** | <center> % </center> | <center>cell % </center> |         
 
 
 #### Adversarial Attack
