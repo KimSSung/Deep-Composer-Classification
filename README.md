@@ -15,12 +15,11 @@ Genre classification in the music domain is a relatively common problem. To the 
 > * tqdm
 
 #### Dataset
-> Midi dataset was collected from two different websites cited as below:
-> * https://freemidi.org/   
-> Classical, Rock, Country genre midi files were collected from here and 300 of each were actually preprocessed and used to train the model.
-> 
-> - https://www.vgmusic.com/music/console/nintendo/gameboy   
-> GameMusic genre midi files were collected from here and 300 were actually used.
+https://magenta.tensorflow.org/datasets/maestro    
+Explanation from MAESTRO (MIDI and Audio Edited for Synchronous TRacks and Organization) is a dataset composed of over 200 hours of virtuosic piano performances captured with fine alignment (~3 ms) between note labels and audio waveforms.     
+Specifically, we used v2.0.0 version of the dataset. Although the big advantage of using this dataset is the fine alignment between midi & audio, we only utilize the midi data for this experiment, for the audio part is unecessary for the classification of symbolic music.   
+
+For the usage, please refer to the "Download" section of the official website.
 
 ## Code Explanation
 #### Preprocess
@@ -34,10 +33,11 @@ Genre classification in the music domain is a relatively common problem. To the 
 
 #### input
 > Generated input takes the form of (129, 400, 128), where:   
-> * 129 channel = 128 instruments + 1 None
+> * 2 channel = onset + note
+>   * channel[0] (onset) = binary
+>   * channel[1] (note) = 0-128 velocity
 > * 400 (x-dim) = time (0.05 sec)
-> * 128 (y-dim) = 0-127 pitch
-> * each cell value = velocity   
+> * 128 (y-dim) = 0-127 pitch 
 <img src="https://user-images.githubusercontent.com/56469754/86505898-feab3080-be04-11ea-8ae6-90d8623352b4.jpg" width="40%" height="30%" title="input"></img><br/>
 
 #### Model
