@@ -123,9 +123,7 @@ class ResNetBasicBlock(ResNetResidualBlock):
                 kernel_size=k
 
             ),
-            activation(),
-            nn.Dropout(p=0.25),
-            
+            activation(),            
             conv_bn(
                 self.out_channels,
                 self.expanded_channels,
@@ -133,7 +131,7 @@ class ResNetBasicBlock(ResNetResidualBlock):
                 bias=False,
                 kernel_size=k
             ),
-            nn.Dropout(p=0.25),
+            nn.Dropout(p=0.5),
         )
 
 # dummy = torch.ones((1, 32, 224, 224))
@@ -155,7 +153,7 @@ class ResNetBottleNeckBlock(ResNetResidualBlock):
                 self.in_channels, self.out_channels, self.conv, kernel_size=1
             ),
             activation(),
-            nn.Dropout(p=0.25),
+            nn.Dropout(p=0.5),
 
             conv_bn(
                 self.out_channels,
@@ -165,12 +163,10 @@ class ResNetBottleNeckBlock(ResNetResidualBlock):
                 kernel_size=k,
             ),
             activation(),
-            nn.Dropout(p=0.25),
-
             conv_bn(
                 self.out_channels, self.expanded_channels, self.conv, kernel_size=1
             ),
-            nn.Dropout(p=0.25),
+            nn.Dropout(p=0.5),
         )
 
 
@@ -296,10 +292,10 @@ class ResnetDecoder(nn.Module):
     correct class by using a fully connected layer.
     """
 
-    def __init__(self, in_features, n_classes):
+    def __init__(self, in_features, num_classes):
         super().__init__()
         self.avg = nn.AdaptiveAvgPool2d((1, 1))
-        self.decoder = nn.Linear(in_features, n_classes)
+        self.decoder = nn.Linear(in_features, num_classes)
 
     def forward(self, x):
         x = self.avg(x)
@@ -309,11 +305,11 @@ class ResnetDecoder(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, in_channels, n_classes, *args, **kwargs):
+    def __init__(self, in_channels, num_classes, *args, **kwargs):
         super().__init__()
         self.encoder = ResNetEncoder(in_channels, *args, **kwargs)
         self.decoder = ResnetDecoder(
-            self.encoder.blocks[-1].blocks[-1].expanded_channels, n_classes
+            self.encoder.blocks[-1].blocks[-1].expanded_channels, num_classes
         )
 
     def forward(self, x):
@@ -322,27 +318,27 @@ class ResNet(nn.Module):
         return x
 
 
-def resnet18(in_channels, n_classes):
-    return ResNet(in_channels, n_classes, block=ResNetBasicBlock, deepths=[2, 2, 2, 2])
+def resnet18(in_channels, num_classes):
+    return ResNet(in_channels, num_classes, block=ResNetBasicBlock, deepths=[2, 2, 2, 2])
 
 
-def resnet34(in_channels, n_classes):
-    return ResNet(in_channels, n_classes, block=ResNetBasicBlock, deepths=[3, 4, 6, 3])
+def resnet34(in_channels, num_classes):
+    return ResNet(in_channels, num_classes, block=ResNetBasicBlock, deepths=[3, 4, 6, 3])
 
 
-def resnet50(in_channels, n_classes):
+def resnet50(in_channels, num_classes):
     return ResNet(
-        in_channels, n_classes, block=ResNetBottleNeckBlock, deepths=[3, 4, 6, 3]
+        in_channels, num_classes, block=ResNetBottleNeckBlock, deepths=[3, 4, 6, 3]
     )
 
 
-def resnet101(in_channels, n_classes):
+def resnet101(in_channels, num_classes):
     return ResNet(
-        in_channels, n_classes, block=ResNetBottleNeckBlock, deepths=[3, 4, 23, 3]
+        in_channels, num_classes, block=ResNetBottleNeckBlock, deepths=[3, 4, 23, 3]
     )
 
 
-def resnet152(in_channels, n_classes):
+def resnet152(in_channels, num_classes):
     return ResNet(
-        in_channels, n_classes, block=ResNetBottleNeckBlock, deepths=[3, 8, 36, 3]
+        in_channels, num_classes, block=ResNetBottleNeckBlock, deepths=[3, 8, 36, 3]
     )
