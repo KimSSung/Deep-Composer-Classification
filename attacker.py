@@ -48,7 +48,7 @@ class Attacker:
             )
             print("attack on VALID")
         else:
-            pass
+            pass  # TODO: adv attack on attack
             # self.valid_loader_1 = torch.load(
             #     self.config.validloader_save_path + "adv_valid_loader_TandAT.pt"
             # )
@@ -185,13 +185,13 @@ class Attacker:
                 # TODO: save successful attacks
                 if self.config.save_atk:
                     pass
-                    save_dir = (
-                        self.config.save_atk_path + self.date.strftime("%b-%d-%Y") + "/"
-                    )
-                    if not os.path.exists(save_dir):
-                        os.makedirs(save_dir)
-                    np.save(save_dir + pth, attack)
-                    print("saved: {} at {}".format(pth, save_dir))
+                    # save_dir = (
+                    #     self.config.save_atk_path + self.date.strftime("%b-%d-%Y") + "/"
+                    # )
+                    # if not os.path.exists(save_dir):
+                    #     os.makedirs(save_dir)
+                    # np.save(save_dir + pth, attack)
+                    # print("saved: {} at {}".format(pth, save_dir))
                 pass
 
         return (

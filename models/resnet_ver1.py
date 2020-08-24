@@ -275,11 +275,15 @@ class ResNet(nn.Module):
 
 
 def resnet18(in_channels, num_classes):
-    return ResNet(in_channels, num_classes, block=ResNetBasicBlock, deepths=[2, 2, 2, 2])
+    return ResNet(
+        in_channels, num_classes, block=ResNetBasicBlock, deepths=[2, 2, 2, 2]
+    )
 
 
 def resnet34(in_channels, num_classes):
-    return ResNet(in_channels, num_classes, block=ResNetBasicBlock, deepths=[3, 4, 6, 3])
+    return ResNet(
+        in_channels, num_classes, block=ResNetBasicBlock, deepths=[3, 4, 6, 3]
+    )
 
 
 def resnet50(in_channels, num_classes):
