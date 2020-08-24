@@ -17,7 +17,10 @@ Classification task, whether it's concerning genre, style, era, or composer as e
 > * music21 = 5.7.2
 > * tqdm
 
-#### Dataset
+## Code Explanation
+        python main.py --mode basetrain --model_name resnet50 --epochs 1 --optim SGD --trainloader_save_path '/data/drum/1/dataset/train/' --validloader_save_path '/data/drum/1/dataset/test/' --gpu 0
+
+## Dataset
 [MAESTRO][maestro_link]: (MIDI and Audio Edited for Synchronous TRacks and Organization) is a dataset composed of over 200 hours of virtuosic piano performances captured with fine alignment (~3 ms) between note labels and audio waveforms.     
 
 Specifically, we used **v2.0.0** version of the dataset. Although the big advantage of using this dataset is the fine alignment between midi & audio, we only utilize the midi data for this experiment, for the audio part is unecessary for the classification of symbolic music.   
@@ -26,8 +29,7 @@ For the usage, please refer to the "Download" section of the official website.
 
 [maestro_link]: https://magenta.tensorflow.org/datasets/maestro    
 
-## Code Explanation
-#### Preprocess
+### Preprocess
 > Downloaded MAESTRO Midi dataset was preprocessed using [music21][music21_link], a toolkit for computer-aided musicology distributed by MIT. Preprocessing takes the following steps:           
 > **1. Remove composers with too small number of data.**           
 > **2. Extract notes from each track**        
