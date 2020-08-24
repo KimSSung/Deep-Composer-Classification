@@ -29,9 +29,10 @@ For the usage, please refer to the "Download" section of the official website.
 ## Code Explanation
 #### Preprocess
 > Downloaded MAESTRO Midi dataset was preprocessed using [music21][music21_link], a toolkit for computer-aided musicology distributed by MIT. Preprocessing takes the following steps:   
-> **1. Remove composers with too small number of data.**      
+>
 > Uneven Distribution of data       
-> <img src="https://user-images.githubusercontent.com/56469754/91077423-00160e00-e67c-11ea-8977-01366e0ad5e7.png" width="80%" height="30%" title="duration"></img><br/>        
+> <img src="https://user-images.githubusercontent.com/56469754/91077423-00160e00-e67c-11ea-8977-01366e0ad5e7.png" width="80%" height="30%" title="duration"></img><br/>       
+> **1. Remove composers with too small number of data.**           
 > **2. Extract notes from each track**        
 > **3. Divide into 0.05 second units**         
 > **4. Mark note information on 3d matrix**        
@@ -40,7 +41,7 @@ For the usage, please refer to the "Download" section of the official website.
 [music21_link]: http://web.mit.edu/music21/
 
 #### input
-> Generated input takes the form of (129, 400, 128), where:   
+> Generated input takes the form of (2, 400, 128), where:   
 > * 2 channel = onset + note
 >   * channel[0] (onset) = binary
 >   * channel[1] (note) = 0-128 velocity
@@ -54,9 +55,9 @@ For the usage, please refer to the "Download" section of the official website.
 
 |  <center> Model </center> |  <center> Train Acc </center> |  <center> Valid Acc</center> |         
 |:--------|:--------:|--------:|         
-|**Resnet** | <center>cell % </center> | <center>cell % </center> |        
-|**Resnet (7,3)** | <center> % </center> | <center>cell % </center> |        
-|**Wide Resnet** | <center> % </center> | <center>cell % </center> |         
+|**Resnet** | <center>cell % </center> | <center>% </center> |        
+|**Resnet (7,3)** | <center> % </center> | <center>% </center> |        
+|**Wide Resnet** | <center> % </center> | <center>% </center> |         
 
 
 #### Adversarial Attack
