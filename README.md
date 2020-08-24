@@ -29,12 +29,12 @@ For the usage, please refer to the "Download" section of the official website.
 ## Code Explanation
 #### Preprocess
 > Downloaded MAESTRO Midi dataset was preprocessed using [music21][music21_link], a toolkit for computer-aided musicology distributed by MIT. Preprocessing takes the following steps:   
-> 1. Remove composers with too small number of data.
-> 2. Extract notes from each track
-> 3. Divide into 0.05 second units
-> 4. Mark note information on 3d matrix
-
-<img src="https://user-images.githubusercontent.com/56469754/91077423-00160e00-e67c-11ea-8977-01366e0ad5e7.png" width="90%" height="30%" title="duration"></img><br/>
+> **1. Remove composers with too small number of data.**      
+> Uneven Distribution of data       
+> <img src="https://user-images.githubusercontent.com/56469754/91077423-00160e00-e67c-11ea-8977-01366e0ad5e7.png" width="80%" height="30%" title="duration"></img><br/>      
+> **2. Extract notes from each track**
+> **3. Divide into 0.05 second units**
+> **4. Mark note information on 3d matrix**
 
 
 [music21_link]: http://web.mit.edu/music21/
@@ -50,7 +50,13 @@ For the usage, please refer to the "Download" section of the official website.
 <img src="https://user-images.githubusercontent.com/56469754/91077437-06a48580-e67c-11ea-9769-a5c19470a52e.png" width="40%" height="30%" title="input"></img><br/>
 
 #### Model
-> This dataset was trained using **ResNet50**
+> This dataset was experimented on different model configurations             
+|  <center>Header1</center> |  <center>Header2</center> |  <center>Header3</center> |       
+|:--------|:--------:|--------:|         
+|**cell 1x1** | <center>cell 1x2 </center> |*cell 1x3* |        
+|**cell 2x1** | <center>cell 2x2 </center> |*cell 2x3* |        
+|**cell 3x1** | <center>cell 3x2 </center> |*cell 3x3* |         
+
 
 #### Adversarial Attack
 
