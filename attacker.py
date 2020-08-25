@@ -17,7 +17,7 @@ from models.wresnet import resnet18, resnet34, resnet50, resnet101, resnet152
 from _collections import OrderedDict
 from sklearn.metrics import f1_score
 from sklearn.metrics import precision_recall_fscore_support
-from datetime import date
+from datetime import date, datetime
 
 
 class Attacker:
@@ -43,10 +43,11 @@ class Attacker:
         self.criterion = nn.CrossEntropyLoss()
         self.criterion = self.criterion.to(self.device)
 
-        self.date = date.today()
+        self.date = date.today().strftime("%m-%d") + datetime.now().strftime("-%H-%M")
         self.epsilons = [float(e) for e in self.config.epsilons.split(",")]
-        print(self.config.attack_type)
+        print("==> ATTACK {}".format(self.config.attack_type))
         print(self.epsilons)
+        print("==> SAVE {} at {}".format(self.config.save_atk, self.date))
 
     def data_load(self, orig):
         if orig:
@@ -197,11 +198,8 @@ class Attacker:
             if new_pred.item() == truth.item():
                 atk_correct += 1
             else:
-                # TODO: save successful attacks
                 if self.config.save_atk:
-                    save_dir = (
-                        self.config.save_path + self.date.strftime("%m-%d-%H-%M") + "/"
-                    )
+                    save_dir = self.config.save_path + self.date + "/"
                     if self.config.attack_type == "fgsm" and epsilon > 0.0:
                         save_dir += "ep" + str(epsilon) + "/"
                     elif self.config.attack_type == "deepfool":
@@ -210,8 +208,12 @@ class Attacker:
                     if not os.path.exists(save_dir):
                         os.makedirs(save_dir)
 
+                    # save orig
+                    np.save(save_dir + pth.replace("/", "_"), X.cpu().detach().numpy())
+                    # save attack
                     np.save(
-                        save_dir + pth.replace("/", "_"), attack.cpu().detach().numpy()
+                        save_dir + "orig_" + pth.replace("/", "_"),
+                        attack.cpu().detach().numpy(),
                     )
                     print("saved: {} at {}".format(pth, save_dir))
                 pass
