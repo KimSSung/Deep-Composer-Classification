@@ -10,7 +10,7 @@ import random
 class Spliter:
     def __init__(self, args):
         self.config = args
-        self.input_path = self.config.input_save_path
+        self.input_path = self.config.load_path # /data/inputs_full/
 
         # print(self.config.omit)
         self.omitlist = []
@@ -28,7 +28,7 @@ class Spliter:
 
         print("###################################")
         print(
-            ">> Train : Test = "
+            ">> Train : Valid = "
             + str(int(self.train_percentage * 10))
             + " : "
             + str(int((1 - self.train_percentage) * 10))
@@ -122,11 +122,11 @@ class Spliter:
     def splits(self):
 
         # train_file = open("/data/split/train.txt", "w")
-        # test_file = open("/data/split/test.txt", "w")
+        # valid_file = open("/data/split/valid.txt", "w")
 
         midi_idxs = []
 
-        # Select train / test 'midi' from each composer
+        # Select train / valid 'midi' from each composer
         for midi_count in self.composer_midi_count:
             idxlist = random.sample(
                 list(range(0, midi_count)), int(midi_count * self.train_percentage)
@@ -134,7 +134,7 @@ class Spliter:
             midi_idxs.append(idxlist)
 
         total_train_midi = 0
-        total_test_midi = 0
+        total_valid_midi = 0
         composer_idx = 0  # to exclude 'csv' file on composer_idx count
 
         # if self.config.age == True
@@ -158,10 +158,10 @@ class Spliter:
                     if this_midi_idx in midi_idxs[composer_idx]:
                         # train_file.write(midi_fold + "\n")
                         total_train_midi += 1
-                    # Test
+                    # valid
                     else:
-                        # test_file.write(midi_fold + "\n")
-                        total_test_midi += 1
+                        # valid_file.write(midi_fold + "\n")
+                        total_valid_midi += 1
 
                 else:  # Age
                     if self.composer_map[composer_idx] in [2, 6]:
@@ -175,22 +175,22 @@ class Spliter:
                     if this_midi_idx in midi_idxs[composer_idx]:
                         train_file.write(midi_fold + "\n")
                         total_train_midi += 1
-                    # Test
+                    # valid
                     else:
-                        test_file.write(midi_fold + "\n")
-                        total_test_midi += 1
+                        valid_file.write(midi_fold + "\n")
+                        total_valid_midi += 1
 
             composer_idx += 1
 
         # age_cnt = [len(baroq_file), len(classic_file), len(roman_file)]
-        # if self.config.age: # write train / test file
+        # if self.config.age: # write train / valid file
 
         # 	# under sampling
         # 	b_idxlist = random.sample(list(range(0, len(baroq_file))), min(age_cnt))
         # 	c_idxlist = random.sample(list(range(0, len(classic_file))), min(age_cnt))
         # 	r_idxlist = random.sample(list(range(0, len(roman_file))), min(age_cnt))
 
-        # 	# split train / test
+        # 	# split train / valid
 
         if self.config.age:
             print(
@@ -204,14 +204,14 @@ class Spliter:
         print("## After split:")
         # print("total:", sum(self.composer_seg_count))
         # print("goal train num:", int(sum(self.composer_seg_count) * self.train_percentage))
-        # print("goal test num:", int(sum(self.composer_seg_count) * (1 - self.train_percentage)))
+        # print("goal valid num:", int(sum(self.composer_seg_count) * (1 - self.train_percentage)))
         # print()
 
         print("total train count:", total_train_midi)
-        print("total test count:", total_test_midi)
+        print("total valid count:", total_valid_midi)
 
         # train_file.close()
-        # test_file.close()
+        # valid_file.close()
 
 
 if __name__ == "__main__":

@@ -127,7 +127,7 @@ class Trainer:
                 lr=self.config.lr,
                 momentum=0.9,
                 nesterov=True,
-                weight_decay=0.0005,
+                weight_decay=0.0001,
             )
         elif self.config.optim == "SGD":  # weight_decay = l2 regularization
             return optim.SGD(
@@ -135,7 +135,7 @@ class Trainer:
                 lr=self.config.lr,
                 momentum=0.9,
                 nesterov=False,
-                weight_decay=0.005,
+                weight_decay=0.0001,
             )
         elif self.config.optim == "Adadelta":  # default lr = 1.0
             return optim.Adadelta(
@@ -226,17 +226,17 @@ class Trainer:
 
             t = MIDIDataset(
                 train=True,  # newly added
-                txt_file=self.config.train_split_path,
+                txt_file=self.config.load_path+'train.txt', # split path + txt
                 classes=self.label_num,
                 omit=self.config.omit,  # str
-                seg_num=self.seg_num,
+                seg_num=self.config.train_batch,
                 age=self.config.age,
                 transform=self.config.transform,
                 transpose_rng=transpose_rng,
             )
             v = MIDIDataset(
                 train=False,  # newly added
-                txt_file=self.config.test_split_path,
+                txt_file=self.config.load_path+'valid.txt',
                 classes=self.label_num,
                 omit=self.config.omit,
                 seg_num=self.seg_num,
@@ -262,116 +262,116 @@ class Trainer:
             if self.config.save_trn:
                 torch.save(
                     self.train_loader,
-                    self.config.trainloader_save_path + "train_loader.pt",
+                    self.config.save_path + "train/train_loader.pt",
                 )
                 print("train_loader saved!")
                 torch.save(
                     self.valid_loader,
-                    self.config.validloader_save_path + "valid_loader.pt",
+                    self.config.save_path + "valid/valid_loader.pt",
                 )
                 print("valid_loader saved!")
 
                 # load train_loader & valid_loader (to check whether well saved)
                 self.train_loader = torch.load(
-                    self.config.trainloader_save_path + "train_loader.pt"
+                    self.config.save_path + "train/train_loader.pt",
                 )
                 print("train_loader loaded!")
                 self.valid_loader = torch.load(
-                    self.config.validloader_save_path + "valid_loader.pt"
+                    self.config.save_path + "valid/valid_loader.pt",
                 )
                 print("valid_loader loaded!")
 
             #############################################################################
 
-        elif mode == "advtrain":
-            print(">>>>>> Adversarial Training <<<<<<\n")
+        # elif mode == "advtrain":
+        #     print(">>>>>> Adversarial Training <<<<<<\n")
 
-            ################### Loader for adversarial training #########################
-            t_list = []
-            t_list.append(
-                MIDIDataset(
-                    self.config.attacked_train_input_path,
-                    -1,
-                    -1,
-                    self.config.genres,
-                    "flat",
-                )
-            )  # not use start, end index for 'flat'
-            t_list.append(
-                MIDIDataset(
-                    self.config.train_input_path,
-                    0,
-                    self.config.genre_datanum * 0.8,
-                    self.config.genres,
-                    "folder",
-                )
-            )
-            t = ConcatDataset(t_list)
+        #     ################### Loader for adversarial training #########################
+        #     t_list = []
+        #     t_list.append(
+        #         MIDIDataset(
+        #             self.config.attacked_train_input_path,
+        #             -1,
+        #             -1,
+        #             self.config.genres,
+        #             "flat",
+        #         )
+        #     )  # not use start, end index for 'flat'
+        #     t_list.append(
+        #         MIDIDataset(
+        #             self.config.train_input_path,
+        #             0,
+        #             self.config.genre_datanum * 0.8,
+        #             self.config.genres,
+        #             "folder",
+        #         )
+        #     )
+        #     t = ConcatDataset(t_list)
 
-            # Caution: attacked_train_input_path & valid_path must be checked !!!!!!!!
-            v2 = MIDIDataset(
-                self.config.valid_input_path,
-                0,
-                self.config.genre_datanum * 0.2,
-                self.config.genres,
-                "folder",
-            )
-            v_list = []
-            v_list.append(
-                MIDIDataset(
-                    self.config.attacked_valid_input_path,
-                    -1,
-                    -1,
-                    self.config.genres,
-                    "flat",
-                )
-            )
-            v_list.append(v2)
-            v1 = ConcatDataset(v_list)  # test + attack test
+        #     # Caution: attacked_train_input_path & valid_path must be checked !!!!!!!!
+        #     v2 = MIDIDataset(
+        #         self.config.valid_input_path,
+        #         0,
+        #         self.config.genre_datanum * 0.2,
+        #         self.config.genres,
+        #         "folder",
+        #     )
+        #     v_list = []
+        #     v_list.append(
+        #         MIDIDataset(
+        #             self.config.attacked_valid_input_path,
+        #             -1,
+        #             -1,
+        #             self.config.genres,
+        #             "flat",
+        #         )
+        #     )
+        #     v_list.append(v2)
+        #     v1 = ConcatDataset(v_list)  # test + attack test
 
-            # train + attack train
-            self.train_loader = DataLoader(
-                t, batch_size=self.config.train_batch, shuffle=True
-            )
-            # test + attack test = TandAT
-            self.valid_loader_1 = DataLoader(
-                v1, batch_size=self.config.valid_batch, shuffle=True
-            )
-            # Only Test = T
-            self.valid_loader_2 = DataLoader(
-                v2, batch_size=self.config.valid_batch, shuffle=True
-            )
+        #     # train + attack train
+        #     self.train_loader = DataLoader(
+        #         t, batch_size=self.config.train_batch, shuffle=True
+        #     )
+        #     # test + attack test = TandAT
+        #     self.valid_loader_1 = DataLoader(
+        #         v1, batch_size=self.config.valid_batch, shuffle=True
+        #     )
+        #     # Only Test = T
+        #     self.valid_loader_2 = DataLoader(
+        #         v2, batch_size=self.config.valid_batch, shuffle=True
+        #     )
 
-            # save adv_train_loader & valid_loader (to check whether well saved)
-            if self.config.save_trn:
-                torch.save(
-                    self.train_loader,
-                    self.config.trainloader_save_path + "adv_train_loader.pt",
-                )
-                print("adv_train_loader saved!")
-                torch.save(
-                    self.valid_loader_1,
-                    self.config.validloader_save_path + "adv_valid_loader_TandAT.pt",
-                )
-                print("adv_valid_loader_TandAT saved!")
-                torch.save(
-                    self.valid_loader_2,
-                    self.config.validloader_save_path + "adv_valid_loader_T.pt",
-                )
-                print("adv_valid_loader_T saved!")
+        #     # save adv_train_loader & valid_loader (to check whether well saved)
+        #     if self.config.save_trn:
+        #         torch.save(
+        #             self.train_loader,
+        #             self.config.trainloader_save_path + "adv_train_loader.pt",
+        #         )
+        #         print("adv_train_loader saved!")
+        #         torch.save(
+        #             self.valid_loader_1,
+        #             self.config.validloader_save_path + "adv_valid_loader_TandAT.pt",
+        #         )
+        #         print("adv_valid_loader_TandAT saved!")
+        #         torch.save(
+        #             self.valid_loader_2,
+        #             self.config.validloader_save_path + "adv_valid_loader_T.pt",
+        #         )
+        #         print("adv_valid_loader_T saved!")
 
-                self.train_loader = torch.load(
-                    self.config.trainloader_save_path + "adv_train_loader.pt"
-                )
-                print("adv_train_loader loaded!")
-                self.valid_loader_1 = torch.load(
-                    self.config.validloader_save_path + "adv_valid_loader_TandAT.pt"
-                )
-                print("adv_valid_loader_TandAT loaded!")
-                self.valid_loader_2 = torch.load(
-                    self.config.validloader_save_path + "adv_valid_loader_T.pt"
-                )
-                print("adv_valid_loader_T loaded!")
+        #         self.train_loader = torch.load(
+        #             self.config.trainloader_save_path + "adv_train_loader.pt"
+        #         )
+        #         print("adv_train_loader loaded!")
+        #         self.valid_loader_1 = torch.load(
+        #             self.config.validloader_save_path + "adv_valid_loader_TandAT.pt"
+        #         )
+        #         print("adv_valid_loader_TandAT loaded!")
+        #         self.valid_loader_2 = torch.load(
+        #             self.config.validloader_save_path + "adv_valid_loader_T.pt"
+        #         )
+        #         print("adv_valid_loader_T loaded!")
 
             #############################################################################
 
@@ -483,7 +483,7 @@ class Trainer:
             )
             self.writer.add_scalar("training acc", w_f1score, epoch)
 
-            ################## TEST ####################
+            ################## VALID ####################
             val_term = 10
             min_valloss = 10000.0
 
@@ -492,33 +492,33 @@ class Trainer:
                 if epoch == 0:
 
                     if mode == "basetrain":
-                        avg_valloss, avg_valacc = self.test(
+                        avg_valloss, avg_valacc = self.valid(
                             self.valid_loader, self.model
                         )
 
                     elif mode == "advtrain":
                         # 1. Test + Attack Test -> adv_valid_loader_1
-                        avg_valloss_1, avg_valacc_1 = self.test(
+                        avg_valloss_1, avg_valacc_1 = self.valid(
                             self.valid_loader_1, self.model
                         )
 
                         # 2. Only Test
-                        avg_valloss_2, avg_valacc_2 = self.test(
+                        avg_valloss_2, avg_valacc_2 = self.valid(
                             self.valid_loader_2, self.model
                         )
 
                 else:
 
                     if mode == "basetrain":
-                        avg_valloss, avg_valacc = self.test(
+                        avg_valloss, avg_valacc = self.valid(
                             self.valid_loader, self.model
                         )
 
                     elif mode == "advtrain":
-                        avg_valloss_1, avg_valacc_1 = self.test(
+                        avg_valloss_1, avg_valacc_1 = self.valid(
                             self.valid_loader_1, self.model
                         )
-                        avg_valloss_2, avg_valacc_2 = self.test(
+                        avg_valloss_2, avg_valacc_2 = self.valid(
                             self.valid_loader_2, self.model
                         )
 
@@ -619,9 +619,9 @@ class Trainer:
         print("Sorted loss list:")
         print(sorted_loss)  # epoch-loss
 
-    def test(self, test_loader, model):
+    def valid(self, valid_loader, model):
         #############################
-        ######## Test function ######
+        ######## valid function ######
         #############################
 
         self.valid_times += 1
@@ -635,7 +635,7 @@ class Trainer:
             val_preds = []
             val_ground_truths = []
 
-            # val_total = 0 # = len(test_loader)
+            # val_total = 0 # = len(valid_loader)
             val_correct = 0
 
             cur_midi_preds = []
@@ -643,7 +643,7 @@ class Trainer:
             pred_labels = [-1] * self.label_num
             cur_true_label = -1
             cur_pred_label = -1  # majority label
-            for j, valset in enumerate(test_loader):
+            for j, valset in enumerate(valid_loader):
 
                 # val_in, val_out = valset
                 val_in = valset["X"]
@@ -727,16 +727,16 @@ class Trainer:
                 cur_true_label = -1
                 cur_pred_label = -1  # majority label
 
-            avg_valloss = val_loss / len(test_loader)
+            avg_valloss = val_loss / len(valid_loader)
 
             # score
             # 1. accuracy
-            # print("len test_loader:", len(test_loader))
+            # print("len valid_loader:", len(valid_loader))
             # print("len val_preds:", len(val_preds))
             # print("len val_ground_truths:", len(val_ground_truths))
             print("============================================")
 
-            val_acc = val_correct / len(test_loader)
+            val_acc = val_correct / len(valid_loader)
 
             # 2. weighted f1-score
             w_f1score = f1_score(val_ground_truths, val_preds, average="weighted")

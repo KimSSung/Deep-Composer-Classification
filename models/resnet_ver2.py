@@ -124,6 +124,7 @@ class ResNetBasicBlock(ResNetResidualBlock):
                 kernel_size=k,
             ),
             activation(),
+            nn.Dropout(p=0.25),
             conv_bn(
                 self.out_channels,
                 self.expanded_channels,
@@ -131,7 +132,6 @@ class ResNetBasicBlock(ResNetResidualBlock):
                 bias=False,
                 kernel_size=k,
             ),
-            nn.Dropout(p=0.5),
         )
 
 
@@ -151,7 +151,7 @@ class ResNetBottleNeckBlock(ResNetResidualBlock):
         self.blocks = nn.Sequential(
             conv_bn(self.in_channels, self.out_channels, self.conv, kernel_size=1),
             activation(),
-            nn.Dropout(p=0.5),
+            nn.Dropout(p=0.25),
             conv_bn(
                 self.out_channels,
                 self.out_channels,
@@ -160,10 +160,10 @@ class ResNetBottleNeckBlock(ResNetResidualBlock):
                 kernel_size=k,
             ),
             activation(),
+            nn.Dropout(p=0.25),
             conv_bn(
                 self.out_channels, self.expanded_channels, self.conv, kernel_size=1
             ),
-            nn.Dropout(p=0.5),
         )
 
 
