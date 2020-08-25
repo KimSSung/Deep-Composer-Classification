@@ -694,7 +694,6 @@ class Trainer:
                 # acc for each batch (=> one batch = one midi)
                 val_label_pred = val_label_pred.tolist()
 
-                # TODO: 어서와 ^^ 여기 max 할 때 같은 개수인 애들 해결부탁해 ㅎㅎ
                 occ = [val_label_pred.count(x) for x in range(self.label_num)]
                 max_vote = max(occ)
                 occ = np.array(occ)
