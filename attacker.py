@@ -10,7 +10,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch.nn as nn
 from config import get_config
-from models.resnet_ver2 import resnet18, resnet34, resnet101, resnet152, resnet50
+from models.wresnet import wide_resnet50_2, wide_resnet101_2
+from models.wresnet import resnet18, resnet34, resnet50, resnet101, resnet152
+
+# from models.resnet_ver2 import resnet18, resnet34, resnet101, resnet152, resnet50
 from _collections import OrderedDict
 from sklearn.metrics import f1_score
 from sklearn.metrics import precision_recall_fscore_support
@@ -25,6 +28,7 @@ class Attacker:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.label_num = self.config.composers
+        self.input_shape = (2, 400, 128)
         self.data_loader = None
         self.input_total = []
         self.output_total = []
@@ -40,11 +44,14 @@ class Attacker:
         self.criterion = self.criterion.to(self.device)
 
         self.date = date.today()
+        self.epsilons = [float(e) for e in self.config.epsilons.split(",")]
+        print(self.config.attack_type)
+        print(self.epsilons)
 
     def data_load(self, orig):
         if orig:
             self.data_loader = torch.load(
-                self.config.atk_path + "dataset/test/valid_loader.pt"
+                self.config.load_path + "dataset/valid/valid_loader.pt"
             )
             print("attack on VALID")
         else:
@@ -74,25 +81,33 @@ class Attacker:
         return
 
     def get_model(self):
-        self.model_fname = os.listdir(self.config.atk_path + "model/")[0]
+        self.model_fname = os.listdir(self.config.load_path + "model/")[0]
         self.model_type = self.model_fname.split("_")[0]  # ex: resnet50
         if self.model_type == "resnet18":
-            return resnet18(int(self.config.input_shape[0]), self.label_num)
+            return resnet18(int(self.input_shape[0]), self.label_num)
         elif self.model_type == "resnet34":
-            return resnet34(int(self.config.input_shape[0]), self.label_num)
+            return resnet34(int(self.input_shape[0]), self.label_num)
         elif self.model_type == "resnet50":
-            return resnet50(int(self.config.input_shape[0]), self.label_num)
+            return resnet50(int(self.input_shape[0]), self.label_num)
         elif self.model_type == "resnet101":
-            return resnet101(int(self.config.input_shape[0]), self.label_num)
+            return resnet101(int(self.input_shape[0]), self.label_num)
         elif self.model_type == "resnet152":
-            return resnet152(int(self.config.input_shape[0]), self.label_num)
+            return resnet152(int(self.input_shape[0]), self.label_num)
+        elif self.model_type == "wresnet50":
+            return wide_resnet50_2(
+                in_channels=int(self.input_shape[0]), num_classes=self.label_num
+            )
+        elif self.model_type == "wresnet101":
+            return wide_resnet101_2(
+                in_channels=int(self.input_shape[0]), num_classes=self.label_num
+            )
 
     def model_load(self):
         self.model.eval()
         # self.model = nn.DataParallel(self.model).to(self.device)
         self.model.to(self.device)
         checkpoint = torch.load(
-            self.config.atk_path + "model/" + str(self.model_fname)
+            self.config.load_path + "model/" + str(self.model_fname)
         )  # 명시
         self.model.load_state_dict(checkpoint["model.state_dict"])
         print("==> MODEL LOADED: {}".format(self.model_type))
@@ -100,7 +115,7 @@ class Attacker:
 
     def run(self):
         self.accuracies = []
-        for ep in tqdm(self.config.epsilons):  # iteration: fgsm(n) others(1)
+        for ep in tqdm(self.epsilons):  # iteration: fgsm(n) others(1)
             truths, preds, orig_correct, atk_correct = self.test(ep)
             orig_acc = orig_correct / len(self.output_total)
             atk_acc = atk_correct / len(self.output_total)
@@ -184,14 +199,21 @@ class Attacker:
             else:
                 # TODO: save successful attacks
                 if self.config.save_atk:
-                    pass
-                    # save_dir = (
-                    #     self.config.save_atk_path + self.date.strftime("%b-%d-%Y") + "/"
-                    # )
-                    # if not os.path.exists(save_dir):
-                    #     os.makedirs(save_dir)
-                    # np.save(save_dir + pth, attack)
-                    # print("saved: {} at {}".format(pth, save_dir))
+                    save_dir = (
+                        self.config.save_path + self.date.strftime("%m-%d-%H-%M") + "/"
+                    )
+                    if self.config.attack_type == "fgsm" and epsilon > 0.0:
+                        save_dir += "ep" + str(epsilon) + "/"
+                    elif self.config.attack_type == "deepfool":
+                        save_dir += "deepfool/"
+
+                    if not os.path.exists(save_dir):
+                        os.makedirs(save_dir)
+
+                    np.save(
+                        save_dir + pth.replace("/", "_"), attack.cpu().detach().numpy()
+                    )
+                    print("saved: {} at {}".format(pth, save_dir))
                 pass
 
         return (
@@ -207,7 +229,7 @@ class Attacker:
         elif atk is "deepfool":
             attack = self.deepfool(data, init_out, self.config.max_iter)
         elif atk is "random":
-            attack = self.random(data, self.config.epsilons)
+            attack = self.random(data, self.epsilons)
         else:
             raise ("Type error. It should be one of (fgsm, deepfool, random)")
         return attack
@@ -316,7 +338,7 @@ class Attacker:
     def draw_plot(self, acc, type):
         if type is "fgsm":
             plt.figure(figsize=(5, 5))
-            plt.plot(self.config.epsilons, acc, "*-")
+            plt.plot(self.epsilons, acc, "*-")
             plt.yticks(np.arange(0, 1.1, step=0.1))
             plt.xticks(np.arange(0, 70, step=5))
             plt.title("Accuracy vs Epsilon")

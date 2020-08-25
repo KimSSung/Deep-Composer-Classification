@@ -44,8 +44,8 @@ class Generator:
 
     def run(self):
 
-        dataset_dir = self.config.midi_files_path
-        input_path = self.config.input_save_path
+        dataset_dir = self.config.load_path
+        input_path = self.config.save_path
         data_list, composers = self.get_data_list(
             dataset_dir + "maestro-v2.0.0_cleaned.csv"
         )

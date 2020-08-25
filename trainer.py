@@ -226,7 +226,7 @@ class Trainer:
 
             t = MIDIDataset(
                 train=True,  # newly added
-                txt_file=self.config.load_path+'train.txt', # split path + txt
+                txt_file=self.config.load_path + "train.txt",  # split path + txt
                 classes=self.label_num,
                 omit=self.config.omit,  # str
                 seg_num=self.config.train_batch,
@@ -236,7 +236,7 @@ class Trainer:
             )
             v = MIDIDataset(
                 train=False,  # newly added
-                txt_file=self.config.load_path+'valid.txt',
+                txt_file=self.config.load_path + "valid.txt",
                 classes=self.label_num,
                 omit=self.config.omit,
                 seg_num=self.seg_num,
@@ -261,13 +261,11 @@ class Trainer:
             # save train_loader & valid_loader
             if self.config.save_trn:
                 torch.save(
-                    self.train_loader,
-                    self.config.save_path + "train/train_loader.pt",
+                    self.train_loader, self.config.save_path + "train/train_loader.pt",
                 )
                 print("train_loader saved!")
                 torch.save(
-                    self.valid_loader,
-                    self.config.save_path + "valid/valid_loader.pt",
+                    self.valid_loader, self.config.save_path + "valid/valid_loader.pt",
                 )
                 print("valid_loader saved!")
 
@@ -373,7 +371,7 @@ class Trainer:
         #         )
         #         print("adv_valid_loader_T loaded!")
 
-            #############################################################################
+        #############################################################################
 
     def set_mode(self, mode="train"):
         if mode == "train":
