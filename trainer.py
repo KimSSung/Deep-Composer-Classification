@@ -732,9 +732,9 @@ class Trainer:
 
             # score
             # 1. accuracy
-            print("len test_loader:", len(test_loader))
-            print("len val_preds:", len(val_preds))
-            print("len val_ground_truths:", len(val_ground_truths))
+            # print("len test_loader:", len(test_loader))
+            # print("len val_preds:", len(val_preds))
+            # print("len val_ground_truths:", len(val_ground_truths))
             print("============================================")
 
             val_acc = val_correct / len(test_loader)
@@ -751,12 +751,12 @@ class Trainer:
             )
 
             # print learning process
-            print()
-            print("######## Valid #########")
+            print("\n######## Valid #########")
             print("Accuracy: {:.4f} | Loss: {:.4f}" "".format(val_acc, avg_valloss))
             print("F1-score: %.4f" % (w_f1score))
-            print("Precision:", precision)
-            print("Recall:", recall)
+            print("{:<30}{:<}".format("Precision", "Recall"))
+            for p, r in zip(precision, recall):
+                print("{:<30}{:<}".format(p, r))
             print()
 
             # Valid TensorBoard

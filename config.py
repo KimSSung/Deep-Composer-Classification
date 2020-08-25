@@ -144,9 +144,9 @@ parser.add_argument(
     "--overshoot", default=5, type=int, help="overshoot for deepfool attack"
 )
 parser.add_argument("--plot", default=False, type=bool, help="draw plot?")
-parser.add_argument(
-    "--tempo_range", default=1, type=int, help="+/-n tempo cells to attack"
-)
+# parser.add_argument(
+#     "--tempo_range", default=1, type=int, help="+/-n tempo cells to attack"
+# )
 
 ##input generator
 
