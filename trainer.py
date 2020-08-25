@@ -42,12 +42,10 @@ class Trainer:
 
         # 0 : acc / 1: loss / 2: f1 / 3: precision / 4: recall
         self.best_valid = [-1.0, 30000.0, -1.0, [], []]
+        self.input_shape = (2, 400, 128)
         self.seg_num = self.config.seg_num
         print("==> Seg num: ", self.seg_num)
 
-        # for GPU use
-        # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID" # moved to main
-        # os.environ["CUDA_VISIBLE_DEVICES"] = self.config.gpu # moved to main
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.omitlist = []
@@ -90,36 +88,36 @@ class Trainer:
     def model_selection(self):
         if self.config.model_name == "resnet18":
             return resnet18(
-                in_channels=int(self.config.input_shape[0]), num_classes=self.label_num
+                in_channels=int(self.input_shape[0]), num_classes=self.label_num
             )
         elif self.config.model_name == "resnet34":
             return resnet34(
-                in_channels=int(self.config.input_shape[0]), num_classes=self.label_num
+                in_channels=int(self.input_shape[0]), num_classes=self.label_num
             )
         elif self.config.model_name == "resnet50":
             return resnet50(
-                in_channels=int(self.config.input_shape[0]), num_classes=self.label_num
+                in_channels=int(self.input_shape[0]), num_classes=self.label_num
             )
         elif self.config.model_name == "resnet101":
             return resnet101(
-                in_channels=int(self.config.input_shape[0]), num_classes=self.label_num
+                in_channels=int(self.input_shape[0]), num_classes=self.label_num
             )
         elif self.config.model_name == "resnet152":
             return resnet152(
-                in_channels=int(self.config.input_shape[0]), num_classes=self.label_num
+                in_channels=int(self.input_shape[0]), num_classes=self.label_num
             )
         elif self.config.model_name == "convnet":
             return convnet(
-                in_channels=int(self.config.input_shape[0]), num_classes=self.label_num
+                in_channels=int(self.input_shape[0]), num_classes=self.label_num
             )
 
         elif self.config.model_name == "wresnet50":
             return wide_resnet50_2(
-                in_channels=int(self.config.input_shape[0]), num_classes=self.label_num
+                in_channels=int(self.input_shape[0]), num_classes=self.label_num
             )
         elif self.config.model_name == "wresnet101":
             return wide_resnet101_2(
-                in_channels=int(self.config.input_shape[0]), num_classes=self.label_num
+                in_channels=int(self.input_shape[0]), num_classes=self.label_num
             )
 
     def optim_selection(self):
@@ -261,24 +259,27 @@ class Trainer:
             ###################### Loader for base training #############################
 
             # save train_loader & valid_loader
-            # torch.save(
-            #     self.train_loader, self.config.trainloader_save_path + "train_loader.pt"
-            # )
-            # print("train_loader saved!")
-            # torch.save(
-            #     self.valid_loader, self.config.validloader_save_path + "valid_loader.pt"
-            # )
-            # print("valid_loader saved!")
-            #
-            # # load train_loader & valid_loader (to check whether well saved)
-            # self.train_loader = torch.load(
-            #     self.config.trainloader_save_path + "train_loader.pt"
-            # )
-            # print("train_loader loaded!")
-            # self.valid_loader = torch.load(
-            #     self.config.validloader_save_path + "valid_loader.pt"
-            # )
-            # print("valid_loader loaded!")
+            if self.config.save_trn:
+                torch.save(
+                    self.train_loader,
+                    self.config.trainloader_save_path + "train_loader.pt",
+                )
+                print("train_loader saved!")
+                torch.save(
+                    self.valid_loader,
+                    self.config.validloader_save_path + "valid_loader.pt",
+                )
+                print("valid_loader saved!")
+
+                # load train_loader & valid_loader (to check whether well saved)
+                self.train_loader = torch.load(
+                    self.config.trainloader_save_path + "train_loader.pt"
+                )
+                print("train_loader loaded!")
+                self.valid_loader = torch.load(
+                    self.config.validloader_save_path + "valid_loader.pt"
+                )
+                print("valid_loader loaded!")
 
             #############################################################################
 
@@ -342,34 +343,35 @@ class Trainer:
             )
 
             # save adv_train_loader & valid_loader (to check whether well saved)
-            # torch.save(
-            #     self.train_loader,
-            #     self.config.trainloader_save_path + "adv_train_loader.pt",
-            # )
-            # print("adv_train_loader saved!")
-            # torch.save(
-            #     self.valid_loader_1,
-            #     self.config.validloader_save_path + "adv_valid_loader_TandAT.pt",
-            # )
-            # print("adv_valid_loader_TandAT saved!")
-            # torch.save(
-            #     self.valid_loader_2,
-            #     self.config.validloader_save_path + "adv_valid_loader_T.pt",
-            # )
-            # print("adv_valid_loader_T saved!")
-            #
-            # self.train_loader = torch.load(
-            #     self.config.trainloader_save_path + "adv_train_loader.pt"
-            # )
-            # print("adv_train_loader loaded!")
-            # self.valid_loader_1 = torch.load(
-            #     self.config.validloader_save_path + "adv_valid_loader_TandAT.pt"
-            # )
-            # print("adv_valid_loader_TandAT loaded!")
-            # self.valid_loader_2 = torch.load(
-            #     self.config.validloader_save_path + "adv_valid_loader_T.pt"
-            # )
-            # print("adv_valid_loader_T loaded!")
+            if self.config.save_trn:
+                torch.save(
+                    self.train_loader,
+                    self.config.trainloader_save_path + "adv_train_loader.pt",
+                )
+                print("adv_train_loader saved!")
+                torch.save(
+                    self.valid_loader_1,
+                    self.config.validloader_save_path + "adv_valid_loader_TandAT.pt",
+                )
+                print("adv_valid_loader_TandAT saved!")
+                torch.save(
+                    self.valid_loader_2,
+                    self.config.validloader_save_path + "adv_valid_loader_T.pt",
+                )
+                print("adv_valid_loader_T saved!")
+
+                self.train_loader = torch.load(
+                    self.config.trainloader_save_path + "adv_train_loader.pt"
+                )
+                print("adv_train_loader loaded!")
+                self.valid_loader_1 = torch.load(
+                    self.config.validloader_save_path + "adv_valid_loader_TandAT.pt"
+                )
+                print("adv_valid_loader_TandAT loaded!")
+                self.valid_loader_2 = torch.load(
+                    self.config.validloader_save_path + "adv_valid_loader_T.pt"
+                )
+                print("adv_valid_loader_T loaded!")
 
             #############################################################################
 
@@ -386,7 +388,7 @@ class Trainer:
         self.set_mode("train")  # model.train()
 
         # print input shape
-        print("\nInput shape:", self.config.input_shape)
+        print("\nInput shape:", self.input_shape)
         print()
 
         # train
@@ -408,7 +410,7 @@ class Trainer:
 
                 ##### Optional: Remove onset channel = [0]
                 ##### Run here when --input_shape 1,400,128
-                if int(self.config.input_shape[0]) == 1:
+                if int(self.input_shape[0]) == 1:
                     # if torch.sum(train_in[:,1:,:,:]) < torch.sum(train_in[:,:1,:,:]): print("1 is onset")
                     train_in = train_in[:, 1:, :, :]  # note channel
                     # print(train_in.shape)
@@ -544,22 +546,23 @@ class Trainer:
                     # save model
                     if avg_valloss < min_valloss:
                         min_valloss = avg_valloss
-                        # torch.save(
-                        #     {
-                        #         "epoch": epoch,
-                        #         "model.state_dict": self.model.state_dict(),
-                        #         "loss": avg_valloss,
-                        #         "acc": avg_valacc,
-                        #     },
-                        #     self.config.model_save_path
-                        #     + self.config.model_name
-                        #     + "_valloss_"
-                        #     + str(float(avg_valloss))
-                        #     + "_acc_"
-                        #     + str(float(avg_valacc))
-                        #     + ".pt",
-                        # )
-                        # print("model saved!")
+                        if self.config.save_trn:
+                            torch.save(
+                                {
+                                    "epoch": epoch,
+                                    "model.state_dict": self.model.state_dict(),
+                                    "loss": avg_valloss,
+                                    "acc": avg_valacc,
+                                },
+                                self.config.model_save_path
+                                + self.config.model_name
+                                + "_valloss_"
+                                + str(float(avg_valloss))
+                                + "_acc_"
+                                + str(float(avg_valacc))
+                                + ".pt",
+                            )
+                            print("model saved!")
 
                 elif mode == "advtrain":
                     print(
@@ -581,22 +584,23 @@ class Trainer:
                     # save model
                     if True:  # avg_valloss_1 < min_valloss:
                         min_valloss = avg_valloss_1
-                        # torch.save(
-                        #     {
-                        #         "epoch": epoch,
-                        #         "model.state_dict": self.model.state_dict(),
-                        #         "loss": avg_valloss_1,
-                        #         "acc": avg_valacc_1,
-                        #     },
-                        #     self.config.model_save_path
-                        #     + self.config.model_name
-                        #     + "_val_TandAT_loss_"
-                        #     + str(float(avg_valloss_1))
-                        #     + "_acc_"
-                        #     + str(float(avg_valacc_1))
-                        #     + ".pt",
-                        # )
-                        # print("model saved!")
+                        if self.config.save_trn:
+                            torch.save(
+                                {
+                                    "epoch": epoch,
+                                    "model.state_dict": self.model.state_dict(),
+                                    "loss": avg_valloss_1,
+                                    "acc": avg_valacc_1,
+                                },
+                                self.config.model_save_path
+                                + self.config.model_name
+                                + "_val_TandAT_loss_"
+                                + str(float(avg_valloss_1))
+                                + "_acc_"
+                                + str(float(avg_valacc_1))
+                                + ".pt",
+                            )
+                            print("model saved!")
 
         # print best valid f1 score
         print()
@@ -653,7 +657,7 @@ class Trainer:
 
                 ##### Optional: Remove onset channel = [0]
                 ##### Run here when --input_shape 1,400,128
-                if int(self.config.input_shape[0]) == 1:
+                if int(self.input_shape[0]) == 1:
                     # if torch.sum(train_in[:,1:,:,:]) < torch.sum(train_in[:,:1,:,:]): print("1 is onset")
                     val_in = val_in[:, 1:, :, :]  # note channel
                     # print(val_in.shape)

@@ -35,22 +35,6 @@ parser.add_argument(
 parser.add_argument(
     "--transform", type=str, default=None, help="Transform mode [Transpose / Tempo]",
 )
-
-
-# attacked input
-parser.add_argument(
-    "--attacked_train_input_path",
-    type=str,
-    default="/data/attacks/vel_deepfool/train/",
-    help="Attacked Train input directory.",
-)
-parser.add_argument(
-    "--attacked_valid_input_path",
-    type=str,
-    default="/data/attacks/vel_deepfool/valid/",
-    help="Attacked Valid input directory.",
-)
-
 parser.add_argument(
     "--epochs",
     default=100,
@@ -69,6 +53,23 @@ parser.add_argument("--gpu", default="0,1,2,3", type=str, help="GPU id to use.")
 
 parser.add_argument("--lr", default=0.01, type=float, help="Model learning rate.")
 
+# attacked input
+parser.add_argument(
+    "--attacked_train_input_path",
+    type=str,
+    default="/data/attacks/vel_deepfool/train/",
+    help="Attacked Train input directory.",
+)
+parser.add_argument(
+    "--attacked_valid_input_path",
+    type=str,
+    default="/data/attacks/vel_deepfool/valid/",
+    help="Attacked Valid input directory.",
+)
+parser.add_argument(
+    "--save_trn", type=bool, default=True, help="Save both model & loader?"
+)
+
 
 ##shared parameters (train & attack)
 parser.add_argument(
@@ -79,9 +80,6 @@ parser.add_argument(
 )
 parser.add_argument(
     "--model_save_path", default="/data/drum/model/", type=str, help="Model saving path"
-)
-parser.add_argument(
-    "--input_shape", default=(2, 400, 128), type=tuple, help="Input shape."
 )
 parser.add_argument(
     "--trainloader_save_path",
