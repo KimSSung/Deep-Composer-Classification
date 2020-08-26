@@ -29,6 +29,8 @@ class Attacker:
 
         self.label_num = self.config.composers
         self.input_shape = (2, 400, 128)
+        self.seg_num = 90
+
         self.data_loader = None
         self.input_total = []
         self.output_total = []
@@ -70,9 +72,7 @@ class Attacker:
         return
 
     def split_data(self):
-
         for v in self.data_loader:
-            # print(v["Y"])
             for i in range(len(v["Y"])):
                 self.input_total.append(torch.unsqueeze(v["X"][i], 0))
                 # unsqueeze -> torch [1,2,400,128]
@@ -170,10 +170,6 @@ class Attacker:
             ground_truth.append(truth.item())
             output_pred.append(init_pred.item())
 
-            # print("preds:", output_pred)
-            # print("truths:", ground_truth)
-            # print("-------------------------------------------------")
-
             # if wrong, skip
             if init_pred.item() != truth.item():
                 orig_wrong += 1
@@ -197,26 +193,9 @@ class Attacker:
             new_pred = torch.max(new_out, 1)[1].view(truth.size()).data
             if new_pred.item() == truth.item():
                 atk_correct += 1
-            else:
+            else:  # save successful attacks
                 if self.config.save_atk:
-                    save_dir = self.config.save_path + self.date + "/"
-                    if self.config.attack_type == "fgsm" and epsilon > 0.0:
-                        save_dir += "ep" + str(epsilon) + "/"
-                    elif self.config.attack_type == "deepfool":
-                        save_dir += "deepfool/"
-
-                    if not os.path.exists(save_dir):
-                        os.makedirs(save_dir)
-
-                    # save orig
-                    np.save(save_dir + pth.replace("/", "_"), X.cpu().detach().numpy())
-                    # save attack
-                    np.save(
-                        save_dir + "orig_" + pth.replace("/", "_"),
-                        attack.cpu().detach().numpy(),
-                    )
-                    print("saved: {} at {}".format(pth, save_dir))
-                pass
+                    self.save_attack(X, attack, i, pth, epsilon)
 
         return (
             ground_truth,
@@ -239,21 +218,21 @@ class Attacker:
     def fgsm(self, data, data_grad, eps):
         # ORIGINAL FGSM
         # sign_data_grad = data_grad.sign()
-        # perturbed_input = data + eps * sign_data_grad
+        # perturbed_input = data + eps * sign_data_grad #0-1
         # perturbed_input = torch.clamp(perturbed_input, 0, 127)
 
         # manipulation : NON ZERO ATTACK
         sign_data_grad = data_grad.sign()
-        indices = torch.nonzero(data)  # get all the attack points
+        indices = torch.nonzero(data[0][1])  # only attack channel[1]
         perturbed_input = data + 0 * sign_data_grad
         for index in indices:
-            i, j, k, l = index[0], index[1], index[2], index[3]
-            orig_vel = int(data[i][j][k][l].item())  # int
-            att_sign = int(sign_data_grad[i][j][k][l].item())
+            x, y = index[0], index[1]
+            orig_vel = int(data[0][1][x][y].item())  # int
+            att_sign = int(sign_data_grad[0][1][x][y].item())
             if att_sign != 0:  # meaningless -> almost all nonzero
-                perturbed_input[i][j][k][l] = max(
-                    0, min(orig_vel + att_sign * eps, 127)
-                )  # clamp
+                scaled_att_vel = orig_vel / 128 + att_sign * eps
+                perturbed_input[0][1][x][y] = max(0, min(128 * scaled_att_vel, 128))
+                # clamp
 
         return perturbed_input
 
@@ -335,6 +314,33 @@ class Attacker:
 
     def tempo(self, data):
         # TODO: tempo attack is optional, implement if necessary
+        return
+
+    def save_attack(self, orig, attack, idx, path, eps):
+        save_dir = self.config.save_path + self.date + "/"
+        if self.config.attack_type == "fgsm" and eps > 0.0:
+            save_dir += "ep" + str(eps) + "/"
+        elif self.config.attack_type == "deepfool":
+            save_dir += "deepfool/"
+
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        # save orig
+        np.save(
+            save_dir + path.replace("/", "_") + "_seg" + str(idx % self.seg_num),
+            orig.cpu().detach().numpy(),
+        )
+        # save attack
+        np.save(
+            save_dir
+            + "orig_"
+            + path.replace("/", "_")
+            + "_seg"
+            + str(idx % self.seg_num),
+            attack.cpu().detach().numpy(),
+        )
+        print("saved: {} at {}".format(path, save_dir))
         return
 
     def draw_plot(self, acc, type):
