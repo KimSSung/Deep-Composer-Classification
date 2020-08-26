@@ -17,7 +17,9 @@ class Converter:
 
         ### Set File directory
         # Get the Header and other data at original Midi Data
-        self.npy_root_path = self.config.to_convert_path
+        # self.npy_root_path = self.config.to_convert_path
+        self.npy_root_path = "/data/attacks/08-25-00-00/ep0.6/"
+
         self.npy_path_list = []  # String list object /data/inputs/composer#/...
         self.midi_header_path_list = (
             []
@@ -25,7 +27,7 @@ class Converter:
         self.origin_midi_dir = "/data/MAESTRO/maestro-v2.0.0/"  # Classical/...
         self.output_file_dir = "/data/converted_music/midi/"
         self.csv_output_dir = "/data/converted_music/csv/"
-        self.mapping_csv_dir = "/data/inputs/name_id_map.csv"
+        self.mapping_csv_dir = "/data/inputs_full/name_id_map.csv"
 
         # To get original Header with matching
         self.composer = ""
@@ -177,6 +179,7 @@ class Converter:
 
             new_csv_string = []
             load_data = np.load(file)
+            load_data = np.squeeze(load_data)
 
             if this_genre == "":  # 'to_convert_path' not contain genre name
 
@@ -521,7 +524,7 @@ class Converter:
         """
 
         # TODO: Change to get config
-        self.npy_root_path = os.path.abspath("/data/inputs/")
+        self.npy_root_path = os.path.abspath("/data/attacks/08-25-00-00/ep0.6/")
 
         self.npy_path_list = []
         mapping_csv_df = pd.read_csv(
@@ -530,7 +533,7 @@ class Converter:
         mapping_csv_df = mapping_csv_df.drop(
             mapping_csv_df.columns[[0]], axis="columns"
         )
-        print(mapping_csv_df)
+        # print(mapping_csv_df)
 
         # Find all of the npy converted files
 
@@ -550,11 +553,12 @@ class Converter:
 
         # Set self.composer, self.orig_midi_name for right place
         split_string_list = cur_npy_string.split("/")  # List
+        attack_split_string_list = split_string_list[-1].split("_")
         composer_num = -1
         midi_num = -1
 
         # Find the composer num, midi num position
-        for index, dir in enumerate(split_string_list):
+        for index, dir in enumerate(attack_split_string_list):
 
             if "composer" in dir:
 

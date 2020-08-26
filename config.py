@@ -32,42 +32,25 @@ parser.add_argument(
     help="save some adversarial examples? (True / False)",
 )
 
-
 ## split path
 # ====> --load_path '/data/inputs_full/'
 # ====> --save_path '/data/split/' => use save_path + [train.txt | valid.txt]
 
-# ====> --load_path '/data/split/' for basetrain
+## trainer
+# basetrain
+# ====> --load_path '/data/split/'
 
-# parser.add_argument(
-#     "--train_split_path",
-#     type=str,
-#     default="/data/split/train.txt",
-#     help="Path of train.txt (train split text file)",
-# )
-# parser.add_argument(
-#     "--valid_split_path",
-#     type=str,
-#     default="/data/split/valid.txt",
-#     help="Path of valid.txt (valid split text file)",
-# )
+# save loader
+# ====> --save_path '/data/drum/dataset/' => use save_path + [train/ | valid/]
 
-##input generator
+
+##generator
 # ====> --load_path '/data/MAESTRO/maestro-v2.0.0/'
 # ====> --save_path '/data/which_dir/'
 
-# parser.add_argument(
-#     "--midi_files_path",
-#     default="/data/MAESTRO/maestro-v2.0.0/",
-#     type=str,
-#     help="dir to original files (absolute dir)",
-# )
-# parser.add_argument(
-#     "--input_save_path",
-#     default="/data/which_dir/",  # to avoid overwriting
-#     type=str,
-#     help="save path (absolute dir)",
-# )
+## attacker
+# ===> --load_path '/data/drum/bestmodel/' => use --load_path + [model/ | dataset/]
+# ===> --save_path '/data/attacks/'
 
 ##converter
 # ====> --load_path '/data/attacks/'
@@ -79,7 +62,7 @@ parser.add_argument(
 #     help="Path for 'only MIDIs' to convert. Path CAN contain any folder !!",
 # )
 
-# attacked input
+## attacked input
 # ====> --save_path '/data/attacks/vel_deepfool/' => use save_path + [train/ | valid/]
 
 # parser.add_argument(
@@ -96,39 +79,6 @@ parser.add_argument(
 # )
 
 
-# train: loader save
-# ====> --save_path '/data/drum/dataset/' => use save_path + [train/ | valid/]
-
-# parser.add_argument(
-#     "--trainloader_save_path",
-#     default="/data/drum/dataset/train/",
-#     type=str,
-#     help="Train loader saving path",
-# )
-# parser.add_argument(
-#     "--validloader_save_path",
-#     default="/data/drum/dataset/valid/",
-#     type=str,
-#     help="valid loader saving path",
-# )
-
-# attack
-# ===> --load_path '/data/drum/bestmodel/' => use --load_path + [model/ | dataset/]
-# ===> --save_path '/data/attacks/'
-
-# parser.add_argument(
-#     "--atk_path",
-#     default="/data/drum/bestmodel/",
-#     type=str,
-#     help="model & data_loader to be attacked [/model/ & /dataset/]",
-# )
-
-# parser.add_argument(
-#     "--save_atk_path",
-#     default="/data/attacks/",
-#     type=str,
-#     help="Dir to save successful attacks",
-# )
 ##########################PATH MERGE##########################
 
 parser.add_argument(
@@ -198,9 +148,9 @@ parser.add_argument(
 # 3. specific attack related
 parser.add_argument(
     "--epsilons",
-    default=[0.0],  # TODO: fix
-    type=list,
-    help="list of epsilons [ep0, ep1, ep2..] (default: [0.0])",
+    default="0.0",  # TODO: fix
+    type=str,
+    help="list of epsilons 'ep0, ep1, ep2..' seperated by , (default: '0.0')",
 )
 parser.add_argument(
     "--max_iter", default=10, type=int, help="max iterations for deepfool attack",

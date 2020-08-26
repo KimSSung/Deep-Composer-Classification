@@ -10,7 +10,7 @@ import random
 class Spliter:
     def __init__(self, args):
         self.config = args
-        self.input_path = self.config.load_path # /data/inputs_full/
+        self.input_path = self.config.load_path  # /data/inputs_full/
 
         # print(self.config.omit)
         self.omitlist = []

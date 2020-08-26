@@ -23,7 +23,6 @@ Classification task, whether it's concerning genre, style, era, or composer as e
 
 ### Train
 
-
 #### basetrain
         python main.py --gpu [gpu to use]
                        --mode basetrain
@@ -31,11 +30,8 @@ Classification task, whether it's concerning genre, style, era, or composer as e
                        --epochs [epoch #]
                        --optim [optimizer to use]
                        --transform [Transpose / Tempo]
-                       --train_split_path ['/PATH/TO/TRAIN.TXT']
-                       --test_split_path ['/PATH/TO/TEST.TXT']
-                       --model_save_path ['/PATH/TO/SAVE/MODEL/']
-                       --trainloader_save_path ['/PATH/TO/SAVE/TRN_LOADER/'] 
-                       --validloader_save_path ['/PATH/TO/SAVE/VLD_LOADER/'] 
+                       --load_path ['/PATH/TO/TRAIN.TXT_AND_VALID.TXT/']
+                       --save_path ['/PATH/TO/SAVE/MODEL_AND_LOADER/']
 #### advtrain
         python main.py --gpu [gpu to use]
                        --mode advtrain
@@ -43,25 +39,35 @@ Classification task, whether it's concerning genre, style, era, or composer as e
                        --epochs [epoch #]
                        --optim [optimizer to use]
                        --transform [Transpose / Tempo]
-                       --attacked_train_input_path ['/PATH/TO/ATTACKED/TRN_INPUT_DIR/']
-                       --attacked_valid_input_path ['/PATH/TO/ATTACKED/VLD_INPUT_DIR/']
-                       --model_save_path ['/PATH/TO/SAVE/MODEL/']
-                       --trainloader_save_path ['/PATH/TO/SAVE/TRN_LOADER/'] 
-                       --validloader_save_path ['/PATH/TO/SAVE/VLD_LOADER/']
-
+                       --input_path ['/PATH/TO/ATTACKED/INPUT/']
+                       --save_path ['/PATH/TO/SAVE_MODEL_AND_LOADER/']
 ### Attack
+        python main.py --gpu [gpu to use]
+                       --mode attack 
+                       --load_path [/PATH/TO/SAVED_LOADER/] 
+                       --save_path [/PATH/TO/SAVE/ATTACK_EXAMPLES/] 
+                       --epsilons ['ep0, ep1, ep2, ... epn']
+                       --save_atk [True/False]
 
 ### Convert
 
 ## How to monitor
+        tensorboard --logdir=trainlog
 
 ## Actual Examples
         python main.py --gpu 0
                        --mode basetrain
                        --model_name resnet50
                        --epochs 100 --optim SGD
-                       --trainloader_save_path '/data/drum/1/dataset/train/'
-                       --validloader_save_path '/data/drum/1/dataset/test/'
+                       --load_path '/data/split/'
+                       --save_path '/data/drum/dataset/'
+                       
+        python main.py --gpu 3
+                       --mode attack 
+                       --load_path '/data/drum/bestmodel/' 
+                       --save_path '/data/attacks/' 
+                       --epsilons '0.05, 0.1, 0.2, 0.4, 0.6' 
+                       --save_atk True
 
 ## Dataset
 [MAESTRO][maestro_link]: (MIDI and Audio Edited for Synchronous TRacks and Organization) is a dataset composed of over 200 hours of virtuosic piano performances captured with fine alignment (~3 ms) between note labels and audio waveforms.     
@@ -101,10 +107,10 @@ For the usage, please refer to the "Download" section of the official website.
 > This dataset was experimented on different model configurations:             
 
 |  <center> Model </center> |  <center> Train Acc </center> |  <center> Valid Acc</center> |         
-|:--------|:--------:|--------:|         
-|**Resnet** | <center> % </center> | <center>% </center> |        
-|**Resnet (7,3)** | <center> % </center> | <center>% </center> |        
-|**Wide Resnet** | <center> % </center> | <center>% </center> |         
+|:--------:|--------:|--------:|         
+|**Resnet** | <center> % </center> | <center> % </center> |        
+|**Resnet (7,3)** | <center> % </center> | <center> % </center> |        
+|**Wide Resnet** | <center> % </center> | <center> % </center> |         
 
 
 #### Adversarial Attack
@@ -119,3 +125,5 @@ For the usage, please refer to the "Download" section of the official website.
 * hylee817@yonsei.ac.kr
 * ryan0507@yonsei.ac.kr
 * hahala25@yonsei.ac.kr
+
+
