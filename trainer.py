@@ -44,7 +44,7 @@ class Trainer:
         self.best_valid = [-1.0, 30000.0, -1.0, [], []]
         self.input_shape = (2, 400, 128)
         self.seg_num = self.config.seg_num
-        print("==> Seg num: ", self.seg_num)
+        # print("==> Seg num: ", self.seg_num)
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -224,12 +224,16 @@ class Trainer:
                 else:
                     print("Wrong Augmentation Command!")
 
+            train_seg = self.config.train_batch + 50
+            print("==> train seg:", train_seg)
+            print("==> valid seg: ", self.seg_num)
+            print("==> train batch:", self.config.train_batch)
             t = MIDIDataset(
                 train=True,  # newly added
                 txt_file=self.config.load_path+'train.txt', # split path + txt
                 classes=self.label_num,
                 omit=self.config.omit,  # str
-                seg_num=self.config.train_batch,
+                seg_num=train_seg,
                 age=self.config.age,
                 transform=self.config.transform,
                 transpose_rng=transpose_rng,
