@@ -23,7 +23,6 @@ Classification task, whether it's concerning genre, style, era, or composer as e
 
 ### Train
 
-
 #### basetrain
         python main.py --gpu [gpu to use]
                        --mode basetrain
@@ -53,7 +52,7 @@ Classification task, whether it's concerning genre, style, era, or composer as e
 ### Convert
 
 ## How to monitor
-
+        tensorboard --logdir=trainlog
 
 ## Actual Examples
         python main.py --gpu 0
@@ -108,10 +107,10 @@ For the usage, please refer to the "Download" section of the official website.
 > This dataset was experimented on different model configurations:             
 
 |  <center> Model </center> |  <center> Train Acc </center> |  <center> Valid Acc</center> |         
-|:--------|:--------:|--------:|         
-|**Resnet** | <center> % </center> | <center>% </center> |        
-|**Resnet (7,3)** | <center> % </center> | <center>% </center> |        
-|**Wide Resnet** | <center> % </center> | <center>% </center> |         
+|:--------:|--------:|--------:|         
+|**Resnet** | <center> % </center> | <center> % </center> |        
+|**Resnet (7,3)** | <center> % </center> | <center> % </center> |        
+|**Wide Resnet** | <center> % </center> | <center> % </center> |         
 
 
 #### Adversarial Attack
@@ -126,3 +125,5 @@ For the usage, please refer to the "Download" section of the official website.
 * hylee817@yonsei.ac.kr
 * ryan0507@yonsei.ac.kr
 * hahala25@yonsei.ac.kr
+
+
