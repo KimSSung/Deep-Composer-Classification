@@ -13,7 +13,7 @@ class Converter:
 
         self.atype = ""  # default
 
-        self.csv_printable = True
+        self.csv_printable = False
 
         ### Set File directory
         # Get the Header and other data at original Midi Data
@@ -34,7 +34,8 @@ class Converter:
         self.orig_midi_name = ""
         self.maestro_midi_name = ""
         self.success_num = 0
-        self.limit_success_num = 300
+        self.limit_success_num = 1000000
+        self.epsilon_folder = ""
 
     # --------------------------------------------------------------------------
     # functions
@@ -112,10 +113,14 @@ class Converter:
 
         for index, cur_npy in enumerate(self.npy_path_list):
 
-            self.name_id_map_restore(cur_npy)
-            print("PATH: " + cur_npy + "\n")
+            try:
+                self.name_id_map_restore(cur_npy)
+                print("PATH: " + cur_npy + "\n")
 
-            self.convert_file(cur_npy)
+                self.convert_file(cur_npy)
+            except:
+                print("Error occured at: " + cur_npy + "\n")
+                continue
 
             if self.success_num == self.limit_success_num:
                 break
@@ -143,18 +148,21 @@ class Converter:
         if os.path.isfile(file):
 
             file_name = file.split("/")[-1]
-            if "vel" in file_name:
-                self.atype = "vel"
+            epsilon_folder = file.split("/")[-2]
+            self.epsilon_folder = epsilon_folder
+
+            if "orig" in file_name:
+                self.atype = "orig"
             elif "noise" in file_name:
                 self.atype = "noise"
             else:  # origin input2midi
-                self.atype = "origin"
+                self.atype = "att"
 
             if self.atype in file_name:
 
-                only_file_name = file_name.replace(self.atype + "_", "").replace(
-                    ".npy", ""
-                )
+                # only_file_name = file_name.replace(self.atype + "_", "").replace(
+                #     ".npy", ""
+                only_file_name = file_name.replace(".npy", "")
 
             else:
 
@@ -195,7 +203,7 @@ class Converter:
                     + self.get_origin_file_name(self.composer, self.orig_midi_name)
                 )
 
-            print("Original file:", origin_file)
+            # print("Original file:", origin_file)
 
             try:
                 origin_file_csv = py_midicsv.midi_to_csv(origin_file)
@@ -203,7 +211,7 @@ class Converter:
                 print("MIDI_TO_CSV ERROR !!")
 
             else:
-                print("current file:", file)
+                # print("current file:", file)
                 # for string in origin_file_csv:
                 #    if 'Program_c' in string: print(string)
 
@@ -471,7 +479,8 @@ class Converter:
 
                 with open(
                     self.output_file_dir
-                    + "New_"
+                    + str(epsilon_folder)
+                    + "/New_"
                     + self.atype
                     + "_"
                     + self.orig_midi_name
@@ -482,7 +491,7 @@ class Converter:
                 ) as output_file:
                     midi_writer = py_midicsv.FileWriter(output_file)
                     midi_writer.write(midi_object)
-                    print("Good Midi File")
+                    # print("Good Midi File")
 
                     self.success_num += 1
 
@@ -493,7 +502,8 @@ class Converter:
     def checking_csv(self, only_file_name):
         csv_string = py_midicsv.midi_to_csv(
             self.output_file_dir
-            + "New_"
+            + str(self.epsilon_folder)
+            + "/" + "New_"
             + self.atype
             + "_"
             + self.orig_midi_name
@@ -509,6 +519,8 @@ class Converter:
         data.to_csv(
             self.csv_output_dir
             + "New_"
+            + self.atype
+            +"_"
             + self.orig_midi_name
             + "_"
             + only_file_name
@@ -524,7 +536,6 @@ class Converter:
         """
 
         # TODO: Change to get config
-        self.npy_root_path = os.path.abspath("/data/attacks/08-25-00-00/ep0.6/")
 
         self.npy_path_list = []
         mapping_csv_df = pd.read_csv(
@@ -594,8 +605,8 @@ class Converter:
 
         self.composer = subset_df.iloc[0].loc["composer"]
         self.orig_midi_name = subset_df.iloc[0].loc["orig_name"]
-        print("Current Composer ", self.composer)
-        print("Current Song", self.orig_midi_name)
+        # print("Current Composer ", self.composer)
+        # print("Current Song", self.orig_midi_name)
 
     def get_origin_file_name(self, composer, orig_midi_name):
         """
