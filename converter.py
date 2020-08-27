@@ -18,14 +18,14 @@ class Converter:
         ### Set File directory
         # Get the Header and other data at original Midi Data
         # self.npy_root_path = self.config.to_convert_path
-        self.npy_root_path = "/data/attacks/08-25-00-00/ep0.6/"
+        self.npy_root_path = self.config.load_path
 
         self.npy_path_list = []  # String list object /data/inputs/composer#/...
         self.midi_header_path_list = (
             []
         )  # Save matched version composer#/midi# -> "/data/3 Etudes, Op.65"
         self.origin_midi_dir = "/data/MAESTRO/maestro-v2.0.0/"  # Classical/...
-        self.output_file_dir = "/data/converted_music/midi/"
+        self.output_file_dir = self.config.save_path
         self.csv_output_dir = "/data/converted_music/csv/"
         self.mapping_csv_dir = "/data/inputs_full/name_id_map.csv"
 
