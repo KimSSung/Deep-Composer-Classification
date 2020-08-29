@@ -189,7 +189,6 @@ class Converter:
             load_data = np.load(file)
             load_data = np.squeeze(load_data)
 
-
             if this_genre == "":  # 'to_convert_path' not contain genre name
 
                 origin_file = self.origin_midi_dir + self.get_origin_file_name(
@@ -478,22 +477,41 @@ class Converter:
 
                 midi_object = py_midicsv.csv_to_midi(new_csv_string)
 
-                self.make_directory(self.output_file_dir + str(epsilon_folder) + "/origin")
-                self.make_directory(self.output_file_dir + str(epsilon_folder) + "/attack")
+                self.make_directory(
+                    self.output_file_dir + str(epsilon_folder) + "/origin"
+                )
+                self.make_directory(
+                    self.output_file_dir + str(epsilon_folder) + "/attack"
+                )
 
                 new_output_file_dir = self.output_file_dir + str(epsilon_folder)
                 if self.atype == "orig":
 
-                    new_output_file_dir = new_output_file_dir + "/origin/"  + self.orig_midi_name +  "_"   + self.atype +  "_"  + only_file_name  + ".mid"
+                    new_output_file_dir = (
+                        new_output_file_dir
+                        + "/origin/"
+                        + self.orig_midi_name
+                        + "_"
+                        + self.atype
+                        + "_"
+                        + only_file_name
+                        + ".mid"
+                    )
 
                 elif self.atype == "att":
 
-                    new_output_file_dir = new_output_file_dir + "/attack/"  + self.orig_midi_name     + "_"    + self.atype   + "_"   + only_file_name + ".mid"
+                    new_output_file_dir = (
+                        new_output_file_dir
+                        + "/attack/"
+                        + self.orig_midi_name
+                        + "_"
+                        + self.atype
+                        + "_"
+                        + only_file_name
+                        + ".mid"
+                    )
 
-                with open(
-                    new_output_file_dir,
-                    "wb",
-                ) as output_file:
+                with open(new_output_file_dir, "wb",) as output_file:
                     midi_writer = py_midicsv.FileWriter(output_file)
                     midi_writer.write(midi_object)
                     # print("Good Midi File")
@@ -508,7 +526,8 @@ class Converter:
         csv_string = py_midicsv.midi_to_csv(
             self.output_file_dir
             + str(self.epsilon_folder)
-            + "/" + "New_"
+            + "/"
+            + "New_"
             + self.atype
             + "_"
             + self.orig_midi_name
@@ -525,7 +544,7 @@ class Converter:
             self.csv_output_dir
             + "New_"
             + self.atype
-            +"_"
+            + "_"
             + self.orig_midi_name
             + "_"
             + only_file_name
@@ -637,16 +656,15 @@ class Converter:
         return self.maestro_midi_name
 
     def make_directory(self, dir_path):
-        '''
+        """
         Check if the directory have been placed or not
 
-        '''
+        """
 
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
 
         return
-
 
 
 ####### Test Code #######
