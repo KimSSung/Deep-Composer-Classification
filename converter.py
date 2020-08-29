@@ -17,16 +17,13 @@ class Converter:
 
         ### Set File directory
         # Get the Header and other data at original Midi Data
-        # self.npy_root_path = self.config.load_path
-        self.npy_root_path = "/data/attacks/fgsm/08-29-11-11/"
-
+        self.npy_root_path = self.config.load_path
         self.npy_path_list = []  # String list object /data/inputs/composer#/...
         self.midi_header_path_list = (
             []
         )  # Save matched version composer#/midi# -> "/data/3 Etudes, Op.65"
         self.origin_midi_dir = "/data/MAESTRO/maestro-v2.0.0/"  # Classical/...
-        # self.output_file_dir = self.config.save_path
-        self.output_file_dir = "/data/converted_music/"
+        self.output_file_dir = self.config.save_path
         self.csv_output_dir = "/data/converted_music/csv/"
         self.mapping_csv_dir = "/data/inputs_full/name_id_map.csv"
 
@@ -35,7 +32,7 @@ class Converter:
         self.orig_midi_name = ""
         self.maestro_midi_name = ""
         self.success_num = 0
-        self.limit_success_num = 1000000
+        self.limit_success_num = 1000000000
         self.epsilon_folder = ""
 
     # --------------------------------------------------------------------------
@@ -116,9 +113,11 @@ class Converter:
 
             try:
                 self.name_id_map_restore(cur_npy)
-                print("PATH: " + cur_npy + "\n")
-
+                print(self.composer + " " + self.orig_midi_name)
+                # print("PATH: " + cur_npy + "\n")
                 self.convert_file(cur_npy)
+                print("Converting Succeed\n")
+
             except:
                 print("Error occured at: " + cur_npy + "\n")
                 continue
@@ -145,9 +144,6 @@ class Converter:
         velocity = 90
 
         # FOR CHECKING
-
-        print(self.composer)
-        print(self.orig_midi_name)
 
         if os.path.isfile(file):
 
@@ -193,7 +189,7 @@ class Converter:
             load_data = np.load(file)
             load_data = np.squeeze(load_data)
 
-            print("Load complete")
+
             if this_genre == "":  # 'to_convert_path' not contain genre name
 
                 origin_file = self.origin_midi_dir + self.get_origin_file_name(
@@ -208,7 +204,7 @@ class Converter:
                     + self.get_origin_file_name(self.composer, self.orig_midi_name)
                 )
 
-            print("Original file:", origin_file)
+            # print("Original file:", origin_file)
 
             try:
                 origin_file_csv = py_midicsv.midi_to_csv(origin_file)
@@ -482,23 +478,17 @@ class Converter:
 
                 midi_object = py_midicsv.csv_to_midi(new_csv_string)
 
-                print("New Code")
-                print(self.output_file_dir + str(epsilon_folder) + "/origin")
                 self.make_directory(self.output_file_dir + str(epsilon_folder) + "/origin")
                 self.make_directory(self.output_file_dir + str(epsilon_folder) + "/attack")
-                print("Make Directory")
 
                 new_output_file_dir = self.output_file_dir + str(epsilon_folder)
+                if self.atype == "orig":
 
-                if self.atype == "origin":
+                    new_output_file_dir = new_output_file_dir + "/origin/"  + self.orig_midi_name +  "_"   + self.atype +  "_"  + only_file_name  + ".mid"
 
-                    new_output_file_dir = new_output_file_dir + "/origin/"
-                    + self.orig_midi_name
-                    + "_"
-                    + self.atype
-                    + "_"
-                    + only_file_name
-                    + ".mid"
+                elif self.atype == "att":
+
+                    new_output_file_dir = new_output_file_dir + "/attack/"  + self.orig_midi_name     + "_"    + self.atype   + "_"   + only_file_name + ".mid"
 
                 with open(
                     new_output_file_dir,
