@@ -221,12 +221,14 @@ class Attacker:
 
             ##new validation
             if (i + 1) % self.seg_num == 0:  # ex) every 90
-                # seq = int(i / self.seg_num)  # 0-89 = seq0
-                ground_truth.append(truth.item())
+                seq = int(i / self.seg_num)  # 0-89 = seq0
                 init_batch_hist = init_pred_history[(i - self.seg_num) : i]
                 new_batch_hist = new_pred_history[(i - self.seg_num) : i]
                 init_batch_pred = self.get_batch_pred(init_out_history, init_batch_hist)
                 new_batch_pred = self.get_batch_pred(new_out_history, new_batch_hist)
+
+                # for acc calc
+                ground_truth.append(truth.item())
                 init_preds.append(init_batch_pred)
                 new_preds.append(new_batch_pred)
 
@@ -240,6 +242,12 @@ class Attacker:
                             self.save_attack(xi, atk, i, path, epsilon)
                 else:  # attack unsuccessful
                     atk_correct += 1
+
+                print(
+                    "{}'th true: {} | init_pred: {} | new_pred: {}".format(
+                        seq, truth.item(), init_batch_pred, new_batch_pred
+                    )
+                )
 
                 # re-initialize
                 init_out_history, new_out_history = [], []
