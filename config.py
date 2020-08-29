@@ -29,7 +29,7 @@ parser.add_argument(
     "--save_atk",
     default=False,
     type=bool,
-    help="save some adversarial examples? (True / False)",
+    help="save adversarial examples? (True / False)",
 )
 
 ## split path

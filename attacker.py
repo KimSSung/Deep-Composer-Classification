@@ -104,14 +104,15 @@ class Attacker:
             )
 
     def model_load(self):
-        self.model.eval()
-        # self.model = nn.DataParallel(self.model).to(self.device)
-        self.model.to(self.device)
         checkpoint = torch.load(
             self.config.load_path + "model/" + str(self.model_fname)
         )
         self.model.load_state_dict(checkpoint["model.state_dict"])
         print("==> MODEL LOADED: {}".format(self.model_type))
+        self.model.eval()
+        # self.model = nn.DataParallel(self.model).to(self.device)
+        self.model.to(self.device)
+        print("==> MODEL ON GPU")
         return
 
     def run(self):
@@ -123,7 +124,6 @@ class Attacker:
             atk_acc = atk_correct / len(truths)
 
             init_w_f1score = f1_score(truths, init_preds, average="weighted")
-            new_w_f1score = f1_score(truths, new_preds, average="weighted")
             init_precision, init_recall, f1, supports = precision_recall_fscore_support(
                 truths,
                 init_preds,
@@ -131,6 +131,7 @@ class Attacker:
                 labels=list(range(13)),
                 warn_for=tuple(),
             )
+            new_w_f1score = f1_score(truths, new_preds, average="weighted")
             new_precision, new_recall, f1, supports = precision_recall_fscore_support(
                 truths,
                 new_preds,
@@ -171,8 +172,9 @@ class Attacker:
         # for f1 score
         ground_truth = []
         init_pred_history, new_pred_history = [], []
+        init_preds, new_preds = [], []
 
-        # re-initialize every 90 loop
+        # re-initialize every validation
         init_out_history, new_out_history = [], []
         X_history, pth_history, attack_history = [], [], []
 
@@ -188,50 +190,50 @@ class Attacker:
             init_pred = torch.max(init_out, 1)[1].view(truth.size()).data
 
             # for batch-unit validation
-            init_out_history.append(init_out)
+            init_out_history.append(init_out.tolist())
             init_pred_history.append(init_pred.item())
 
-            # if wrong, skip
             if init_pred.item() != truth.item():
-                new_out_history.append(init_out)
+                new_out_history.append(init_out.tolist())
                 new_pred_history.append(init_pred.item())
-                continue  # next X
 
-            # if correct, ATTACK
-            loss = self.criterion(init_out, truth)  # compute loss
-            self.model.zero_grad()
-            loss.backward()
-            X_grad = X.grad.data
+            else:  # if correct, ATTACK
+                loss = self.criterion(init_out, truth)  # compute loss
+                self.model.zero_grad()
+                loss.backward()
+                X_grad = X.grad.data
 
-            # generate attack (single 'X')
-            attack = self.generate(
-                self.config.attack_type, X, X_grad, init_out, epsilon
-            )
-            attack_history.append(attack)
+                # generate attack (single 'X')
+                attack = self.generate(
+                    self.config.attack_type, X, X_grad, init_out, epsilon
+                )
+                attack_history.append(attack)
 
-            # re-test
-            new_out = self.model(attack)
-            new_pred = torch.max(new_out, 1)[1].view(truth.size()).data
+                # re-test
+                new_out = self.model(attack)
+                new_pred = torch.max(new_out, 1)[1].view(truth.size()).data
 
-            # for batch-unit validation
-            X_history.append(X)
-            pth_history.append(pth)
-            new_out_history.append(new_out)
-            new_pred_history.append(new_pred.item())
+                # for batch-unit validation
+                X_history.append(X)
+                pth_history.append(pth)
+                new_out_history.append(new_out.tolist())
+                new_pred_history.append(new_pred.item())
 
             ##new validation
             if (i + 1) % self.seg_num == 0:  # ex) every 90
                 # seq = int(i / self.seg_num)  # 0-89 = seq0
                 ground_truth.append(truth.item())
-                init_batch_hist = init_pred_history[i - self.seg_num : i]
-                new_batch_hist = new_pred_history[i - self.seg_num : i]
+                init_batch_hist = init_pred_history[(i - self.seg_num) : i]
+                new_batch_hist = new_pred_history[(i - self.seg_num) : i]
                 init_batch_pred = self.get_batch_pred(init_out_history, init_batch_hist)
                 new_batch_pred = self.get_batch_pred(new_out_history, new_batch_hist)
+                init_preds.append(init_batch_pred)
+                new_preds.append(new_batch_pred)
 
                 if init_batch_pred != truth.item():  # intially wrong
                     orig_wrong += 1
                 elif new_batch_pred != truth.item():  # attack successful
-                    if self.config.save_atk:
+                    if self.config.save_atk:  # save attacks
                         for i, (xi, atk, path) in enumerate(
                             zip(X_history, attack_history, pth_history)
                         ):
@@ -241,19 +243,21 @@ class Attacker:
 
                 # re-initialize
                 init_out_history, new_out_history = [], []
-                attack_history = []
+                X_history, pth_history, attack_history = [], [], []
 
         return (
             ground_truth,
-            new_pred_history,
+            init_preds,
+            new_preds,
             len(ground_truth) - orig_wrong,
             atk_correct,
         )
 
     def get_batch_pred(self, out_history, pred_history):
-        out_history = torch.tensor(out_history)
+        out_history = torch.tensor(out_history).squeeze()  # (90,13)
         out_scaled = torch.softmax(out_history, dim=1)
         confidence = torch.sum(out_scaled, dim=0)
+        confidence = torch.div(confidence, self.seg_num)  # avg
 
         occ = [pred_history.count(x) for x in range(self.label_num)]
         max_vote = max(occ)
