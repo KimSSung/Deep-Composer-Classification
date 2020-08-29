@@ -82,7 +82,7 @@ class Trainer:
         # self.scheduler = lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min',factor=0.5,patience=10,verbose=True) #0.5 best for midi370
 
         # tensorboard
-        self.writer = SummaryWriter("trainlog/trainlog")
+        self.writer = SummaryWriter("trainlog/")
         self.valid_times = 0  # increased when validation called
 
     def model_selection(self):

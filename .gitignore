@@ -6,7 +6,6 @@ other_models/
 .idea/
 __pycache__/
 old_versions/
-trainlog/
 
 train/train_options/
 *.git/
