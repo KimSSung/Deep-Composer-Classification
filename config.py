@@ -53,7 +53,7 @@ parser.add_argument(
 # ===> --save_path '/data/attacks/'
 
 ##converter
-# ====> --load_path '/data/attacks/'
+# ====> --load_path "/data/attacks/08-25-00-00/ep0.6/"
 
 # parser.add_argument(
 #     "--to_convert_path",
@@ -148,9 +148,9 @@ parser.add_argument(
 # 3. specific attack related
 parser.add_argument(
     "--epsilons",
-    default="0.0",  # TODO: fix
+    default="0.0",
     type=str,
-    help="list of epsilons 'ep0, ep1, ep2..' seperated by , (default: '0.0')",
+    help="list of epsilons 'ep0, ep1, ep2..' seperated by ,",
 )
 parser.add_argument(
     "--max_iter", default=10, type=int, help="max iterations for deepfool attack",

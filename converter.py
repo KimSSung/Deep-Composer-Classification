@@ -17,8 +17,8 @@ class Converter:
 
         ### Set File directory
         # Get the Header and other data at original Midi Data
-        # self.npy_root_path = self.config.to_convert_path
-        self.npy_root_path = "/data/attacks/08-25-00-00/ep0.6/"
+        self.npy_root_path = self.config.load_path
+        # self.npy_root_path = "/data/attacks/08-25-00-00/ep0.6/"
 
         self.npy_path_list = []  # String list object /data/inputs/composer#/...
         self.midi_header_path_list = (
