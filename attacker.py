@@ -193,6 +193,7 @@ class Attacker:
             init_out_history.append(init_out.tolist())
             init_pred_history.append(init_pred.item())
 
+            # if wrong, do nothing
             if init_pred.item() != truth.item():
                 new_out_history.append(init_out.tolist())
                 new_pred_history.append(init_pred.item())
@@ -396,18 +397,16 @@ class Attacker:
     def save_attack(self, orig, attack, idx, path, eps):
         save_dir = (
             self.config.save_path + self.config.attack_type + "/" + self.date + "/"
-        )
+        )  # attacks/fgsm/[date]/ep0.1/
         if self.config.attack_type == "fgsm":
             if eps == 0.0:
                 return
             save_dir += "ep" + str(eps) + "/"
-        elif self.config.attack_type == "deepfool":
-            save_dir += "deepfool/"
 
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
-        save_name = path.replace("/", "_") + "_seg" + str(idx % self.seg_num)
+        save_name = path.replace("/", "_") + "_seg" + str(idx)
         # save orig
         np.save(
             save_dir + "orig_" + save_name, orig.cpu().detach().numpy(),

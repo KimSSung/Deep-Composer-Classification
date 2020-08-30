@@ -503,7 +503,8 @@ class Converter:
         csv_string = py_midicsv.midi_to_csv(
             self.output_file_dir
             + str(self.epsilon_folder)
-            + "/" + "New_"
+            + "/"
+            + "New_"
             + self.atype
             + "_"
             + self.orig_midi_name
@@ -520,7 +521,7 @@ class Converter:
             self.csv_output_dir
             + "New_"
             + self.atype
-            +"_"
+            + "_"
             + self.orig_midi_name
             + "_"
             + only_file_name
