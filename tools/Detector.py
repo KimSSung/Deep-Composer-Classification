@@ -39,16 +39,17 @@ class Detector:
         '''
 
         #Initialize Clear the dictionary
-        self.note_used.clear()
+        for key in self.note_used.keys():
+            self.note_used[key] = 0
 
         indices = (self.input_npy)[row].nonzero()[0]
         print(indices)
 
+        # If there is no elements
         for index in indices:
 
             self.note_used[index%12] = self.note_used[index%12] + 1
 
-        print(self.note_used) #TODO: Delete Debug print
         return
 
 
@@ -132,7 +133,12 @@ if __name__=='__main__':
 
     t = Detector(input)
     t.set_chord_table()
-    print(t.chord_table)
+    # print(t.set_chord_table())
+    # print(t.chord_table)
+    t.detect_note(133)
+    print(t.note_used)
+    t.detect_note(0)
+    print(t.note_used)
 
 
 
