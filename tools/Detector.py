@@ -28,6 +28,10 @@ class Detector:
 
             self.detect_note(time)
 
+            for harmony in self.chord_table.keys():
+                for note in self.chord_table[harmony]:
+
+
 
         return
 
@@ -71,8 +75,10 @@ class Detector:
 
     def test_probability(self):
 
-        # for chord in self.chord_table.keys():
-
+        cur_score = 0
+        for harmony in self.chord_table.keys():
+            for note in self.chord_table[harmony]:
+                print('hahahah')
         return
 
 
