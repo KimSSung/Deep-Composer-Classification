@@ -18,19 +18,24 @@ class Detector:
         self.note_used = {i:0 for i in range(0,12)}
         self.perturbed_npy = np.zeros((400,128))
         self.MARK_NUM = 1
+        self.chord_inference = ''
+        self.chord_name_list = []
+        self.chord_numpy = np.zeros((1,1))
+        self.test_numpy = np.zeros((1,1))
+
+
 
     def run(self):
 
         #Set chord Table for numpy
         self.set_chord_table()
+        self.set_chord_name_list()
+        self.set_chord_numpy()
 
         for time in range(0,400):
 
             self.detect_note(time)
-
-            for harmony in self.chord_table.keys():
-                for note in self.chord_table[harmony]:
-
+            self.test_probability()
 
 
         return
@@ -110,6 +115,35 @@ class Detector:
 
         return
 
+    def set_chord_name_list(self):
+
+        for chord_name in self.chord_table.keys():
+
+            self.chord_name_list.append(chord_name)
+
+        return
+
+    def set_chord_numpy(self):
+
+        col = 12
+        row = len(self.chord_name_list)
+        self.chord_numpy = np.zeros((row,col), int)
+
+        cur_row = 0
+
+        for chord in self.chord_table.keys():
+
+            for index in range(0,12):
+
+                if index in self.chord_table[chord]:
+                    self.chord_numpy[cur_row][index] = 1
+                else:
+                    continue
+
+            cur_row += 1
+
+        return
+
     def mark_npy(self, cur_row, indices):
         '''
         output: Marked With 1, (2X400X128)
@@ -139,6 +173,8 @@ if __name__=='__main__':
 
     t = Detector(input)
     t.set_chord_table()
+    t.set_chord_name_list()
+    t.set_chord_numpy()
     # print(t.set_chord_table())
     # print(t.chord_table)
     t.detect_note(133)
