@@ -16,6 +16,7 @@ class Detector:
         self.chord_table = {}
         self.note_appeared = {}
         self.note_used = {i:0 for i in range(0,12)}
+        self.note_used_npy = np.zeros((12))
         self.perturbed_npy = np.zeros((400,128))
         self.MARK_NUM = 1
         self.chord_inference = ''
@@ -34,10 +35,15 @@ class Detector:
 
         for time in range(0,400):
 
+            if np.sum(self.input_npy[time])==0:
+                continue
             self.detect_note(time)
+            self.set_note_used_numpy()
             self.test_probability()
+            self.mark_npy(time,self.chord_inference)
 
-
+        #TODO: Erase Print
+        print(self.perturbed_npy)
         return
 
 
@@ -45,6 +51,7 @@ class Detector:
 
         '''
         Find indices and update how many times note used
+        update self.note_used {} after this function execute
         '''
 
         #Initialize Clear the dictionary
@@ -61,9 +68,6 @@ class Detector:
 
         return
 
-
-
-
     def mod12_note(self, note):
         '''
         Return Midi Note Number to Chord
@@ -77,13 +81,28 @@ class Detector:
 
         return (mod_dict[note%12])
 
-
     def test_probability(self):
+        '''
+        Use self.note_used dictionary that used
+        Use self.chord_numpy for mark
+        Set chord_inference = '' string to chord name
+        Return self.chord_numpy[max_row]
+        '''
 
-        cur_score = 0
-        for harmony in self.chord_table.keys():
-            for note in self.chord_table[harmony]:
-                print('hahahah')
+
+        chord_iterator = 0
+        for index, harmony in enumerate(self.chord_table.keys()):
+
+            self.test_numpy[index] = self.chord_numpy[index] * self.note_used_npy
+            chord_iterator += 1
+
+        print(self.test_numpy)
+        score_numpy = np.sum(self.test_numpy,axis=1)
+        name_index = np.argmax(score_numpy)
+
+        #TODO: When same probability appears we should handle it
+        self.chord_inference = self.chord_name_list[name_index]
+
         return
 
 
@@ -124,7 +143,10 @@ class Detector:
         return
 
     def set_chord_numpy(self):
-
+        '''
+        Set self.chord_numpy
+        MARK numpy what note is located for whole numpy
+        '''
         col = 12
         row = len(self.chord_name_list)
         self.chord_numpy = np.zeros((row,col), int)
@@ -142,17 +164,41 @@ class Detector:
 
             cur_row += 1
 
+        self.test_numpy = np.zeros((row,col),int)
+
         return
 
-    def mark_npy(self, cur_row, indices):
+    def set_note_used_numpy(self):
+        '''
+        Function to set self.note_used dictionary -> numpy
+        Result : self.test_numpy -> update how many time used
+
+        Return None
+        '''
+        tmp = []
+        for note in self.note_used.keys():
+            tmp.append(self.note_used[note])
+
+        self.note_used_npy = np.array(tmp)
+
+        #TODO: Delete Print statement
+        print(tmp)
+
+        return
+
+    def mark_npy(self, cur_row, chord_inference):
         '''
         output: Marked With 1, (2X400X128)
         Return Nothing (optional)
         input: indices list (int[128])
         '''
 
-        for note in indices:
-            self.perturbed_npy[cur_row][indices] = self.MARK_NUM
+        #TODO: Change the indices for each cases
+
+        for i in range(0,10):
+
+            self.perturbed_npy[cur_row, i*12:(i+1)*12] = self.chord_numpy[self.chord_name_list.index(chord_inference)]
+
 
         return
 
@@ -172,14 +218,15 @@ if __name__=='__main__':
             input[i][j] = 0
 
     t = Detector(input)
-    t.set_chord_table()
-    t.set_chord_name_list()
-    t.set_chord_numpy()
-    # print(t.set_chord_table())
-    # print(t.chord_table)
-    t.detect_note(133)
-    print(t.note_used)
-    t.detect_note(0)
+    t.run()
+    # t.set_chord_table()
+    # t.set_chord_name_list()
+    # t.set_chord_numpy()
+    # # print(t.set_chord_table())
+    # # print(t.chord_table)
+    # t.detect_note(133)
+    # print(t.note_used)
+    # t.detect_note(0)
     print(t.note_used)
 
 
