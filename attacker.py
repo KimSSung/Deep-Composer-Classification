@@ -319,17 +319,17 @@ class Attacker:
 
         # NON ZERO COLUMN ATTACK
         sign_data_grad = data_grad.sign()
-        indices = torch.nonzero(data[0][1])  # only attack channel[1]
-        nonzero_x, nonzero_y = torch.unique(indices[0]), indices[1]
+        nzeros = torch.nonzero(data[0][1])  # only attack channel[1]
+        nonzero_x, nonzero_y = torch.unique(nzeros[0]), nzeros[1]
 
         perturbed_input = data + 0 * sign_data_grad  # makes copy?
         for column in nonzero_x:  # nonzero column
-            att_vel = torch.clamp(
-                torch.mul(sign_data_grad[0][1][column], 70 * eps), 0, 128
-            )
-            perturbed_input[0][1][column] += att_vel
-            # print(perturbed_input[0][1][column])
+            sorted, indices = torch.sort(data_grad[0][1][column])
+            for i in range(5):  # notes to add
+                att_vel = sorted[i] * eps
+                perturbed_input[0][1][column][indices[i]] += att_vel
 
+        torch.clamp(perturbed_input, min=0, max=128)
         return perturbed_input
 
     def deepfool(self, data, model_out, max_iter):
