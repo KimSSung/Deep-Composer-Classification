@@ -18,6 +18,7 @@ from _collections import OrderedDict
 from sklearn.metrics import f1_score
 from sklearn.metrics import precision_recall_fscore_support
 from datetime import date, datetime
+from tools import confusion_matrix
 
 
 class Attacker:
@@ -158,11 +159,15 @@ class Attacker:
             for p, r in zip(new_precision, new_recall):
                 print("{:<30}{:<}".format(p, r))
 
+            if self.config.confusion:
+                self.draw_confusion_matrix(truths, new_preds)
+
             self.accuracies.append(atk_acc)
 
         # draw plot
         if self.config.plot:
             self.draw_plot(self.accuracies, self.config.attack_type)
+
         return
 
     def test(self, epsilon):  # call this function to run attack
@@ -300,17 +305,30 @@ class Attacker:
         # perturbed_input = torch.clamp(perturbed_input, 0, 127)
 
         # NON ZERO ATTACK
+        # sign_data_grad = data_grad.sign()
+        # indices = torch.nonzero(data[0][1])  # only attack channel[1]
+        # perturbed_input = data + 0 * sign_data_grad
+        # for index in indices:
+        #     x, y = index[0], index[1]
+        #     orig_vel = int(data[0][1][x][y].item())  # int
+        #     att_sign = int(sign_data_grad[0][1][x][y].item())
+        #     if att_sign != 0:  # meaningless -> almost all nonzero
+        #         scaled_att_vel = orig_vel / 128 + att_sign * eps
+        #         perturbed_input[0][1][x][y] = max(0, min(128 * scaled_att_vel, 128))
+        #         # clamp
+
+        # NON ZERO COLUMN ATTACK
         sign_data_grad = data_grad.sign()
         indices = torch.nonzero(data[0][1])  # only attack channel[1]
-        perturbed_input = data + 0 * sign_data_grad
-        for index in indices:
-            x, y = index[0], index[1]
-            orig_vel = int(data[0][1][x][y].item())  # int
-            att_sign = int(sign_data_grad[0][1][x][y].item())
-            if att_sign != 0:  # meaningless -> almost all nonzero
-                scaled_att_vel = orig_vel / 128 + att_sign * eps
-                perturbed_input[0][1][x][y] = max(0, min(128 * scaled_att_vel, 128))
-                # clamp
+        nonzero_x, nonzero_y = torch.unique(indices[0]), indices[1]
+
+        perturbed_input = data + 0 * sign_data_grad  # makes copy?
+        for column in nonzero_x:  # nonzero column
+            att_vel = torch.clamp(
+                torch.mul(sign_data_grad[0][1][column], 70 * eps), 0, 128
+            )
+            perturbed_input[0][1][column] += att_vel
+            # print(perturbed_input[0][1][column])
 
         return perturbed_input
 
@@ -406,7 +424,7 @@ class Attacker:
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
-        save_name = path.replace("/", "_") + "_seg" + str(idx)
+        save_name = path.replace("/", "_").replace(".npy", "") + "_seg" + str(idx)
         # save orig
         np.save(
             save_dir + "orig_" + save_name, orig.cpu().detach().numpy(),
@@ -427,6 +445,12 @@ class Attacker:
             plt.xlabel("Epsilon")
             plt.ylabel("Accuracy")
             plt.show()
+        return
+
+    def draw_confusion_matrix(self, true, pred):
+        temp = confusion_matrix.ConfusionMatrix(sort=True, normalize=True)
+        temp.generate_matrix(true, pred)
+        # print("confusion matrix saved at: {}".format())
         return
 
 
