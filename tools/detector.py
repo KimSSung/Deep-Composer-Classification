@@ -52,7 +52,7 @@ class Detector:
 
         self.modify_note_range()
         #TODO: Erase Print
-        print(self.perturbed_npy)
+        # print(self.perturbed_npy)
 
         return self.perturbed_npy
 
@@ -69,7 +69,7 @@ class Detector:
             self.note_used[key] = 0
 
         indices = (self.input_npy)[track][row].nonzero()[0]
-        print(indices)
+        # print(indices)
 
         # If there is no elements
         for index in indices:
@@ -105,7 +105,7 @@ class Detector:
             self.test_numpy[index] = self.chord_numpy[index] * self.note_used_npy
             chord_iterator += 1
 
-        print(self.test_numpy)
+        # print(self.test_numpy)
         score_numpy = np.sum(self.test_numpy,axis=1)
         name_index = np.argmax(score_numpy)
 
@@ -191,7 +191,7 @@ class Detector:
         self.note_used_npy = np.array(tmp)
 
         #TODO: Delete Print statement
-        print(tmp)
+        # print(tmp)
 
         return
 

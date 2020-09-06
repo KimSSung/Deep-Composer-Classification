@@ -297,10 +297,10 @@ class Attacker:
             attack = self.random(data, self.epsilons)
         elif atk == "test":  # for testing new attacks
             attack = self.test_attack(data, data_grad, eps)
-        elif atk is "chord":
+        elif atk == "chord":
             attack = self.chord_attack(data, data_grad, vel=70)
         else:
-            raise ("Type error. It should be one of (fgsm, deepfool, random)")
+            raise "Type error. It should be one of (fgsm, deepfool, random)"
         return attack
 
     def test_attack(self, data, data_grad, eps):
