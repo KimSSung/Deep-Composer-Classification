@@ -3,7 +3,7 @@ Parameters for attack:
 load_path = /data/drum/bestmodel/
 save_path = /data/attacks/
 model_save_path = /data/drum/model/
-save_atk = True
+save_atk = False
 mode = attack
 composers = 13
 model_name = resnet50
