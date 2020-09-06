@@ -288,15 +288,54 @@ class Attacker:
         return batch_prediction
 
     def generate(self, atk, data, data_grad, init_out, eps):
-        if atk is "fgsm":
+        if atk == "fgsm":
             attack = self.fgsm(data, data_grad, eps)
-        elif atk is "deepfool":
+        elif atk == "deepfool":
             attack = self.deepfool(data, init_out, self.config.max_iter)
-        elif atk is "random":
+        elif atk == "random":
             attack = self.random(data, self.epsilons)
+        elif atk == "test":  # for testing new attacks
+            attack = self.test_attack(data, data_grad, eps)
         else:
             raise ("Type error. It should be one of (fgsm, deepfool, random)")
         return attack
+
+    def test_attack(self, data, data_grad, eps):
+
+        perturbed_input = torch.clamp(data_grad, 0, 128)  # remove negative grads
+        np_input = perturbed_input.cpu().numpy()  # 400 x 128
+        np_input = np_input[0][1]
+        # print(np.shape(np_input))  # 400 , 128
+
+        # # option1
+        # max_vel, min_vel = (
+        #     np.max(np_input),
+        #     np.min(np_input[np_input > 0]),
+        # )  # single scalar
+        # # print("{}, {}".format(max_vel, min_vel))
+        # nzero = np.nonzero(np_input)
+        # for i, (x, y) in enumerate(zip(nzero[0], nzero[1])):
+        #     new_vel = (np_input[x][y] - min_vel) / (max_vel - min_vel)  # 0-1
+        #     new_vel *= 128
+        #     perturbed_input[0][1][x][y] = int(new_vel)
+        # # print(new_vel)
+        # print(perturbed_input[0][1])
+
+        # option2
+        # max_vel = np.max(np_input)
+        # perturbed_input[0][1] = torch.from_numpy(np_input // max_vel * 128)
+        # # print(perturbed_input[0][1])
+        # # perturbed_input[0][1] *= 128
+        # print(torch.nonzero(perturbed_input[0][1], as_tuple=True))
+
+        # option3
+        sign_data_grad = data_grad.sign()
+        perturbed_input = torch.clamp(sign_data_grad, 0, 1)  # remove negative grads
+        perturbed_input = torch.mul(perturbed_input, 70)
+        # print(perturbed_input)
+
+        perturbed_input = torch.clamp(perturbed_input, 0, 128)
+        return perturbed_input
 
     def fgsm(self, data, data_grad, eps):
         # ORIGINAL FGSM
@@ -325,11 +364,11 @@ class Attacker:
         perturbed_input = data + 0 * sign_data_grad  # makes copy?
         for column in nonzero_x:  # nonzero column
             sorted, indices = torch.sort(data_grad[0][1][column])
-            for i in range(5):  # notes to add
+            for i in range(20):  # notes to add
                 att_vel = sorted[i] * eps
                 perturbed_input[0][1][column][indices[i]] += att_vel
 
-        torch.clamp(perturbed_input, min=0, max=128)
+        perturbed_input = torch.clamp(perturbed_input, min=0, max=128)
         return perturbed_input
 
     def deepfool(self, data, model_out, max_iter):
@@ -436,7 +475,7 @@ class Attacker:
         return
 
     def draw_plot(self, acc, type):
-        if type is "fgsm":
+        if type == "fgsm":
             plt.figure(figsize=(5, 5))
             plt.plot(self.epsilons, acc, "*-")
             plt.yticks(np.arange(0, 1.1, step=0.1))
