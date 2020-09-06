@@ -19,7 +19,7 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import precision_recall_fscore_support
 from datetime import date, datetime
 from tools import confusion_matrix
-from tools.detector import Dectector
+from tools.detector import Detector
 
 
 class Attacker:
@@ -447,8 +447,9 @@ class Attacker:
         return perturbed_input
 
     def chord_attack(self, data, data_grad, vel=70):
-        chords = Dectector(data).run()
+        chords = Detector(data).run()
         perturbed_input = data + np.multiply(chords, data_grad.sign()*vel)
+        print(perturbed_input)
 
         return torch.clamp(perturbed_input, min=0, max=128)
 
