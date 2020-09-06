@@ -19,6 +19,7 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import precision_recall_fscore_support
 from datetime import date, datetime
 from tools import confusion_matrix
+from tools.detector import Dectector
 
 
 class Attacker:
@@ -296,6 +297,8 @@ class Attacker:
             attack = self.random(data, self.epsilons)
         elif atk == "test":  # for testing new attacks
             attack = self.test_attack(data, data_grad, eps)
+        elif atk is "chord":
+            attack = self.chord_attack(data, data_grad, vel=70)
         else:
             raise ("Type error. It should be one of (fgsm, deepfool, random)")
         return attack
@@ -442,6 +445,12 @@ class Attacker:
 
         print("")
         return perturbed_input
+
+    def chord_attack(self, data, data_grad, vel=70):
+        chords = Dectector(data).run()
+        perturbed_input = data + np.multiply(chords, data_grad.sign()*vel)
+
+        return torch.clamp(perturbed_input, min=0, max=128)
 
     def random(self, data, eps):
         # TODO: no grad, completely random attack
