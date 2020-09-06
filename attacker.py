@@ -363,9 +363,9 @@ class Attacker:
 
         perturbed_input = data + 0 * sign_data_grad  # makes copy?
         for column in nonzero_x:  # nonzero column
-            sorted, indices = torch.sort(data_grad[0][1][column])
+            sorted_out, indices = torch.sort(data_grad[0][1][column])
             for i in range(20):  # notes to add
-                att_vel = sorted[i] * eps
+                att_vel = sorted_out[i] * eps
                 perturbed_input[0][1][column][indices[i]] += att_vel
 
         perturbed_input = torch.clamp(perturbed_input, min=0, max=128)
