@@ -2,12 +2,18 @@ import numpy as np
 
 class Detector:
     '''
-    Input SINGLE TRACK for Numpy
+    Input WHOLE shape for Numpy (4 dimension)
     shape: (400,128) 2d array
 
     Output: Marked Indices Numpy (where should be attack)
     '''
     def __init__(self, input_npy):
+
+        self.SONG = input_npy.shape[0]
+        self.TRACK = input_npy.shape[1]
+        self.ROW = input_npy.shape[2]
+        self.COL = input_npy.shape[3]
+
 
         self.load_data_path = ''
         self.input_npy = input_npy
@@ -17,7 +23,7 @@ class Detector:
         self.note_appeared = {}
         self.note_used = {i:0 for i in range(0,12)}
         self.note_used_npy = np.zeros((12))
-        self.perturbed_npy = np.zeros((400,128))
+        self.perturbed_npy = np.zeros((self.SONG,self.TRACK,self.ROW,self.COL))
         self.MARK_NUM = 1
         self.chord_inference = ''
         self.chord_name_list = []
@@ -29,25 +35,29 @@ class Detector:
     def run(self):
 
         #Set chord Table for numpy
+        self.input_npy = (self.input_npy).squeeze()
         self.set_chord_table()
         self.set_chord_name_list()
         self.set_chord_numpy()
 
-        for time in range(0,400):
+        for track in range(self.TRACK):
 
-            if np.sum(self.input_npy[time])==0:
-                continue
-            self.detect_note(time)
-            self.set_note_used_numpy()
-            self.test_probability()
-            self.mark_npy(time,self.chord_inference)
+            for time in range(self.ROW):
+                if np.sum(self.input_npy[track][time])==0:
+                    continue
+                self.detect_note(track,time)
+                self.set_note_used_numpy()
+                self.test_probability()
+                self.mark_npy(time,self.chord_inference)
 
+        self.modify_note_range()
         #TODO: Erase Print
         print(self.perturbed_npy)
-        return
+
+        return self.perturbed_npy
 
 
-    def detect_note(self, row):
+    def detect_note(self, track, row):
 
         '''
         Find indices and update how many times note used
@@ -58,7 +68,7 @@ class Detector:
         for key in self.note_used.keys():
             self.note_used[key] = 0
 
-        indices = (self.input_npy)[row].nonzero()[0]
+        indices = (self.input_npy)[track][row].nonzero()[0]
         print(indices)
 
         # If there is no elements
@@ -88,7 +98,6 @@ class Detector:
         Set chord_inference = '' string to chord name
         Return self.chord_numpy[max_row]
         '''
-
 
         chord_iterator = 0
         for index, harmony in enumerate(self.chord_table.keys()):
@@ -194,10 +203,19 @@ class Detector:
         '''
 
         #TODO: Change the indices for each cases
+        for track in range(self.TRACK):
+            for i in range(0,int(self.COL/12)):
 
-        for i in range(0,10):
+                #Slice perturbed_npy
+                self.perturbed_npy[0, track, cur_row, i*12:(i+1)*12] = self.chord_numpy[self.chord_name_list.index(chord_inference)]
 
-            self.perturbed_npy[cur_row, i*12:(i+1)*12] = self.chord_numpy[self.chord_name_list.index(chord_inference)]
+        return
+
+    def modify_note_range(self):
+
+        #Set perturbed npy to midi note
+        self.perturbed_npy[0,:,:,0:21] = 0
+        self.perturbed_npy[0,:,:,109:] = 0
 
 
         return
@@ -206,29 +224,22 @@ class Detector:
 if __name__=='__main__':
 
 
-    # temp = np.zeros((100,128))
-    # temp2 = np.ones((100,128))
-    # temp3 = np.zeros((100,128))
-    # temp4 = np.ones((100,128))
+    # temp = np.zeros((1,2,100,128))
+    # temp2 = np.ones((1,2,100,128))
+    # temp3 = np.zeros((1,2,100,128))
+    # temp4 = np.ones((1,2,100,128))
     #
     # input = np.vstack((temp, temp2, temp3, temp4))
-
     #
-    # for i in range(122,150):
-    #     for j in range(64,80):
-    #         input[i][j] = 0
+    #
+    # for k in range(0,2):
+    #     for i in range(122,150):
+    #         for j in range(64,80):
+    #             input[0][k][i][j] = 0
 
-    input = np.load('/data/attacks/fgsm/09-04-01-25/ep0.05/orig_composer3_midi3_ver0_seg0.npy').squeeze()
-    t = Detector(input[1])
+    input = np.load('/data/attacks/fgsm/09-04-01-25/ep0.05/orig_composer3_midi3_ver0_seg0.npy')
+    t = Detector(input)
     t.run()
-    # t.set_chord_table()
-    # t.set_chord_name_list()
-    # t.set_chord_numpy()
-    # # print(t.set_chord_table())
-    # # print(t.chord_table)
-    # t.detect_note(133)
-    # print(t.note_used)
-    # t.detect_note(0)
     print(t.note_used)
 
 
