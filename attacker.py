@@ -242,7 +242,7 @@ class Attacker:
                 if init_batch_pred != truth.item():  # intially wrong
                     orig_wrong += 1
                 elif new_batch_pred != truth.item():  # attack successful
-                    if self.config.save_atk:  # save attacks
+                    if self.config.save_atk == "True": # save attacks
                         for i, (xi, atk, path) in enumerate(
                             zip(X_history, attack_history, pth_history)
                         ):
@@ -447,10 +447,19 @@ class Attacker:
         return perturbed_input
 
     def chord_attack(self, data, data_grad, vel=70):
-        chords = Detector(data).run()
-        perturbed_input = data + np.multiply(chords, data_grad.sign()*vel)
-        print(perturbed_input)
+        # gpu tensor to cpu numpy
+        data1 = data.detach().cpu().clone().numpy()
+        data_grad1 = data_grad.detach().cpu().clone().numpy()
 
+        chords = Detector(data1).run()
+        signs = np.sign(data_grad1)
+        pos_signs = np.where(signs < 0., 0., signs)
+        perturbed_input = data1 + np.multiply(chords, pos_signs*vel)
+
+        # print(perturbed_input[perturbed_input > 0])
+
+        # cpu numpy to gpu tensor
+        perturbed_input = torch.tensor(perturbed_input, dtype=torch.float).to(self.device)
         return torch.clamp(perturbed_input, min=0, max=128)
 
     def random(self, data, eps):

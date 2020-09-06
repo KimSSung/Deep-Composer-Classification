@@ -27,8 +27,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "--save_atk",
-    default=False,
-    type=bool,
+    default="False",
+    type=str,
     help="save adversarial examples? (True / False)",
 )
 
@@ -126,7 +126,7 @@ parser.add_argument("--lr", default=0.01, type=float, help="Model learning rate.
 
 
 parser.add_argument(
-    "--save_trn", type=bool, default=True, help="Save both model & loader?"
+    "--save_trn", type=str, default=True, help="Save both model & loader?"
 )
 
 

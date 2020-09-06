@@ -43,7 +43,7 @@ class Detector:
         for track in range(self.TRACK):
 
             for time in range(self.ROW):
-                if np.sum(self.input_npy[track][time])==0:
+                if np.sum(self.input_npy[track][time]) == 0.0:
                     continue
                 self.detect_note(track,time)
                 self.set_note_used_numpy()
@@ -73,8 +73,7 @@ class Detector:
 
         # If there is no elements
         for index in indices:
-
-            self.note_used[index%12] = self.note_used[index%12] + 1
+            self.note_used[int(index)%12] = self.note_used[int(index)%12] + 1
 
         return
 
