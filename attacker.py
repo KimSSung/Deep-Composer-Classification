@@ -242,7 +242,7 @@ class Attacker:
                 if init_batch_pred != truth.item():  # intially wrong
                     orig_wrong += 1
                 elif new_batch_pred != truth.item():  # attack successful
-                    if self.config.save_atk:  # save attacks
+                    if self.config.save_atk == "True":  # save attacks
                         for i, (xi, atk, path) in enumerate(
                             zip(X_history, attack_history, pth_history)
                         ):
@@ -300,7 +300,7 @@ class Attacker:
         elif atk == "chord":
             attack = self.chord_attack(data, data_grad, vel=70)
         else:
-            raise "Type error. It should be one of (fgsm, deepfool, random)"
+            raise Exception("Type error. It should be one of (fgsm, deepfool, random)")
         return attack
 
     def test_attack(self, data, data_grad, eps):
@@ -448,7 +448,7 @@ class Attacker:
 
     def chord_attack(self, data, data_grad, vel=70):
         chords = Detector(data).run()
-        perturbed_input = data + np.multiply(chords, data_grad.sign()*vel)
+        perturbed_input = data + np.multiply(chords, data_grad.sign() * vel)
         print(perturbed_input)
 
         return torch.clamp(perturbed_input, min=0, max=128)

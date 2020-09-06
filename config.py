@@ -27,8 +27,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "--save_atk",
-    default=False,
-    type=bool,
+    default="False",
+    type=str,
     help="save adversarial examples? (True / False)",
 )
 
