@@ -19,6 +19,7 @@ ts-1.0/
 .npy
 test*.py
 temp.py
+notes.txt
 
 
 train/test*.py
