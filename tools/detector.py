@@ -32,6 +32,7 @@ class Detector:
             "A#": 10,
             "B": 11,
         }
+        self.CHK_DURATION = 5
         self.chord_table = {}
         self.note_appeared = {}
         self.note_used = {i: 0 for i in range(0, 12)}
@@ -53,13 +54,19 @@ class Detector:
 
         for track in range(self.TRACK):
 
-            for time in range(self.ROW):
-                if np.sum(self.input_npy[track][time]) == 0.0:
+            for time in range(self.ROW//self.CHK_DURATION):
+
+                unit_time = time * self.CHK_DURATION
+                if np.sum(self.input_npy[track][unit_time]) == 0.0:
                     continue
-                self.detect_note(track, time)
+                self.detect_note(track, unit_time)
                 self.set_note_used_numpy()
                 self.test_probability()
-                self.mark_npy(time, self.chord_inference)
+                self.mark_npy(unit_time, self.chord_inference)
+
+                #COPY for continous chord inference
+                for copy_npy_row in range(self.CHK_DURATION):
+                    self.mark_npy(unit_time + copy_npy_row, self.chord_inference)
 
         self.modify_note_range()
         # TODO: Erase Print
@@ -303,9 +310,7 @@ if __name__ == "__main__":
     #         for j in range(64,80):
     #             input[0][k][i][j] = 0
 
-    input = np.load(
-        "/data/attacks/fgsm/09-04-01-25/ep0.05/orig_composer3_midi3_ver0_seg0.npy"
-    )
+    input = np.load('/data/temp/chord/09-07-13-31/orig_composer3_midi56_ver0_seg6.npy')
     t = Detector(input)
     t.run()
     print(t.note_used)
