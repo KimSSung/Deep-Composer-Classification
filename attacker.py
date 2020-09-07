@@ -49,9 +49,11 @@ class Attacker:
 
         self.date = date.today().strftime("%m-%d") + datetime.now().strftime("-%H-%M")
         self.epsilons = [float(e) for e in self.config.epsilons.split(",")]
-        print("==> ATTACK {}".format(self.config.attack_type))
+        print("==> ATTACK {}".format(self.config.attack_type), end=' ')
         print(self.epsilons)
+        print("==> TARGET LABEL: {}".format(self.config.target_label))
         print("==> SAVE {} at {}".format(self.config.save_atk, self.date))
+        print(isinstance(self.config.confusion, bool))
 
     def data_load(self, orig):
         if orig:
@@ -205,7 +207,16 @@ class Attacker:
                 new_pred_history.append(init_pred.item())
 
             else:  # if correct, ATTACK
-                loss = self.criterion(init_out, truth)  # compute loss
+                if self.config.target_label is None:
+                    loss = self.criterion(init_out, truth)  # compute loss
+                else:
+                    if self.config.target_label in range(self.label_num):
+                        target = torch.tensor([self.config.target_label])
+                        target = target.to(self.device)
+                        loss = self.criterion(init_out, target)  # compute loss
+                    else:
+                        raise Exception('Incorrect target label. Should be in rang[0,{}]'.format(self.label_num))
+
                 self.model.zero_grad()
                 loss.backward()
                 X_grad = X.grad.data
@@ -242,7 +253,7 @@ class Attacker:
                 if init_batch_pred != truth.item():  # intially wrong
                     orig_wrong += 1
                 elif new_batch_pred != truth.item():  # attack successful
-                    if self.config.save_atk == "True": # save attacks
+                    if self.config.save_atk:  # save attacks
                         for i, (xi, atk, path) in enumerate(
                             zip(X_history, attack_history, pth_history)
                         ):
@@ -251,8 +262,8 @@ class Attacker:
                     atk_correct += 1
 
                 print(
-                    "{}'th true: {} | init_pred: {} | new_pred: {}".format(
-                        seq, truth.item(), init_batch_pred, new_batch_pred
+                    "   {}th true: {} | init_pred: {} | new_pred: {}".format(
+                        seq+1, truth.item(), init_batch_pred, new_batch_pred
                     )
                 )
 
@@ -453,8 +464,8 @@ class Attacker:
 
         chords = Detector(data1).run()
         signs = np.sign(data_grad1)
-        pos_signs = np.where(signs < 0., 0., signs)
-        perturbed_input = data1 + np.multiply(chords, pos_signs*vel)
+        pos_signs = np.where(signs < 0.0, 0.0, signs)
+        perturbed_input = data1 + np.multiply(chords, pos_signs * vel)
 
         # print(chords.shape)
         # print((pos_signs*vel).shape)
@@ -471,7 +482,9 @@ class Attacker:
         # print(perturbed_input[perturbed_input > 0])
 
         # cpu numpy to gpu tensor
-        perturbed_input = torch.tensor(perturbed_input, dtype=torch.float).to(self.device)
+        perturbed_input = torch.tensor(perturbed_input, dtype=torch.float).to(
+            self.device
+        )
         return torch.clamp(perturbed_input, min=0, max=128)
 
     def random(self, data, eps):
@@ -524,12 +537,12 @@ class Attacker:
         return
 
 
-# if __name__ == "__main__":
-#     # Testing
-#     config, unparsed = get_config()
-#     # for arg in vars(config):
-#     #     argname = arg
-#     #     contents = str(getattr(config, arg))
-#     #     print(argname + " = " + contents)
-#     temp = Attacker(config)
-#     temp.run()
+if __name__ == "__main__":
+    # Testing
+    config, unparsed = get_config()
+    # for arg in vars(config):
+    #     argname = arg
+    #     contents = str(getattr(config, arg))
+    #     print(argname + " = " + contents)
+    temp = Attacker(config)
+    temp.run()

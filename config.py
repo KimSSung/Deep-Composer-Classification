@@ -1,6 +1,7 @@
 # Configuration file for (base training / adversarial training / adversarial attack)
 
 import argparse
+from distutils import util
 
 # Basic Configuration
 parser = argparse.ArgumentParser(description="Base Training")
@@ -27,8 +28,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "--save_atk",
-    default="False",
-    type=str,
+    default=False,
+    type=lambda x:bool(util.strtobool(x)),
     help="save adversarial examples? (True / False)",
 )
 
@@ -126,7 +127,7 @@ parser.add_argument("--lr", default=0.01, type=float, help="Model learning rate.
 
 
 parser.add_argument(
-    "--save_trn", type=str, default=True, help="Save both model & loader?"
+    "--save_trn", type=lambda x:bool(util.strtobool(x)), default=True, help="Save both model & loader?"
 )
 
 
@@ -134,7 +135,7 @@ parser.add_argument(
 
 # 1. basic configurations
 # parser.add_argument("--attack_mode", default="base", type=str, help="Attack Mode (base / trained)") # full name of .pt will tell anyway
-parser.add_argument("--targeted", default=False, type=bool, help="is Targeted?")
+parser.add_argument("--target_label", default=None, type=int, help="label for targeted attack")
 parser.add_argument(
     "--attack_type", default="fgsm", type=str, help="attack (fgsm / deepfool / random)"
 )
@@ -142,7 +143,7 @@ parser.add_argument(
 parser.add_argument(
     "--orig",
     default=True,
-    type=bool,
+    type=lambda x:bool(util.strtobool(x)),
     help="attack on original dataset? (default: True)",
 )
 # 3. specific attack related
@@ -158,14 +159,10 @@ parser.add_argument(
 parser.add_argument(
     "--overshoot", default=5, type=int, help="overshoot for deepfool attack"
 )
-parser.add_argument("--plot", default=False, type=bool, help="draw plot?")
+parser.add_argument("--plot", default=False, type=lambda x:bool(util.strtobool(x)), help="draw plot?")
 parser.add_argument(
-    "--confusion", default=False, type=bool, help="draw confusion matrix?"
-)
-# parser.add_argument(
-#     "--tempo_range", default=1, type=int, help="+/-n tempo cells to attack"
-# )
-
+    "--confusion", default=False, type=lambda x:bool(util.strtobool(x)), help="draw confusion matrix?")
+# parser.add_argument('--feature', dest='feature', type=lambda x:bool(distutils.util.strtobool(x)))
 
 ##spliter
 # use --input_save_path
@@ -176,7 +173,7 @@ parser.add_argument(
     "--omit", default=None, type=str, help="List of omitted composers' indices.",
 )
 parser.add_argument(
-    "--age", default=False, type=bool, help="Classification of Age? (True / False)",
+    "--age", default=False, type=lambda x:bool(util.strtobool(x)), help="Classification of Age? (True / False)",
 )
 
 
