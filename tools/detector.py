@@ -15,6 +15,8 @@ class Detector:
         self.TRACK = input_npy.shape[1]
         self.ROW = input_npy.shape[2]
         self.COL = input_npy.shape[3]
+        self.LIMIT_NOTE = 5
+        self.CHK_DURATION = 5
 
         self.load_data_path = ""
         self.input_npy = input_npy
@@ -32,7 +34,6 @@ class Detector:
             "A#": 10,
             "B": 11,
         }
-        self.CHK_DURATION = 5
         self.chord_table = {}
         self.note_appeared = {}
         self.note_used = {i: 0 for i in range(0, 12)}
@@ -62,11 +63,12 @@ class Detector:
                 self.detect_note(track, unit_time)
                 self.set_note_used_numpy()
                 self.test_probability()
-                self.mark_npy(unit_time, self.chord_inference)
+                # self.mark_npy(unit_time, self.chord_inference)
+                self.limit_mark_npy(unit_time, self.chord_inference)
 
                 #COPY for continous chord inference
-                for copy_npy_row in range(self.CHK_DURATION):
-                    self.mark_npy(unit_time + copy_npy_row, self.chord_inference)
+                for copy_npy_row in range(1,self.CHK_DURATION):
+                    self.perturbed_npy[0,1,unit_time + copy_npy_row,:] = self.perturbed_npy[0,1,unit_time,:]
 
         self.modify_note_range()
         # TODO: Erase Print
@@ -277,7 +279,7 @@ class Detector:
 
         # TODO: Change the indices for each cases
         for track in range(self.TRACK):
-            for i in range(0, int(self.COL / 12)):
+            for i in range(2, int(self.COL / 12)-2):
 
                 # Slice perturbed_npy
                 self.perturbed_npy[
@@ -293,6 +295,25 @@ class Detector:
         self.perturbed_npy[0, :, :, 109:] = 0
 
         return
+
+    def limit_mark_npy(self,  cur_row, chord_inference):
+
+        octave_num = np.random.normal(int(t.COL/12)/2 + 1, size = self.LIMIT_NOTE)
+        octave_num = octave_num.astype('int')
+        note_random = np.random.choice(self.chord_table[chord_inference],self.LIMIT_NOTE, replace = True)
+
+
+        for index in range(self.LIMIT_NOTE):
+
+            mark_note_index = octave_num[index] * 12 + note_random[index]
+            # print(mark_note_index)
+            self.perturbed_npy[0,1,cur_row,mark_note_index] = 1
+
+        return
+
+
+
+
 
 
 if __name__ == "__main__":
