@@ -298,7 +298,7 @@ class Attacker:
         elif atk == "test":  # for testing new attacks
             attack = self.test_attack(data, data_grad, eps)
         elif atk == "chord":
-            attack = self.chord_attack(data, data_grad, vel=70)
+            attack = self.chord_attack(data, data_grad, vel=40)
         else:
             raise "Type error. It should be one of (fgsm, deepfool, random)"
         return attack
@@ -446,7 +446,7 @@ class Attacker:
         print("")
         return perturbed_input
 
-    def chord_attack(self, data, data_grad, vel=70):
+    def chord_attack(self, data, data_grad, vel=40):
         # gpu tensor to cpu numpy
         data1 = data.detach().cpu().clone().numpy()
         data_grad1 = data_grad.detach().cpu().clone().numpy()
@@ -455,6 +455,18 @@ class Attacker:
         signs = np.sign(data_grad1)
         pos_signs = np.where(signs < 0., 0., signs)
         perturbed_input = data1 + np.multiply(chords, pos_signs*vel)
+
+        # print(chords.shape)
+        # print((pos_signs*vel).shape)
+        temp = np.multiply(chords, pos_signs*vel)[0][1][:][:]
+        # print(temp.shape)
+        # print('--------------------')
+        with open("./notes.txt", 'a') as f:
+            f.write('[ ')
+            for row in temp:
+                f.write(str(np.count_nonzero(row)))
+                f.write(', ')
+            f.write(']\n\n')
 
         # print(perturbed_input[perturbed_input > 0])
 

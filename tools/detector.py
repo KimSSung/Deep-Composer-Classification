@@ -54,6 +54,7 @@ class Detector:
         #TODO: Erase Print
         # print(self.perturbed_npy)
 
+        self.perturbed_npy[0][0] = 0
         return self.perturbed_npy
 
 
