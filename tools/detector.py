@@ -298,7 +298,7 @@ class Detector:
 
     def limit_mark_npy(self,  cur_row, chord_inference):
 
-        octave_num = np.random.normal(int(t.COL/12)/2 + 1, size = self.LIMIT_NOTE)
+        octave_num = np.random.normal(int(self.COL/12)/2 + 1, size = self.LIMIT_NOTE)
         octave_num = octave_num.astype('int')
         note_random = np.random.choice(self.chord_table[chord_inference],self.LIMIT_NOTE, replace = True)
 
@@ -306,6 +306,10 @@ class Detector:
         for index in range(self.LIMIT_NOTE):
 
             mark_note_index = octave_num[index] * 12 + note_random[index]
+            if (mark_note_index) > 108:
+                mark_note_index = 108
+            elif mark_note_index < 21:
+                mark_note_index = 21
             # print(mark_note_index)
             self.perturbed_npy[0,1,cur_row,mark_note_index] = 1
 
