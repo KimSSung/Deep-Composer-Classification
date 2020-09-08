@@ -146,6 +146,12 @@ parser.add_argument(
     type=lambda x:bool(util.strtobool(x)),
     help="attack on original dataset? (default: True)",
 )
+parser.add_argument(
+    "--col_notes",
+    type=int,
+    default=5,
+    help="max # of notes to add each column"
+)
 # 3. specific attack related
 parser.add_argument(
     "--epsilons",
@@ -161,7 +167,7 @@ parser.add_argument(
 )
 parser.add_argument("--plot", default=False, type=lambda x:bool(util.strtobool(x)), help="draw plot?")
 parser.add_argument(
-    "--confusion", default=False, type=lambda x:bool(util.strtobool(x)), help="draw confusion matrix?")
+    "--confusion", default=True, type=lambda x:bool(util.strtobool(x)), help="draw confusion matrix?")
 # parser.add_argument('--feature', dest='feature', type=lambda x:bool(distutils.util.strtobool(x)))
 
 ##spliter

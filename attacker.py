@@ -53,7 +53,6 @@ class Attacker:
         print(self.epsilons)
         print("==> TARGET LABEL: {}".format(self.config.target_label))
         print("==> SAVE {} at {}".format(self.config.save_atk, self.date))
-        print(isinstance(self.config.confusion, bool))
 
     def data_load(self, orig):
         if orig:
@@ -190,8 +189,8 @@ class Attacker:
             tqdm(zip(self.input_total, self.output_total, self.pth_total))
         ):
             X, truth = X.to(self.device), truth.to(self.device)
-            X = X.detach()
-            X.requires_grad = True  # for attack
+            X = X.detach() # remove graph from data_load
+            X.requires_grad = True  # reinitialize for attack
 
             # check initial performance
             init_out = self.model(X)
@@ -207,8 +206,10 @@ class Attacker:
                 new_pred_history.append(init_pred.item())
 
             else:  # if correct, ATTACK
+                # untargeted
                 if self.config.target_label is None:
                     loss = self.criterion(init_out, truth)  # compute loss
+                # targeted
                 else:
                     if self.config.target_label in range(self.label_num):
                         target = torch.tensor([self.config.target_label])
@@ -371,18 +372,16 @@ class Attacker:
         #         # clamp
 
         # NON ZERO COLUMN ATTACK
-        sign_data_grad = data_grad.sign()
-        nzeros = torch.nonzero(data[0][1])  # only attack channel[1]
-        nonzero_x, nonzero_y = torch.unique(nzeros[0]), nzeros[1]
+        # sign_data_grad = data_grad.sign()
+        pos_data_grad = torch.clamp(data_grad, min=0, max=128)
+        perturbed_input = data.detach().clone() #copy
+        nonzero_x = torch.unique(torch.nonzero(perturbed_input[0][1]))
 
-        perturbed_input = data + 0 * sign_data_grad  # makes copy?
         for column in nonzero_x:  # nonzero column
-            sorted_out, indices = torch.sort(data_grad[0][1][column])
-            for i in range(20):  # notes to add
-                att_vel = sorted_out[i] * eps
-                perturbed_input[0][1][column][indices[i]] += att_vel
+            idx = torch.topk(pos_data_grad[0][1][column], k=self.config.col_notes, dim=0)[1] #top k gradients
+            perturbed_input[0][1][column][idx] += 70
 
-        perturbed_input = torch.clamp(perturbed_input, min=0, max=128)
+        perturbed_input = torch.clamp(perturbed_input, min=21, max=108)
         return perturbed_input
 
     def deepfool(self, data, model_out, max_iter):
