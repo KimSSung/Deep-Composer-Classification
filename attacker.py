@@ -381,7 +381,7 @@ class Attacker:
             idx = torch.topk(pos_data_grad[0][1][column], k=self.config.col_notes, dim=0)[1] #top k gradients
             perturbed_input[0][1][column][idx] += 70
 
-        perturbed_input = torch.clamp(perturbed_input, min=21, max=108)
+        perturbed_input = torch.clamp(perturbed_input, min=0, max=128)
         return perturbed_input
 
     def deepfool(self, data, model_out, max_iter):
