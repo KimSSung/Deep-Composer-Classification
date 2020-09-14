@@ -24,9 +24,6 @@ parser.add_argument(
     help="Path of save parent folder.",
 )
 parser.add_argument(
-    "--model_save_path", default="/data/drum/model/", type=str, help="Model saving path"
-)
-parser.add_argument(
     "--save_atk",
     default=False,
     type=lambda x:bool(util.strtobool(x)),
@@ -114,7 +111,10 @@ parser.add_argument(
     help="Total number of epochs to run. Not actual epoch.",
 )
 parser.add_argument(
-    "--seg_num", default=20, type=int, help="segment number for each midi#"
+    "--trn_seg", default=90, type=int, help="segment number for train."
+)
+parser.add_argument(
+    "--val_seg", default=90, type=int, help="segment number for valid."
 )
 parser.add_argument(
     "--train_batch", default=40, type=int, help="Batch size for training"
