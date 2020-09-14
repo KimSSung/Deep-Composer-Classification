@@ -34,7 +34,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from torch.utils.tensorboard import SummaryWriter
-
+import os
 
 class Trainer:
     def __init__(self, args):
@@ -42,9 +42,14 @@ class Trainer:
 
         # 0 : acc / 1: loss / 2: f1 / 3: precision / 4: recall
         self.best_valid = [-1.0, 30000.0, -1.0, [], []]
+
+        # if onset = on
         self.input_shape = (2, 400, 128)
-        self.seg_num = self.config.seg_num
-        # print("==> Seg num: ", self.seg_num)
+        # else
+        # self.input_shape = (1, 400, 128)
+        
+        self.valid_seg = self.config.val_seg
+        self.train_seg = self.config.trn_seg
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -58,6 +63,13 @@ class Trainer:
         # if age == True ==> label: 0, 1, 2
         if self.config.age:
             self.label_num = 3
+
+        # save dir
+        self.save_dir = self.config.save_path # /data/drum/
+        if not os.path.exists(self.save_dir):
+            os.makedirs(self.save_dir + "model/")
+            os.makedirs(self.save_dir + "dataset/train/")
+            os.makedirs(self.save_dir + "dataset/valid/")
 
         self.data_load(self.config.mode)
         self.num_batches = len(self.train_loader)
@@ -84,6 +96,7 @@ class Trainer:
         # tensorboard
         self.writer = SummaryWriter("trainlog/")
         self.valid_times = 0  # increased when validation called
+
 
     def model_selection(self):
         if self.config.model_name == "resnet18":
@@ -224,16 +237,18 @@ class Trainer:
                 else:
                     print("Wrong Augmentation Command!")
 
-            train_seg = self.config.train_batch + 50
-            print("==> train seg:", train_seg)
-            print("==> valid seg: ", self.seg_num)
+            print("==> train seg:", self.train_seg)
+            print("==> valid seg: ", self.valid_seg)
             print("==> train batch:", self.config.train_batch)
+            print("==> valid batch:", self.valid_seg)
+            print()
+            
             t = MIDIDataset(
                 train=True,  # newly added
                 txt_file=self.config.load_path + "train.txt",  # split path + txt
                 classes=self.label_num,
                 omit=self.config.omit,  # str
-                seg_num=train_seg,
+                seg_num=self.train_seg,
                 age=self.config.age,
                 transform=self.config.transform,
                 transpose_rng=transpose_rng,
@@ -243,43 +258,37 @@ class Trainer:
                 txt_file=self.config.load_path + "valid.txt",
                 classes=self.label_num,
                 omit=self.config.omit,
-                seg_num=self.seg_num,
+                seg_num=self.valid_seg,
                 age=self.config.age,
                 transform=None,
             )
 
             # create batch
-            # self.train_loader = DataLoader(
-            # 	t, batch_size=self.config.train_batch, shuffle=True
-            # )
-            # self.valid_loader = DataLoader(
-            # 	v, batch_size=self.config.valid_batch, shuffle=False
-            # )
             self.train_loader = DataLoader(
                 t, batch_size=self.config.train_batch, shuffle=True
             )
-            self.valid_loader = DataLoader(v, batch_size=self.seg_num, shuffle=False)
+            self.valid_loader = DataLoader(v, batch_size=self.valid_seg, shuffle=False)
 
             ###################### Loader for base training #############################
 
             # save train_loader & valid_loader
             if self.config.save_trn:
                 torch.save(
-                    self.train_loader, self.config.save_path + "train/train_loader.pt",
+                    self.train_loader, self.save_dir + "dataset/train/train_loader.pt",
                 )
                 print("train_loader saved!")
                 torch.save(
-                    self.valid_loader, self.config.save_path + "valid/valid_loader.pt",
+                    self.valid_loader, self.save_dir + "dataset/valid/valid_loader.pt",
                 )
                 print("valid_loader saved!")
 
                 # load train_loader & valid_loader (to check whether well saved)
                 self.train_loader = torch.load(
-                    self.config.save_path + "train/train_loader.pt",
+                    self.save_dir + "dataset/train/train_loader.pt",
                 )
                 print("train_loader loaded!")
                 self.valid_loader = torch.load(
-                    self.config.save_path + "valid/valid_loader.pt",
+                    self.save_dir + "dataset/valid/valid_loader.pt",
                 )
                 print("valid_loader loaded!")
 
@@ -415,8 +424,6 @@ class Trainer:
                 if int(self.input_shape[0]) == 1:
                     # if torch.sum(train_in[:,1:,:,:]) < torch.sum(train_in[:,:1,:,:]): print("1 is onset")
                     train_in = train_in[:, 1:, :, :]  # note channel
-                    # print(train_in.shape)
-                    # print(train_out.shape)
 
                 ################################################################
 
@@ -556,7 +563,7 @@ class Trainer:
                                     "loss": avg_valloss,
                                     "acc": avg_valacc,
                                 },
-                                self.config.model_save_path
+                                self.save_dir + "model/"
                                 + self.config.model_name
                                 + "_valloss_"
                                 + str(float(avg_valloss))
@@ -566,43 +573,43 @@ class Trainer:
                             )
                             print("model saved!")
 
-                elif mode == "advtrain":
-                    print(
-                        """epoch: {}/{} | trn loss: {:.4f} | trn acc: {:.2f}%| lr: {:.6f} |
-	val_TandAT loss: {:.4f} | val_TandAT acc: {:.2f}% |
-	val_T loss: {:.4f} | val_T acc: {:.2f}% """.format(
-                            epoch + 1,
-                            self.config.epochs,
-                            trn_running_loss / self.num_batches,
-                            trn_acc / self.num_batches,
-                            lr,
-                            avg_valloss_1,
-                            avg_valacc_1,
-                            avg_valloss_2,
-                            avg_valacc_2,
-                        )
-                    )
+ #                elif mode == "advtrain":
+ #                    print(
+ #                        """epoch: {}/{} | trn loss: {:.4f} | trn acc: {:.2f}%| lr: {:.6f} |
+	# val_TandAT loss: {:.4f} | val_TandAT acc: {:.2f}% |
+	# val_T loss: {:.4f} | val_T acc: {:.2f}% """.format(
+ #                            epoch + 1,
+ #                            self.config.epochs,
+ #                            trn_running_loss / self.num_batches,
+ #                            trn_acc / self.num_batches,
+ #                            lr,
+ #                            avg_valloss_1,
+ #                            avg_valacc_1,
+ #                            avg_valloss_2,
+ #                            avg_valacc_2,
+ #                        )
+ #                    )
 
-                    # save model
-                    if True:  # avg_valloss_1 < min_valloss:
-                        min_valloss = avg_valloss_1
-                        if self.config.save_trn:
-                            torch.save(
-                                {
-                                    "epoch": epoch,
-                                    "model.state_dict": self.model.state_dict(),
-                                    "loss": avg_valloss_1,
-                                    "acc": avg_valacc_1,
-                                },
-                                self.config.model_save_path
-                                + self.config.model_name
-                                + "_val_TandAT_loss_"
-                                + str(float(avg_valloss_1))
-                                + "_acc_"
-                                + str(float(avg_valacc_1))
-                                + ".pt",
-                            )
-                            print("model saved!")
+ #                    # save model
+ #                    if True:  # avg_valloss_1 < min_valloss:
+ #                        min_valloss = avg_valloss_1
+ #                        if self.config.save_trn:
+ #                            torch.save(
+ #                                {
+ #                                    "epoch": epoch,
+ #                                    "model.state_dict": self.model.state_dict(),
+ #                                    "loss": avg_valloss_1,
+ #                                    "acc": avg_valacc_1,
+ #                                },
+ #                                self.config.model_save_path
+ #                                + self.config.model_name
+ #                                + "_val_TandAT_loss_"
+ #                                + str(float(avg_valloss_1))
+ #                                + "_acc_"
+ #                                + str(float(avg_valacc_1))
+ #                                + ".pt",
+ #                            )
+ #                            print("model saved!")
 
         # print best valid f1 score
         print()
@@ -676,7 +683,7 @@ class Trainer:
                 val_softmax = torch.softmax(val_pred, dim=1)
                 batch_confidence = torch.sum(val_softmax, dim=0)  # =1
                 batch_confidence = torch.div(
-                    batch_confidence, self.seg_num
+                    batch_confidence, self.valid_seg
                 )  # avg value
                 # print("confidence: ")
                 # print(batch_confidence)
