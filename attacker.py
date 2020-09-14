@@ -373,8 +373,8 @@ class Attacker:
 
         # NON ZERO COLUMN ATTACK
         # sign_data_grad = data_grad.sign()
-        pos_data_grad = torch.clamp(data_grad, min=0, max=128)
-        perturbed_input = data.detach().clone() #copy
+        pos_data_grad = torch.clamp(data_grad, min=0, max=1)
+        perturbed_input = data.detach().clone() #copy data
         nonzero_x = torch.unique(torch.nonzero(perturbed_input[0][1]))
 
         for column in nonzero_x:  # nonzero column
