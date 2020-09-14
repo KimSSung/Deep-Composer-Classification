@@ -301,85 +301,63 @@ class Attacker:
         return batch_prediction
 
     def generate(self, atk, data, data_grad, init_out, eps):
-        if atk == "fgsm":
-            attack = self.fgsm(data, data_grad, eps)
+        if atk == "random":
+            attack = self.random(data, eps)
+        elif atk == "fgsm":
+            attack = self.fgsm_original(data, data_grad, eps)
+        elif atk == "fgsm_nonzero":
+            attack = self.fgsm_nonzero(data, data_grad, eps)
         elif atk == "deepfool":
             attack = self.deepfool(data, init_out, self.config.max_iter)
-        elif atk == "random":
-            attack = self.random(data, self.epsilons)
-        elif atk == "test":  # for testing new attacks
-            attack = self.test_attack(data, data_grad, eps)
+        elif atk == "notes_by_col":
+            attack = self.notes_by_col(data,data_grad)
         elif atk == "chord":
             attack = self.chord_attack(data, data_grad, vel=40)
         else:
-            raise Exception("Type error. It should be one of (fgsm, deepfool, random)")
+            raise Exception("Type error. Please use valid attack names")
         return attack
 
-    def test_attack(self, data, data_grad, eps):
+    def random(self, data, eps):
+        # no grad, completely random attack
+        rndarray = torch.randint(2, (400, 128)).to(self.device) #random cells
+        perturbed_input = data + 128 * eps * rndarray
 
-        perturbed_input = torch.clamp(data_grad, 0, 128)  # remove negative grads
-        np_input = perturbed_input.cpu().numpy()  # 400 x 128
-        np_input = np_input[0][1]
-        # print(np.shape(np_input))  # 400 , 128
-
-        # # option1
-        # max_vel, min_vel = (
-        #     np.max(np_input),
-        #     np.min(np_input[np_input > 0]),
-        # )  # single scalar
-        # # print("{}, {}".format(max_vel, min_vel))
-        # nzero = np.nonzero(np_input)
-        # for i, (x, y) in enumerate(zip(nzero[0], nzero[1])):
-        #     new_vel = (np_input[x][y] - min_vel) / (max_vel - min_vel)  # 0-1
-        #     new_vel *= 128
-        #     perturbed_input[0][1][x][y] = int(new_vel)
-        # # print(new_vel)
-        # print(perturbed_input[0][1])
-
-        # option2
-        # max_vel = np.max(np_input)
-        # perturbed_input[0][1] = torch.from_numpy(np_input // max_vel * 128)
-        # # print(perturbed_input[0][1])
-        # # perturbed_input[0][1] *= 128
-        # print(torch.nonzero(perturbed_input[0][1], as_tuple=True))
-
-        # option3
-        sign_data_grad = data_grad.sign()
-        perturbed_input = torch.clamp(sign_data_grad, 0, 1)  # remove negative grads
-        perturbed_input = torch.mul(perturbed_input, 70)
-        # print(perturbed_input)
-
-        perturbed_input = torch.clamp(perturbed_input, 0, 128)
+        perturbed_input = torch.clamp(perturbed_input, min=0, max=128)
         return perturbed_input
 
-    def fgsm(self, data, data_grad, eps):
-        # ORIGINAL FGSM
-        # sign_data_grad = data_grad.sign()
-        # perturbed_input = data + eps * sign_data_grad #0-1
-        # perturbed_input = torch.clamp(perturbed_input, 0, 127)
-
-        # NON ZERO ATTACK
-        # sign_data_grad = data_grad.sign()
-        # indices = torch.nonzero(data[0][1])  # only attack channel[1]
-        # perturbed_input = data + 0 * sign_data_grad
-        # for index in indices:
-        #     x, y = index[0], index[1]
-        #     orig_vel = int(data[0][1][x][y].item())  # int
-        #     att_sign = int(sign_data_grad[0][1][x][y].item())
-        #     if att_sign != 0:  # meaningless -> almost all nonzero
-        #         scaled_att_vel = orig_vel / 128 + att_sign * eps
-        #         perturbed_input[0][1][x][y] = max(0, min(128 * scaled_att_vel, 128))
-        #         # clamp
-
-        # NON ZERO COLUMN ATTACK
-        # sign_data_grad = data_grad.sign()
-        pos_data_grad = torch.clamp(data_grad, min=0, max=1)
-        perturbed_input = data.detach().clone() #copy data
+    def notes_by_col(self, data, data_grad):
+        pos_data_grad = torch.clamp(data_grad, min=0) # positive values
+        perturbed_input = data.detach().clone()  # copy data
         nonzero_x = torch.unique(torch.nonzero(perturbed_input[0][1]))
 
         for column in nonzero_x:  # nonzero column
-            idx = torch.topk(pos_data_grad[0][1][column], k=self.config.col_notes, dim=0)[1] #top k gradients
+            idx = torch.topk(pos_data_grad[0][1][column], k=self.config.col_notes, dim=0)[1]  # top k gradients
             perturbed_input[0][1][column][idx] += 70
+
+        perturbed_input = torch.clamp(perturbed_input, min=0, max=128)
+        return perturbed_input
+
+    def fgsm_original(self, data, data_grad, eps):
+        sign_data_grad = data_grad.sign()
+        perturbed_input = data / 128  # normalize 0-1
+        perturbed_input = perturbed_input + eps * sign_data_grad
+        perturbed_input = perturbed_input * 128  # amplify back to 0-128
+
+        perturbed_input = torch.clamp(perturbed_input, min=0, max=128)
+        return perturbed_input
+
+    def fgsm_nonzero(self, data, data_grad, eps):
+        sign_data_grad = data_grad.sign()
+        indices = torch.nonzero(data[0][1])  # only attack channel[1]
+        perturbed_input = data + 0 * sign_data_grad
+        for index in indices:
+            x, y = index[0], index[1]
+            orig_vel = int(data[0][1][x][y].item())  # int
+            att_sign = int(sign_data_grad[0][1][x][y].item())
+            if att_sign != 0:  # meaningless -> almost all nonzero
+                scaled_att_vel = orig_vel / 128 + att_sign * eps
+                perturbed_input[0][1][x][y] = max(0, min(128 * scaled_att_vel, 128))
+                # clamp
 
         perturbed_input = torch.clamp(perturbed_input, min=0, max=128)
         return perturbed_input
@@ -486,13 +464,6 @@ class Attacker:
         )
         return torch.clamp(perturbed_input, min=0, max=128)
 
-    def random(self, data, eps):
-        # TODO: no grad, completely random attack
-        return
-
-    def tempo(self, data):
-        # TODO: tempo attack is optional, implement if necessary
-        return
 
     def save_attack(self, orig, attack, idx, path, eps):
         save_dir = (
