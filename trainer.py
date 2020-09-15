@@ -33,7 +33,7 @@ from tools.transformation import ToTensor, Segmentation, Transpose, TempoStretch
 import numpy as np
 import matplotlib.pyplot as plt
 
-from torch.utils.tensorboard import SummaryWriter
+# from torch.utils.tensorboard import SummaryWriter
 import os
 
 class Trainer:
@@ -76,7 +76,7 @@ class Trainer:
 
         # Define model
         self.model = self.model_selection()
-        # self.model = nn.DataParallel(self.model)
+        self.model = nn.DataParallel(self.model)
         self.model.cuda()
 
         self.criterion = nn.CrossEntropyLoss()
@@ -94,7 +94,7 @@ class Trainer:
         # self.scheduler = lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min',factor=0.5,patience=10,verbose=True) #0.5 best for midi370
 
         # tensorboard
-        self.writer = SummaryWriter("trainlog/")
+        # self.writer = SummaryWriter("trainlog/")
         self.valid_times = 0  # increased when validation called
 
 
@@ -487,10 +487,10 @@ class Trainer:
 
             # TensorBoard
             # record running loss
-            self.writer.add_scalar(
-                "training loss", trn_running_loss / self.num_batches, epoch
-            )
-            self.writer.add_scalar("training acc", w_f1score, epoch)
+            # self.writer.add_scalar(
+            #     "training loss", trn_running_loss / self.num_batches, epoch
+            # )
+            # self.writer.add_scalar("training acc", w_f1score, epoch)
 
             ################## VALID ####################
             val_term = 10
@@ -769,8 +769,8 @@ class Trainer:
 
             # Valid TensorBoard
             # record running loss
-            self.writer.add_scalar("valid loss", avg_valloss, self.valid_times)
-            self.writer.add_scalar("valid acc", w_f1score, self.valid_times)
+            # self.writer.add_scalar("valid loss", avg_valloss, self.valid_times)
+            # self.writer.add_scalar("valid acc", w_f1score, self.valid_times)
 
             if self.best_valid[2] < w_f1score:
                 self.best_valid = [val_acc, avg_valloss, w_f1score, precision, recall]

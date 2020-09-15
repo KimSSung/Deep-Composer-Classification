@@ -15,7 +15,7 @@ from sklearn.metrics import precision_recall_fscore_support
 
 # to import from sibling folders
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-from .data_loader import MIDIDataset
+from tools.data_loader import MIDIDataset
 
 
 from models.wresnet import resnet18, resnet34, resnet101, resnet152, resnet50
@@ -171,17 +171,17 @@ class ConfusionMatrix:
         #                 / Rachmaninoff / Scriabin => [0, 1, 3, 5, 7, 10, 11]
         axis_labels = np.array(
             [
-                "Scriab",
-                "Debus",
-                "Scarl",
-                "Liszt",
-                "Schube",
+                "Scri",
+                "Debu",
+                "Scar",
+                "Lisz",
+                "Schu",
                 "Chop",
                 "Bach",
-                "Brahm",
-                "Haydn",
-                "Beethov",
-                "Schum",
+                "Brah",
+                "Hayd",
+                "Beet",
+                "Schu",
                 "Rach",
                 "Moza",
             ]
@@ -205,7 +205,8 @@ class ConfusionMatrix:
             print(">>> Confusion matrix, without normalization")
             val_format = "d"
 
-        sns.heatmap(
+        sns.set(font_scale=0.5)
+        ax = sns.heatmap(
             conf,
             annot=True,
             annot_kws={"size": 7},
@@ -215,17 +216,19 @@ class ConfusionMatrix:
             cmap=plt.cm.bone,
         )
 
-        plt.title("Confusion Matrix => [x : Pred, y : True]")
-        plt.savefig("confmat.png", dpi=700)
+        plt.title("Confusion Matrix, with normalization", fontsize=10)
+        plt.xlabel("Predicted label", fontsize=8)
+        plt.ylabel("True label", fontsize=8)
+        plt.savefig("confmat.png", dpi=1000)
 
 
 # Testing
-# if __name__ == "__main__":
-#
-#     # for base train
-#
-#     temp = ConfusionMatrix(label_num=13, seg_num=90, sort=False, normalize=True)
-#     temp.run()
+if __name__ == "__main__":
+
+    # for base train
+
+    temp = ConfusionMatrix(label_num=13, seg_num=90, sort=True, normalize=True)
+    temp.run()
 
 # for attacker: only generate matrix example
 # not use label_num & seg_num
