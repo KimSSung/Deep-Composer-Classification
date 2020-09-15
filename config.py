@@ -119,7 +119,7 @@ parser.add_argument(
 parser.add_argument(
     "--train_batch", default=40, type=int, help="Batch size for training"
 )
-parser.add_argument("--valid_batch", default=40, type=int, help="Batch size for valid.")
+# parser.add_argument("--valid_batch", default=40, type=int, help="Batch size for valid.")
 
 parser.add_argument("--gpu", default="0,1,2,3", type=str, help="GPU id to use.")
 
