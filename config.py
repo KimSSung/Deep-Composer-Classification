@@ -146,19 +146,21 @@ parser.add_argument(
     type=lambda x:bool(util.strtobool(x)),
     help="attack on original dataset? (default: True)",
 )
-parser.add_argument(
-    "--col_notes",
-    type=int,
-    default=5,
-    help="max # of notes to add each column"
-)
 # 3. specific attack related
+#fgsm
 parser.add_argument(
     "--epsilons",
     default="0.0",
     type=str,
     help="list of epsilons 'ep0, ep1, ep2..' seperated by ,",
 )
+parser.add_argument(
+    "--variable",
+    type=float,
+    default=None,
+    help="Depends on attack type: (randomness ctrl / max # of notes in column / uniform velocity value)"
+)
+#deepfool
 parser.add_argument(
     "--max_iter", default=10, type=int, help="max iterations for deepfool attack",
 )
@@ -168,7 +170,6 @@ parser.add_argument(
 parser.add_argument("--plot", default=False, type=lambda x:bool(util.strtobool(x)), help="draw plot?")
 parser.add_argument(
     "--confusion", default=True, type=lambda x:bool(util.strtobool(x)), help="draw confusion matrix?")
-# parser.add_argument('--feature', dest='feature', type=lambda x:bool(distutils.util.strtobool(x)))
 
 ##spliter
 # use --input_save_path

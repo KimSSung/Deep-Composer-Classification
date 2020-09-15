@@ -50,7 +50,8 @@ class Attacker:
         self.date = date.today().strftime("%m-%d") + datetime.now().strftime("-%H-%M")
         self.epsilons = [float(e) for e in self.config.epsilons.split(",")]
         print("==> ATTACK {}".format(self.config.attack_type), end=' ')
-        print(self.epsilons)
+        if self.config.attack_type == "fgsm": print("eps: ", self.epsilons)
+        else: print("var:", self.config.variable)
         print("==> TARGET LABEL: {}".format(self.config.target_label))
         print("==> SAVE {} at {}".format(self.config.save_atk, self.date))
 
@@ -302,36 +303,38 @@ class Attacker:
 
     def generate(self, atk, data, data_grad, init_out, eps):
         if atk == "random":
-            attack = self.random(data, eps)
+            attack = self.random(data, rndness=self.config.variable)
         elif atk == "fgsm":
             attack = self.fgsm_original(data, data_grad, eps)
         elif atk == "fgsm_nonzero":
             attack = self.fgsm_nonzero(data, data_grad, eps)
         elif atk == "deepfool":
             attack = self.deepfool(data, init_out, self.config.max_iter)
-        elif atk == "notes_by_col":
-            attack = self.notes_by_col(data,data_grad)
+        elif atk == "column":
+            attack = self.notes_by_col(data,data_grad, notes=int(self.config.variable))
         elif atk == "chord":
-            attack = self.chord_attack(data, data_grad, vel=40)
+            attack = self.chord_attack(data, data_grad, dur=int(self.config.variable))
         else:
             raise Exception("Type error. Please use valid attack names")
         return attack
 
-    def random(self, data, eps):
+    def random(self, data, rndness, vel=40):
         # no grad, completely random attack
-        rndarray = torch.randint(2, (400, 128)).to(self.device) #random cells
-        perturbed_input = data + 128 * eps * rndarray
+        factor = torch.full((400,128), rndness)
+        rndarray = torch.bernoulli(factor).to(self.device)
+        perturbed_input = data.detach().clone()  # copy data
+        perturbed_input[0][1] = data[0][1] + vel * rndarray
 
         perturbed_input = torch.clamp(perturbed_input, min=0, max=128)
         return perturbed_input
 
-    def notes_by_col(self, data, data_grad):
+    def notes_by_col(self, data, data_grad, notes):
         pos_data_grad = torch.clamp(data_grad, min=0) # positive values
         perturbed_input = data.detach().clone()  # copy data
         nonzero_x = torch.unique(torch.nonzero(perturbed_input[0][1]))
 
         for column in nonzero_x:  # nonzero column
-            idx = torch.topk(pos_data_grad[0][1][column], k=self.config.col_notes, dim=0)[1]  # top k gradients
+            idx = torch.topk(pos_data_grad[0][1][column], k=notes, dim=0)[1]  # top k gradients
             perturbed_input[0][1][column][idx] += 70
 
         perturbed_input = torch.clamp(perturbed_input, min=0, max=128)
@@ -361,6 +364,20 @@ class Attacker:
 
         perturbed_input = torch.clamp(perturbed_input, min=0, max=128)
         return perturbed_input
+
+    def chord_attack(self, data, data_grad, dur, vel=40):
+        # gpu tensor to cpu numpy
+        data1 = data.detach().cpu().clone().numpy()
+        data_grad1 = data_grad.detach().cpu().clone().numpy()
+
+        chords = Detector(data1, dur).run()
+        signs = np.sign(data_grad1)
+        pos_signs = np.where(signs < 0.0, 0.0, signs)
+        perturbed_input = data1 + np.multiply(chords, pos_signs * vel)
+
+        # cpu numpy to gpu tensor
+        perturbed_input = torch.tensor(perturbed_input, dtype=torch.float).to(self.device)
+        return torch.clamp(perturbed_input, min=0, max=128)
 
     def deepfool(self, data, model_out, max_iter):
         indices = torch.nonzero(data)
@@ -433,36 +450,6 @@ class Attacker:
 
         print("")
         return perturbed_input
-
-    def chord_attack(self, data, data_grad, vel=40):
-        # gpu tensor to cpu numpy
-        data1 = data.detach().cpu().clone().numpy()
-        data_grad1 = data_grad.detach().cpu().clone().numpy()
-
-        chords = Detector(data1).run()
-        signs = np.sign(data_grad1)
-        pos_signs = np.where(signs < 0.0, 0.0, signs)
-        perturbed_input = data1 + np.multiply(chords, pos_signs * vel)
-
-        # print(chords.shape)
-        # print((pos_signs*vel).shape)
-        temp = np.multiply(chords, pos_signs*vel)[0][1][:][:]
-        # print(temp.shape)
-        # print('--------------------')
-        with open("./notes.txt", 'a') as f:
-            f.write('[ ')
-            for row in temp:
-                f.write(str(np.count_nonzero(row)))
-                f.write(', ')
-            f.write(']\n\n')
-
-        # print(perturbed_input[perturbed_input > 0])
-
-        # cpu numpy to gpu tensor
-        perturbed_input = torch.tensor(perturbed_input, dtype=torch.float).to(
-            self.device
-        )
-        return torch.clamp(perturbed_input, min=0, max=128)
 
 
     def save_attack(self, orig, attack, idx, path, eps):

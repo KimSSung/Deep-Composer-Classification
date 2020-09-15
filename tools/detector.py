@@ -9,14 +9,14 @@ class Detector:
     Output: Marked Indices Numpy (where should be attack)
     """
 
-    def __init__(self, input_npy):
+    def __init__(self, input_npy, dur):
 
         self.SONG = input_npy.shape[0]
         self.TRACK = input_npy.shape[1]
         self.ROW = input_npy.shape[2]
         self.COL = input_npy.shape[3]
         self.LIMIT_NOTE = 5
-        self.CHK_DURATION = 5
+        self.CHK_DURATION = dur
 
         self.load_data_path = ""
         self.input_npy = input_npy
