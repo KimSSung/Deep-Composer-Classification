@@ -314,6 +314,8 @@ class Attacker:
             attack = self.notes_by_col(data,data_grad, notes=int(self.config.variable))
         elif atk == "chord":
             attack = self.chord_attack(data, data_grad, dur=int(self.config.variable))
+        elif atk == "melody_no_change":
+            attack = self.melody_no_change(data, data_grad, dur=int(self.config.variable))
         else:
             raise Exception("Type error. Please use valid attack names")
         return attack
@@ -371,6 +373,30 @@ class Attacker:
         data_grad1 = data_grad.detach().cpu().clone().numpy()
 
         chords = Detector(data1, dur).run()
+        signs = np.sign(data_grad1)
+        pos_signs = np.where(signs < 0.0, 0.0, signs)
+        perturbed_input = data1 + np.multiply(chords, pos_signs * vel)
+
+        # cpu numpy to gpu tensor
+        perturbed_input = torch.tensor(perturbed_input, dtype=torch.float).to(self.device)
+        return torch.clamp(perturbed_input, min=0, max=128)
+
+    def last_nonzero(self, arr, axis, invalid_val=-1):
+        mask = arr != 0
+        val = arr.shape[axis] - np.flip(mask, axis=axis).argmax(axis=axis) - 1
+        return np.where(mask.any(axis=axis), val, invalid_val)
+
+    def melody_no_change(self, data, data_grad, dur, vel = 40):
+        data1 = data.detach().cpu().clone().numpy()
+        data_grad1 = data_grad.detach().cpu().clone().numpy()
+
+        melody_np = self.last_nonzero(data1[0][1], axis=1)
+        melody_np = melody_np.squeeze()
+        chords = Detector(data1, dur).run()
+        for time,melody_note in enumerate(melody_np):
+            if melody_note == -1:
+                continue
+            chords[0,1,time,melody_note+1:] = 0
         signs = np.sign(data_grad1)
         pos_signs = np.where(signs < 0.0, 0.0, signs)
         perturbed_input = data1 + np.multiply(chords, pos_signs * vel)
