@@ -124,8 +124,8 @@ class Spliter:
 
     def splits(self):
 
-        train_file = open(self.save_dir+"train.txt", "w")
-        valid_file = open(self.save_dir+"valid.txt", "w")
+        # train_file = open(self.save_dir+"train.txt", "w")
+        # valid_file = open(self.save_dir+"valid.txt", "w")
 
         midi_idxs = []
 
@@ -159,11 +159,11 @@ class Spliter:
                 if not self.config.age:  # Not Age
                     # Train
                     if this_midi_idx in midi_idxs[composer_idx]:
-                        train_file.write(midi_fold + "\n")
+                        # train_file.write(midi_fold + "\n")
                         total_train_midi += 1
                     # valid
                     else:
-                        valid_file.write(midi_fold + "\n")
+                        # valid_file.write(midi_fold + "\n")
                         total_valid_midi += 1
 
                 else:  # Age
@@ -176,11 +176,11 @@ class Spliter:
 
                     # Train
                     if this_midi_idx in midi_idxs[composer_idx]:
-                        train_file.write(midi_fold + "\n")
+                        # train_file.write(midi_fold + "\n")
                         total_train_midi += 1
                     # valid
                     else:
-                        valid_file.write(midi_fold + "\n")
+                        # valid_file.write(midi_fold + "\n")
                         total_valid_midi += 1
 
             composer_idx += 1
@@ -213,8 +213,8 @@ class Spliter:
         print("total train count:", total_train_midi)
         print("total valid count:", total_valid_midi)
 
-        train_file.close()
-        valid_file.close()
+        # train_file.close()
+        # valid_file.close()
 
 
 if __name__ == "__main__":

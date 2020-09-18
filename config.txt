@@ -1,18 +1,18 @@
 Parameters for basetrain:
 
 load_path = /data/split/
-save_path = /data/drum/res152/
+save_path = /data/drum/seg40/
 save_atk = False
 mode = basetrain
 composers = 13
-model_name = resnet152
+model_name = resnet50
 optim = SGD
 transform = None
 epochs = 100
-trn_seg = 90
-val_seg = 90
-train_batch = 90
-gpu = 0,1,2,3
+trn_seg = 40
+val_seg = 40
+train_batch = 40
+gpu = 2
 lr = 0.005
 save_trn = True
 target_label = None

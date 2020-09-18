@@ -21,7 +21,7 @@ from tools.data_loader import MIDIDataset
 from models.wresnet import resnet18, resnet34, resnet101, resnet152, resnet50
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
 
 class ConfusionMatrix:
@@ -205,21 +205,27 @@ class ConfusionMatrix:
             print(">>> Confusion matrix, without normalization")
             val_format = "d"
 
-        sns.set(font_scale=0.5)
+        sns.set(font_scale=0.7)
+        plt.figure(figsize=(6,6))
         ax = sns.heatmap(
             conf,
             annot=True,
-            annot_kws={"size": 7},
+            annot_kws={"size": 8},
             fmt=val_format,
             xticklabels=axis_labels,
             yticklabels=axis_labels,
             cmap=plt.cm.bone,
+            cbar=True,
+            linecolor='white',
+            linewidths=0.01
         )
+        ax.set_yticklabels(ax.get_yticklabels(), rotation=0, fontsize=7.5)
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=45, fontsize=7.5, rotation_mode='anchor', ha='right')
 
-        plt.title("Confusion Matrix, with normalization", fontsize=10)
-        plt.xlabel("Predicted label", fontsize=8)
-        plt.ylabel("True label", fontsize=8)
-        plt.savefig("confmat.png", dpi=1000)
+        plt.title("Confusion Matrix, with normalization", fontsize=12)
+        plt.xlabel("Predicted label", fontsize=10)
+        plt.ylabel("True label", fontsize=10)
+        plt.savefig("confmat.pdf", dpi=1000)
 
 
 # Testing
