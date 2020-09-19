@@ -1,18 +1,18 @@
 Parameters for basetrain:
 
 load_path = /data/split/
-save_path = /data/drum/res101/
+save_path = /data/drum/onsetO_2/
 save_atk = False
 mode = basetrain
 composers = 13
-model_name = resnet101
+model_name = resnet50
 optim = SGD
 transform = None
 epochs = 100
 trn_seg = 60
 val_seg = 60
 train_batch = 40
-gpu = 1
+gpu = 3
 lr = 0.005
 save_trn = True
 target_label = None

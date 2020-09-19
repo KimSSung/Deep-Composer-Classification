@@ -12,6 +12,7 @@ import numpy as np
 # score metric
 from sklearn.metrics import f1_score
 from sklearn.metrics import precision_recall_fscore_support
+from sklearn.metrics import classification_report
 
 # to import from sibling folders
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
@@ -21,7 +22,7 @@ from tools.data_loader import MIDIDataset
 from models.wresnet import resnet18, resnet34, resnet101, resnet152, resnet50
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 
 class ConfusionMatrix:
@@ -51,6 +52,25 @@ class ConfusionMatrix:
             "/data/drum/bestmodel/dataset/valid/valid_loader.pt"
         )
         print(">>> TEST LOADER LOADED.")
+
+
+        self.axis_labels = np.array(
+            [
+                "Scri",
+                "Debu",
+                "Scar",
+                "Lisz",
+                "F.Sch",
+                "Chop",
+                "Bach",
+                "Brah",
+                "Hayd",
+                "Beet",
+                "R.Sch",
+                "Rach",
+                "Moza",
+            ]
+        )
 
     def run(self):
         self.validation()
@@ -155,7 +175,10 @@ class ConfusionMatrix:
             print()
 
             # generate & save confusion matrix
-            self.generate_matrix(self.val_ground_truths, self.val_preds)
+            if self.bar:
+                self.draw_bar(self.val_ground_truths, self.val_preds)
+            else:
+                self.generate_matrix(self.val_ground_truths, self.val_preds)
 
     def generate_matrix(self, true, pred):
         # confusion matrix
@@ -163,38 +186,19 @@ class ConfusionMatrix:
         print(">>> CONFUSION MATRIX:")
         print(conf)
 
-        
-        # Sorting by age
+        # sorting by age
         # ['Scriab','Debus','Scarl','Liszt','Schube','Chop','Bach',
         #  'Brahm','Haydn','Beethov','Schum','Rach','Moza']
         # 1. Baroque: Scarlatti / Bach => [2, 6]
         # 2. Classical: Haydn / Mozart / Beethoven / Schubert => [4, 8, 9, 12]
         # 3. Romanticism: Schumann / Chopin / Liszt / Brahms / Debussy
         #                 / Rachmaninoff / Scriabin => [0, 1, 3, 5, 7, 10, 11]
-        axis_labels = np.array(
-            [
-                "Scri",
-                "Debu",
-                "Scar",
-                "Lisz",
-                "F.Sch",
-                "Chop",
-                "Bach",
-                "Brah",
-                "Hayd",
-                "Beet",
-                "R.Sch",
-                "Rach",
-                "Moza",
-            ]
-        )
-
         want_order = [2, 6, 4, 8, 9, 12, 0, 1, 3, 5, 7, 10, 11]
 
         if self.sort:
             print(">>> Sorting.....")
             conf = conf[want_order, :][:, want_order]
-            axis_labels = axis_labels[want_order]
+            self.axis_labels = self.axis_labels[want_order]
 
         val_format = ""  # heatmap print value format
         if self.normalize:
@@ -207,45 +211,61 @@ class ConfusionMatrix:
             print(">>> Confusion matrix, without normalization")
             val_format = "d"
 
-        if self.bar: #  bar chart
-            bar_values = []
-            for i in range(self.label_num):
-                bar_values.append(conf[i][i])
-            indices = range(len(bar_values))
 
-            plt.figure(figsize=(6,6))
-            plt.bar(indices, bar_values)
-            plt.yticks(indices, axis_labels, fontsize=8, rotation=45)
 
-            plt.title("Bar chart, with normalization", fontsize=12)
-            plt.xlabel("composers", fontsize=10)
-            plt.ylabel("accuracy", fontsize=10)
-            plt.savefig("barchart.pdf", dpi=1000)
+        sns.set(font_scale=0.7)
+        plt.figure(figsize=(6,6))
+        ax = sns.heatmap(
+            conf,
+            annot=True,
+            annot_kws={"size": 8},
+            fmt=val_format,
+            xticklabels=self.axis_labels,
+            yticklabels=self.axis_labels,
+            cmap=plt.cm.bone,
+            cbar=True,
+            linecolor='white',
+            linewidths=0.01
+        )
+        ax.set_yticklabels(ax.get_yticklabels(), rotation=0, fontsize=7.5)
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=45, fontsize=7.5, rotation_mode='anchor', ha='right')
 
-        else: # confusion matrix
-            sns.set(font_scale=0.7)
-            plt.figure(figsize=(6,6))
-            ax = sns.heatmap(
-                conf,
-                annot=True,
-                annot_kws={"size": 8},
-                fmt=val_format,
-                xticklabels=axis_labels,
-                yticklabels=axis_labels,
-                cmap=plt.cm.bone,
-                cbar=True,
-                linecolor='white',
-                linewidths=0.01
-            )
-            ax.set_yticklabels(ax.get_yticklabels(), rotation=0, fontsize=7.5)
-            ax.set_xticklabels(ax.get_xticklabels(), rotation=45, fontsize=7.5, rotation_mode='anchor', ha='right')
-
-            plt.title("Confusion Matrix, with normalization", fontsize=12)
-            plt.xlabel("Predicted label", fontsize=10)
-            plt.ylabel("True label", fontsize=10)
-            plt.savefig("confmat.pdf", dpi=1000)
+        plt.title("Confusion Matrix, with normalization", fontsize=12)
+        plt.xlabel("Predicted label", fontsize=10)
+        plt.ylabel("True label", fontsize=10)
+        plt.savefig("confmat.pdf", dpi=1000)
 
         
+    def draw_bar(self, true, pred):
+
+        print(">>> Drawing bar graph....")
+        # no sorting for bar graph
+        dic = classification_report(true, pred, target_names=self.axis_labels, output_dict=True)
+        
+        bar_values = []
+        for i in range(self.label_num):
+            # print(dic[self.axis_labels[i]]['f1-score'])
+            bar_values.append(round(dic[self.axis_labels[i]]['f1-score'], 2))
+
+        indices = range(len(bar_values))
+
+        fig, ax = plt.subplots(figsize=(12,9))
+        ax.bar(indices, bar_values, width=0.5, align="center")
+        for i in range(len(bar_values)):
+            plt.annotate('{0:03.2f}'.format(bar_values[i]), (-0.5 + i, bar_values[i] + 0.01), fontsize=20)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['bottom'].set_linewidth(False)
+        ax.spines['left'].set_linewidth(False)
+        plt.xticks(indices, self.axis_labels, fontsize=20, rotation=-45)
+        plt.setp(ax.get_yticklabels(), fontsize=20)
+
+        # plt.title("Bar chart, with normalization", fontsize=12)
+        # plt.xlabel("composers", fontsize=20)
+        plt.ylabel("F1 score", fontsize=20)
+        plt.grid(b=True, linewidth=0.1, axis='y')
+        # plt.subplots_adjust(left=0.125, right=0.9, bottom=0.1, top=0.9, wspace=0.2, hspace=0.2)
+        plt.savefig("barchart.pdf", dpi=1000)
 
 
 
