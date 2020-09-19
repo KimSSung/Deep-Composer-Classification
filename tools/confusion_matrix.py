@@ -25,7 +25,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
 
 class ConfusionMatrix:
-    def __init__(self, label_num=13, seg_num=90, sort=True, normalize=True):
+    def __init__(self, label_num=13, seg_num=90, sort=True, normalize=True, bar=False):
 
         self.label_num = label_num
         self.seg_num = seg_num
@@ -35,6 +35,7 @@ class ConfusionMatrix:
 
         self.sort = sort
         self.normalize = normalize
+        self.bar = bar
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = resnet50(2, self.label_num)
@@ -162,6 +163,7 @@ class ConfusionMatrix:
         print(">>> CONFUSION MATRIX:")
         print(conf)
 
+        
         # Sorting by age
         # ['Scriab','Debus','Scarl','Liszt','Schube','Chop','Bach',
         #  'Brahm','Haydn','Beethov','Schum','Rach','Moza']
@@ -175,13 +177,13 @@ class ConfusionMatrix:
                 "Debu",
                 "Scar",
                 "Lisz",
-                "Schu",
+                "F.Sch",
                 "Chop",
                 "Bach",
                 "Brah",
                 "Hayd",
                 "Beet",
-                "Schu",
+                "R.Sch",
                 "Rach",
                 "Moza",
             ]
@@ -205,27 +207,46 @@ class ConfusionMatrix:
             print(">>> Confusion matrix, without normalization")
             val_format = "d"
 
-        sns.set(font_scale=0.7)
-        plt.figure(figsize=(6,6))
-        ax = sns.heatmap(
-            conf,
-            annot=True,
-            annot_kws={"size": 8},
-            fmt=val_format,
-            xticklabels=axis_labels,
-            yticklabels=axis_labels,
-            cmap=plt.cm.bone,
-            cbar=True,
-            linecolor='white',
-            linewidths=0.01
-        )
-        ax.set_yticklabels(ax.get_yticklabels(), rotation=0, fontsize=7.5)
-        ax.set_xticklabels(ax.get_xticklabels(), rotation=45, fontsize=7.5, rotation_mode='anchor', ha='right')
+        if self.bar: #  bar chart
+            bar_values = []
+            for i in range(self.label_num):
+                bar_values.append(conf[i][i])
+            indices = range(len(bar_values))
 
-        plt.title("Confusion Matrix, with normalization", fontsize=12)
-        plt.xlabel("Predicted label", fontsize=10)
-        plt.ylabel("True label", fontsize=10)
-        plt.savefig("confmat.pdf", dpi=1000)
+            plt.figure(figsize=(6,6))
+            plt.bar(indices, bar_values)
+            plt.yticks(indices, axis_labels, fontsize=8, rotation=45)
+
+            plt.title("Bar chart, with normalization", fontsize=12)
+            plt.xlabel("composers", fontsize=10)
+            plt.ylabel("accuracy", fontsize=10)
+            plt.savefig("barchart.pdf", dpi=1000)
+
+        else: # confusion matrix
+            sns.set(font_scale=0.7)
+            plt.figure(figsize=(6,6))
+            ax = sns.heatmap(
+                conf,
+                annot=True,
+                annot_kws={"size": 8},
+                fmt=val_format,
+                xticklabels=axis_labels,
+                yticklabels=axis_labels,
+                cmap=plt.cm.bone,
+                cbar=True,
+                linecolor='white',
+                linewidths=0.01
+            )
+            ax.set_yticklabels(ax.get_yticklabels(), rotation=0, fontsize=7.5)
+            ax.set_xticklabels(ax.get_xticklabels(), rotation=45, fontsize=7.5, rotation_mode='anchor', ha='right')
+
+            plt.title("Confusion Matrix, with normalization", fontsize=12)
+            plt.xlabel("Predicted label", fontsize=10)
+            plt.ylabel("True label", fontsize=10)
+            plt.savefig("confmat.pdf", dpi=1000)
+
+        
+
 
 
 # Testing
@@ -233,7 +254,7 @@ if __name__ == "__main__":
 
     # for base train
 
-    temp = ConfusionMatrix(label_num=13, seg_num=90, sort=True, normalize=True)
+    temp = ConfusionMatrix(label_num=13, seg_num=90, sort=True, normalize=True, bar=True)
     temp.run()
 
 # for attacker: only generate matrix example
