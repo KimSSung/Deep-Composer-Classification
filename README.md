@@ -10,7 +10,7 @@ Classification task, whether it's concerning genre, style, era, or composer as e
 > * Python >= 3.6.9
 > * PyTorch = 1.4.0
 > * torchvision = 
-> * pymidi_csv = 1.10.0
+> * py_midicsv = 1.10.0
 > * numpy = 1.18.1
 > * sklearn = 
 > * matplotlib = 3.1.3
