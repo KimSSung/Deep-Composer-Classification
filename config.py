@@ -130,6 +130,10 @@ parser.add_argument(
     "--save_trn", type=lambda x:bool(util.strtobool(x)), default=True, help="Save both model & loader?"
 )
 
+parser.add_argument(
+    "--onset", type=lambda x:bool(util.strtobool(x)), default=True, help="use Onset channel"
+)
+
 
 ##attack parameters
 

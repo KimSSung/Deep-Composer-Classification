@@ -37,17 +37,17 @@ import matplotlib.pyplot as plt
 import os
 
 class Trainer:
-    def __init__(self, args):
+    def __init__(self, args, save_dir):
         self.config = args
 
         # 0 : acc / 1: loss / 2: f1 / 3: precision / 4: recall
         self.best_valid = [-1.0, 30000.0, -1.0, [], []]
 
-        # if onset = on
-        # self.input_shape = (2, 400, 128)
-        # else
-        self.input_shape = (1, 400, 128)
-        
+        if self.config.onset is True:
+            self.input_shape = (2, 400, 128)
+        elif self.config.onset is False:
+            self.input_shape = (1, 400, 128)
+
         self.valid_seg = self.config.val_seg
         self.train_seg = self.config.trn_seg
 
@@ -58,25 +58,25 @@ class Trainer:
             self.omitlist = self.config.omit.split(",")  # ['2', '5']. str list.
 
         self.label_num = self.config.composers - len(self.omitlist)
-        print("==> Total label # :", self.label_num)
-        print()
+        print("\n==> Total label # :", self.label_num)
         # if age == True ==> label: 0, 1, 2
         if self.config.age:
             self.label_num = 3
 
         # save dir
-        self.save_dir = self.config.save_path # /data/drum/
-        if not os.path.exists(self.save_dir):
-            os.makedirs(self.save_dir + "model/")
-            os.makedirs(self.save_dir + "dataset/train/")
-            os.makedirs(self.save_dir + "dataset/valid/")
+        self.save_dir = save_dir
+        print("==> SAVE at {}\n".format(self.save_dir))
+        # if not os.path.exists(self.save_dir):
+        os.makedirs(self.save_dir + "model/")
+        os.makedirs(self.save_dir + "dataset/train/")
+        os.makedirs(self.save_dir + "dataset/valid/")
 
         self.data_load(self.config.mode)
         self.num_batches = len(self.train_loader)
 
         # Define model
         self.model = self.model_selection()
-        # self.model = nn.DataParallel(self.model)
+        self.model = nn.DataParallel(self.model)
         self.model.cuda()
 
         self.criterion = nn.CrossEntropyLoss()
@@ -86,7 +86,6 @@ class Trainer:
         self.optimizer = self.optim_selection()
         print()
         print("==> Optim: ", self.optimizer)
-        print()
 
         self.scheduler = lr_scheduler.CosineAnnealingLR(
             self.optimizer, T_max=self.config.epochs
@@ -613,20 +612,23 @@ class Trainer:
 
         # print best valid f1 score
         print()
-        print("######## Best Valid F1-score environ #########")
+        print("######## Best F1-score #########")
         print(
             "Accuracy: {:.4f} | Loss: {:.4f}"
             "".format(self.best_valid[0], self.best_valid[1])
         )
-        print("F1-score: {:.4f}".format(self.best_valid[2]))
-        print("Precision:", self.best_valid[3])
-        print("Recall:", self.best_valid[4])
+        print("F1-score: %.4f" % (self.best_valid[2]))
+        print("{:<30}{:<}".format("Precision", "Recall"))
+        for p, r in zip(self.best_valid[3], self.best_valid[4]):
+            print("{:<30}{:<}".format(p, r))
         print()
+
 
         # loss
         sorted_loss = sorted(loss_list.items(), key=lambda x: x[1])
-        print("Sorted loss list:")
-        print(sorted_loss)  # epoch-loss
+        print("######## Sorted Loss List #########")
+        for loss_item in sorted_loss:
+            print("{}th : {}".format(loss_item[0], loss_item[1].item())) #epoch-loss
 
     def valid(self, valid_loader, model):
         #############################

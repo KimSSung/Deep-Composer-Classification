@@ -12,6 +12,8 @@ from generator import Generator
 from converter import Converter
 from spliter import Spliter
 
+from datetime import date, datetime
+
 # seed
 def set_seed(seed):
     random.seed(seed)  # python random module
@@ -24,13 +26,13 @@ def set_seed(seed):
     return
 
 
-def main(args):
+def main(args, save_dir):
 
     set_seed(333)
 
     # mode: [basetrain / advtrain / attack / generate]
     if args.mode == "basetrain" or args.mode == "advtrain":
-        net = Trainer(args)
+        net = Trainer(args, save_dir)
         net.train(args.mode)
 
     elif args.mode == "attack":
@@ -59,8 +61,12 @@ def main(args):
 if __name__ == "__main__":
 
     config, unparsed = get_config()
+    run_time = date.today().strftime("%m-%d") + datetime.now().strftime("-%H-%M")
+    save_dir = config.save_path + run_time + "/"
     # store configuration
-    with open("config.txt", "w") as f:
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    with open(save_dir +  "config.txt", "w") as f:
         f.write("Parameters for " + config.mode + ":\n\n")
         for arg in vars(config):
             argname = arg
@@ -71,4 +77,4 @@ if __name__ == "__main__":
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = config.gpu
 
-    main(config)
+    main(config, save_dir)
