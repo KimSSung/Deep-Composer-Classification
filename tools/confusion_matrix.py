@@ -252,13 +252,14 @@ class ConfusionMatrix:
         fig, ax = plt.subplots(figsize=(12,9))
         ax.bar(indices, bar_values, width=0.5, align="center")
         for i in range(len(bar_values)):
-            plt.annotate('{0:03.2f}'.format(bar_values[i]), (-0.5 + i, bar_values[i] + 0.01), fontsize=20)
+            plt.annotate('{0:03.3f}'.format(bar_values[i]).lstrip('0'), (-0.5 + i, bar_values[i] + 0.01), fontsize=20)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.spines['bottom'].set_linewidth(False)
         ax.spines['left'].set_linewidth(False)
         plt.xticks(indices, self.axis_labels, fontsize=20, rotation=-45)
         plt.setp(ax.get_yticklabels(), fontsize=20)
+        plt.ylim([0.5, 1.01])
 
         # plt.title("Bar chart, with normalization", fontsize=12)
         # plt.xlabel("composers", fontsize=20)

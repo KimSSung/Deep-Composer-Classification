@@ -44,9 +44,9 @@ class Trainer:
         self.best_valid = [-1.0, 30000.0, -1.0, [], []]
 
         # if onset = on
-        self.input_shape = (2, 400, 128)
+        # self.input_shape = (2, 400, 128)
         # else
-        # self.input_shape = (1, 400, 128)
+        self.input_shape = (1, 400, 128)
         
         self.valid_seg = self.config.val_seg
         self.train_seg = self.config.trn_seg
