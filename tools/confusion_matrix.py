@@ -24,8 +24,9 @@ from models.wresnet import resnet18, resnet34, resnet101, resnet152, resnet50
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
+LOAD_PATH = "/data/bestmodel_85/"
 
-class ConfusionMatrix:
+class Visualization:
     def __init__(self, label_num=13, seg_num=90, sort=True, normalize=True, bar=True, barmode=None):
 
         self.label_num = label_num
@@ -41,16 +42,19 @@ class ConfusionMatrix:
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = resnet50(2, self.label_num)
-        # model = nn.DataParallel(model)
+        
+        # data parallel
+        self.model = nn.DataParallel(self.model)
+        
         self.model.cuda()
 
-        model_fname = os.listdir("/data/drum/bestmodel/model/")
-        checkpoint = torch.load("/data/drum/bestmodel/model/" + model_fname[0])
+        model_fname = os.listdir(LOAD_PATH + "model/")
+        checkpoint = torch.load(LOAD_PATH + "model/" + model_fname[0])
         self.model.load_state_dict(checkpoint["model.state_dict"])
         print(">>> MODEL LOADED.")
 
         self.valid_loader = torch.load(
-            "/data/drum/bestmodel/dataset/valid/valid_loader.pt"
+            LOAD_PATH + "dataset/valid/valid_loader.pt"
         )
         print(">>> TEST LOADER LOADED.")
 
@@ -199,7 +203,9 @@ class ConfusionMatrix:
         if self.sort:
             print(">>> Sorting.....")
             conf = conf[want_order, :][:, want_order]
-            self.axis_labels = self.axis_labels[want_order]
+            conf_axis_labels = self.axis_labels[want_order]
+        else:
+            conf_axis_labels = self.axis_labels
 
         val_format = ""  # heatmap print value format
         if self.normalize:
@@ -221,8 +227,8 @@ class ConfusionMatrix:
             annot=True,
             annot_kws={"size": 8},
             fmt=val_format,
-            xticklabels=self.axis_labels,
-            yticklabels=self.axis_labels,
+            xticklabels=conf_axis_labels,
+            yticklabels=conf_axis_labels,
             cmap=plt.cm.bone,
             cbar=True,
             linecolor='white',
@@ -251,21 +257,25 @@ class ConfusionMatrix:
 
 
         # sorting by age or # of data
-        if self.barmode == 'age' or self.barmode == 'data':
-            want_order = []
-            if self.barmode == 'age':
-                want_order = [2, 6, 4, 8, 9, 12, 0, 1, 3, 5, 7, 10, 11]
-            else: # self.barmode == 'data'
-                want_order = [9, 4, 3, 5, 1, 12, 11, 8, 10, 7, 6, 0, 2]
-            
+        if self.barmode == 'age'    
+            want_order = [2, 6, 4, 8, 9, 12, 0, 1, 3, 5, 7, 10, 11]
             b = np.array(bar_values)
             bar_values = b[want_order]
-            self.axis_labels = self.axis_labels[want_order]
-            print('bar vals:', bar_values)
-            print('labels:', self.axis_labels)
+            bar_axis_labels = self.axis_labels[want_order]
+            self.SpearmanCorr(bar_values, bar_axis_labels)
+
+        elif self.barmode == 'data':
+            want_order = [9, 4, 3, 5, 1, 12, 11, 8, 10, 7, 6, 0, 2]
+            b = np.array(bar_values)
+            bar_values = b[want_order]
+            bar_axis_labels = self.axis_labels[want_order]
+            
         else: # self.barmode == None
             self.barmode = '' # for save pdf name
+            bar_axis_labels = self.axis_labels
 
+        # print('bar vals:', bar_values)
+        # print('labels:', bar_axis_labels)
 
         indices = range(len(bar_values))
 
@@ -277,7 +287,7 @@ class ConfusionMatrix:
         ax.spines['right'].set_visible(False)
         ax.spines['bottom'].set_linewidth(False)
         ax.spines['left'].set_linewidth(False)
-        plt.xticks(indices, self.axis_labels, fontsize=30, rotation=45)
+        plt.xticks(indices, bar_axis_labels, fontsize=30, rotation=45)
         plt.setp(ax.get_yticklabels(), fontsize=30)
         plt.ylim([0.5, 1.01])
 
@@ -287,6 +297,14 @@ class ConfusionMatrix:
         plt.grid(b=True, linewidth=0.1, axis='y')
         # plt.subplots_adjust(left=0.125, right=0.9, bottom=0.1, top=0.9, wspace=0.2, hspace=0.2)
         plt.savefig("barchart_" + self.barmode + ".pdf", dpi=1000)
+        print("\n>>> barchart_" + self.barmode + ".pdf saved.")
+
+
+    def SpearmanCorr(self, values, labels):
+
+
+
+
 
 
 
@@ -295,11 +313,4 @@ if __name__ == "__main__":
 
     # for base train
 
-    temp = ConfusionMatrix(label_num=13, seg_num=90, sort=True, normalize=True, bar=True, barmode='data')
-    temp.run()
-
-# for attacker: only generate matrix example
-# not use label_num & seg_num
-
-# temp = ConfusionMatrix(sort=False, normalize=True)
-# temp.generate_matrix(true_list, pred_list)
+    temp = Visualization(label_num=13, seg_num=90, so
