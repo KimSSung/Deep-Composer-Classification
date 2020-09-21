@@ -1,4 +1,5 @@
 from sklearn.metrics import confusion_matrix, plot_confusion_matrix
+from scipy.stats import spearmanr,pointbiserialr
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -257,7 +258,7 @@ class ConfusionMatrix:
 
 
         # sorting by age or # of data
-        if self.barmode == 'age'    
+        if self.barmode == 'age':
             want_order = [2, 6, 4, 8, 9, 12, 0, 1, 3, 5, 7, 10, 11]
             b = np.array(bar_values)
             bar_values = b[want_order]
@@ -269,6 +270,13 @@ class ConfusionMatrix:
             b = np.array(bar_values)
             bar_values = b[want_order]
             bar_axis_labels = self.axis_labels[want_order]
+
+        elif self.barmode == 'birth':
+            want_order = [2, 6, 8, 12, 9, 4, 5, 10, 3, 7, 1, 0, 11]
+            b = np.array(bar_values)
+            bar_values = b[want_order]
+            bar_axis_labels = self.axis_labels[want_order]
+            self.SpearmanCorr(bar_values, bar_axis_labels)
             
         else: # self.barmode == None
             self.barmode = '' # for save pdf name
@@ -301,11 +309,38 @@ class ConfusionMatrix:
 
 
     def SpearmanCorr(self, values, labels):
-        
 
+        if self.barmode == 'birth' :
 
+            print('--------  Organized with birth date --------')
 
+            coef = spearmanr(values, np.arange(0,13,step=1))[0]
+            p_value = spearmanr(values, np.arange(0,13,step=1))[1]
+            print('Spearman Rank: ', round(coef,4))
+            print('P_Value: ', round(p_value,4))
 
+            # Calculating Point Biserial Rank
+            coef = pointbiserialr(values, np.arange(0,13,step=1))[0]
+            p_value = pointbiserialr(values, np.arange(0,13, step=1))[1]
+            print('Point Biserial Rank: ', round(coef,4))
+            print('P_value: ', round(p_value,4))
+
+            return
+
+        elif self.barmode == 'age' :
+
+            print('--------  Organized with Age (3 class) --------')
+
+            coef = spearmanr(values, np.array([1,1,2,2,2,2,3,3,3,3,3,3,3]))[0]
+            p_value = spearmanr(values, np.array([1,1,2,2,2,2,3,3,3,3,3,3,3]))[1]
+            print('Spearman Rank: ', round(coef, 4))
+            print('P_Value: ', round(p_value, 4))
+
+            # Calculating Point Biserial Rank
+            coef = pointbiserialr(values, np.array([1,1,2,2,2,2,3,3,3,3,3,3,3]))[0]
+            p_value = pointbiserialr(values, np.array([1,1,2,2,2,2,3,3,3,3,3,3,3]))[1]
+            print('Point Biserial Rank: ', round(coef, 4))
+            print('P_value: ', round(p_value, 4))
 
 
 # Testing
@@ -313,7 +348,7 @@ if __name__ == "__main__":
 
     # for base train
 
-    temp = ConfusionMatrix(label_num=13, seg_num=90, sort=True, normalize=True, bar=True, barmode='data')
+    temp = ConfusionMatrix(label_num=13, seg_num=90, sort=True, normalize=True, bar=True, barmode='age')
     temp.run()
 
 # for attacker: only generate matrix example
