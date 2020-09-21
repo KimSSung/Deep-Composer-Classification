@@ -22,6 +22,7 @@ test*.py
 temp.py
 notes.txt
 test.pdf
+barchart*.pdf
 
 train/test*.py
 

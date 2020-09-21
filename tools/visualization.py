@@ -26,7 +26,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 LOAD_PATH = "/data/bestmodel_85/"
 
-class Visualization:
+class ConfusionMatrix:
     def __init__(self, label_num=13, seg_num=90, sort=True, normalize=True, bar=True, barmode=None):
 
         self.label_num = label_num
@@ -301,7 +301,7 @@ class Visualization:
 
 
     def SpearmanCorr(self, values, labels):
-
+        
 
 
 
@@ -313,4 +313,11 @@ if __name__ == "__main__":
 
     # for base train
 
-    temp = Visualization(label_num=13, seg_num=90, so
+    temp = ConfusionMatrix(label_num=13, seg_num=90, sort=True, normalize=True, bar=True, barmode='data')
+    temp.run()
+
+# for attacker: only generate matrix example
+# not use label_num & seg_num
+
+# temp = ConfusionMatrix(sort=False, normalize=True)
+# temp.generate_matrix(true_list, pred_list)
