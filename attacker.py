@@ -18,7 +18,7 @@ from _collections import OrderedDict
 from sklearn.metrics import f1_score
 from sklearn.metrics import precision_recall_fscore_support
 from datetime import date, datetime
-from tools import confusion_matrix
+from tools import visualization
 from tools.detector import Detector
 
 
@@ -514,7 +514,7 @@ class Attacker:
         return
 
     def draw_confusion_matrix(self, true, pred):
-        temp = confusion_matrix.ConfusionMatrix(sort=True, normalize=True)
+        temp = visualization.Visualization(sort=True, normalize=True)
         temp.generate_matrix(true, pred)
         # print("confusion matrix saved at: {}".format())
         return

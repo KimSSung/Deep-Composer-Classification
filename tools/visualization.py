@@ -25,10 +25,12 @@ from models.wresnet import resnet18, resnet34, resnet101, resnet152, resnet50
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-LOAD_PATH = "/data/bestmodel_85/"
 
-class ConfusionMatrix:
-    def __init__(self, label_num=13, seg_num=90, sort=True, normalize=True, bar=True, barmode=None):
+LOAD_PATH = "/data/drum/bestmodel/"
+SAVE_PATH = "./visual/"
+
+class Visualization:
+    def __init__(self, label_num=13, seg_num=90, normalize=True, bar=True, mode=None):
 
         self.label_num = label_num
         self.seg_num = seg_num
@@ -36,16 +38,18 @@ class ConfusionMatrix:
         self.val_preds = []
         self.val_ground_truths = []
 
-        self.sort = sort
+
+        self.mode = mode # 'age' or 'data' or 'birth' or None
+
+
         self.normalize = normalize
         self.bar = bar # T of F
-        self.barmode = barmode # 'age' or 'data' or None
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = resnet50(2, self.label_num)
         
         # data parallel
-        self.model = nn.DataParallel(self.model)
+        # self.model = nn.DataParallel(self.model)
         
         self.model.cuda()
 
@@ -58,6 +62,9 @@ class ConfusionMatrix:
             LOAD_PATH + "dataset/valid/valid_loader.pt"
         )
         print(">>> TEST LOADER LOADED.")
+
+        # for saving pdf
+        os.makedirs(SAVE_PATH)
 
 
         self.axis_labels = np.array(
@@ -199,13 +206,19 @@ class ConfusionMatrix:
         # 2. Classical: Haydn / Mozart / Beethoven / Schubert => [4, 8, 9, 12]
         # 3. Romanticism: Schumann / Chopin / Liszt / Brahms / Debussy
         #                 / Rachmaninoff / Scriabin => [0, 1, 3, 5, 7, 10, 11]
-        want_order = [2, 6, 4, 8, 9, 12, 0, 1, 3, 5, 7, 10, 11]
 
-        if self.sort:
+        if self.mode:
+            if self.mode == 'age':
+                want_order = [2, 6, 4, 8, 9, 12, 0, 1, 3, 5, 7, 10, 11]
+
+            elif self.mode == 'birth':
+                want_order = [2, 6, 8, 12, 9, 4, 5, 10, 3, 7, 1, 0, 11]
+
             print(">>> Sorting.....")
             conf = conf[want_order, :][:, want_order]
             conf_axis_labels = self.axis_labels[want_order]
-        else:
+
+        else: # mode == None
             conf_axis_labels = self.axis_labels
 
         val_format = ""  # heatmap print value format
@@ -218,8 +231,6 @@ class ConfusionMatrix:
         else:
             print(">>> Confusion matrix, without normalization")
             val_format = "d"
-
-
 
         sns.set(font_scale=0.7)
         plt.figure(figsize=(6,6))
@@ -241,7 +252,7 @@ class ConfusionMatrix:
         plt.title("Confusion Matrix, with normalization", fontsize=12)
         plt.xlabel("Predicted label", fontsize=10)
         plt.ylabel("True label", fontsize=10)
-        plt.savefig("confmat.pdf", dpi=1000)
+        plt.savefig(SAVE_PATH + "confmat.pdf", dpi=1000)
 
         
     def draw_bar(self, true, pred):
@@ -258,28 +269,22 @@ class ConfusionMatrix:
 
 
         # sorting by age or # of data
-        if self.barmode == 'age':
-            want_order = [2, 6, 4, 8, 9, 12, 0, 1, 3, 5, 7, 10, 11]
-            b = np.array(bar_values)
-            bar_values = b[want_order]
-            bar_axis_labels = self.axis_labels[want_order]
-            self.SpearmanCorr(bar_values, bar_axis_labels)
+        if self.mode in ['age', 'data', 'birth']:
 
-        elif self.barmode == 'data':
-            want_order = [9, 4, 3, 5, 1, 12, 11, 8, 10, 7, 6, 0, 2]
-            b = np.array(bar_values)
-            bar_values = b[want_order]
-            bar_axis_labels = self.axis_labels[want_order]
-
-        elif self.barmode == 'birth':
-            want_order = [2, 6, 8, 12, 9, 4, 5, 10, 3, 7, 1, 0, 11]
+            if self.mode == 'age':
+                want_order = [2, 6, 4, 8, 9, 12, 0, 1, 3, 5, 7, 10, 11]
+            elif self.mode == 'data':
+                want_order = [9, 4, 3, 5, 1, 12, 11, 8, 10, 7, 6, 0, 2]
+            else: # self.mode == 'birth'
+                want_order = [2, 6, 8, 12, 9, 4, 5, 10, 3, 7, 1, 0, 11]
+            
             b = np.array(bar_values)
             bar_values = b[want_order]
             bar_axis_labels = self.axis_labels[want_order]
             self.SpearmanCorr(bar_values, bar_axis_labels)
             
-        else: # self.barmode == None
-            self.barmode = '' # for save pdf name
+        else: # self.mode == None
+            self.mode = '' # for save pdf name
             bar_axis_labels = self.axis_labels
 
         # print('bar vals:', bar_values)
@@ -297,22 +302,24 @@ class ConfusionMatrix:
         ax.spines['left'].set_linewidth(False)
         plt.xticks(indices, bar_axis_labels, fontsize=30, rotation=45)
         plt.setp(ax.get_yticklabels(), fontsize=30)
-        plt.ylim([0.5, 1.01])
+        plt.ylim([0.6, 1.01])
 
         # plt.title("Bar chart, with normalization", fontsize=12)
         # plt.xlabel("composers", fontsize=15)
         plt.ylabel("F1 score", fontsize=40)
         plt.grid(b=True, linewidth=0.1, axis='y')
         # plt.subplots_adjust(left=0.125, right=0.9, bottom=0.1, top=0.9, wspace=0.2, hspace=0.2)
-        plt.savefig("barchart_" + self.barmode + ".pdf", dpi=1000)
-        print("\n>>> barchart_" + self.barmode + ".pdf saved.")
+        plt.savefig(SAVE_PATH + "barchart_" + self.mode + ".pdf", dpi=1000)
+        print("\n>>> barchart_" + self.mode + ".pdf saved.")
 
 
     def SpearmanCorr(self, values, labels):
 
-        if self.barmode == 'birth' :
-
-            print('--------  Organized with birth date --------')
+        if self.mode == 'birth' or self.mode == 'data':
+            if self.mode == 'birth':
+                print('--------  Organized with birth date --------')
+            elif self.mode == 'data':
+                print('--------  Organized with # of data --------')
 
             coef = spearmanr(values, np.arange(0,13,step=1))[0]
             p_value = spearmanr(values, np.arange(0,13,step=1))[1]
@@ -327,32 +334,39 @@ class ConfusionMatrix:
 
             return
 
-        elif self.barmode == 'age' :
+        # elif self.mode == 'age' :
 
-            print('--------  Organized with Age (3 class) --------')
+        #     print('--------  Organized with Age (3 class) --------')
 
-            coef = spearmanr(values, np.array([1,1,2,2,2,2,3,3,3,3,3,3,3]))[0]
-            p_value = spearmanr(values, np.array([1,1,2,2,2,2,3,3,3,3,3,3,3]))[1]
-            print('Spearman Rank: ', round(coef, 4))
-            print('P_Value: ', round(p_value, 4))
+        #     coef = spearmanr(values, np.array([1,1,2,2,2,2,3,3,3,3,3,3,3]))[0]
+        #     p_value = spearmanr(values, np.array([1,1,2,2,2,2,3,3,3,3,3,3,3]))[1]
+        #     print('Spearman Rank: ', round(coef, 4))
+        #     print('P_Value: ', round(p_value, 4))
 
-            # Calculating Point Biserial Rank
-            coef = pointbiserialr(values, np.array([1,1,2,2,2,2,3,3,3,3,3,3,3]))[0]
-            p_value = pointbiserialr(values, np.array([1,1,2,2,2,2,3,3,3,3,3,3,3]))[1]
-            print('Point Biserial Rank: ', round(coef, 4))
-            print('P_value: ', round(p_value, 4))
+        #     # Calculating Point Biserial Rank
+        #     coef = pointbiserialr(values, np.array([1,1,2,2,2,2,3,3,3,3,3,3,3]))[0]
+        #     p_value = pointbiserialr(values, np.array([1,1,2,2,2,2,3,3,3,3,3,3,3]))[1]
+        #     print('Point Biserial Rank: ', round(coef, 4))
+        #     print('P_value: ', round(p_value, 4))
 
 
 # Testing
 if __name__ == "__main__":
 
     # for base train
+    # # 0. not sorted confusion matrix
+    # temp0 = Visualization(label_num=13, seg_num=90, normalize=True, bar=False, mode=None)
+    # temp0.run()
 
-    temp = ConfusionMatrix(label_num=13, seg_num=90, sort=True, normalize=True, bar=True, barmode='age')
-    temp.run()
+    # # 1. age confusion matrix
+    # temp1 = Visualization(label_num=13, seg_num=90, normalize=True, bar=False, mode='age')
+    # temp1.run()
 
-# for attacker: only generate matrix example
-# not use label_num & seg_num
+    # 2. birth confusion matrix
+    temp1 = Visualization(label_num=13, seg_num=90, normalize=True, bar=False, mode='birth')
+    temp1.run()
 
-# temp = ConfusionMatrix(sort=False, normalize=True)
-# temp.generate_matrix(true_list, pred_list)
+    # # 3. birth bar chart
+    # temp2 = Visualization(label_num=13, seg_num=90, normalize=True, bar=True, mode='birth')
+    # temp2.run()
+
