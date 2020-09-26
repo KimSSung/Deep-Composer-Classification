@@ -10,8 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch.nn as nn
 from config import get_config
-from models.wresnet import wide_resnet50_2, wide_resnet101_2
-from models.wresnet import resnet18, resnet34, resnet50, resnet101, resnet152
+from models.resnet import resnet18, resnet34, resnet50, resnet101, resnet152
 
 # from models.resnet_ver2 import resnet18, resnet34, resnet101, resnet152, resnet50
 from _collections import OrderedDict
@@ -98,11 +97,11 @@ class Attacker:
             return resnet101(int(self.input_shape[0]), self.label_num)
         elif self.model_type == "resnet152":
             return resnet152(int(self.input_shape[0]), self.label_num)
-        elif self.model_type == "wresnet50":
+        elif self.model_type == "resnet50":
             return wide_resnet50_2(
                 in_channels=int(self.input_shape[0]), num_classes=self.label_num
             )
-        elif self.model_type == "wresnet101":
+        elif self.model_type == "resnet101":
             return wide_resnet101_2(
                 in_channels=int(self.input_shape[0]), num_classes=self.label_num
             )

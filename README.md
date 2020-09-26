@@ -1,5 +1,4 @@
-# Style Transfer using Symbolic Music (MIDI)
-Style Transfer between different composer styles using symbolic representation (MIDI) of music, implemented in PyTorch. 
+# Deep Composer Classification Using Symbolic Representation
 
 ## Abstract
 This research has its purpose in accelerating the usage of symbolic representation of music through showing its potential in improving accuracy and efficiency in recognizing and handling musical information.

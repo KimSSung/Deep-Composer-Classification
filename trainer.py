@@ -1,4 +1,4 @@
-# Trainer class (config.mode = 'basetrain' -> base training / 'advtrain' -> adversarial training)
+# Trainer class (config.mode = 'basetrain' -> base training
 
 # from config import get_config
 
