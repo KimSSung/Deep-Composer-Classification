@@ -7,7 +7,7 @@ import numpy as np
 import torch
 
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-from models.wresnet import resnet18, resnet34, resnet101, resnet152, resnet50
+from models.resnet import resnet18, resnet34, resnet101, resnet152, resnet50
 
 import random
 

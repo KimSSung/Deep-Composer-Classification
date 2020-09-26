@@ -20,7 +20,7 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from tools.data_loader import MIDIDataset
 
 
-from models.wresnet import resnet18, resnet34, resnet101, resnet152, resnet50
+from models.resnet import resnet18, resnet34, resnet101, resnet152, resnet50
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -64,7 +64,8 @@ class Visualization:
         print(">>> TEST LOADER LOADED.")
 
         # for saving pdf
-        os.makedirs(SAVE_PATH)
+        if not os.path.exists(SAVE_PATH):
+            os.makedirs(SAVE_PATH)
 
 
         self.axis_labels = np.array(

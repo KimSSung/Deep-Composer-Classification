@@ -16,8 +16,7 @@ from torch.optim import lr_scheduler
 # from models.resnet_ver2 import resnet18, resnet34, resnet50, resnet101, resnet152
 from models.convnet import convnet
 
-from models.wresnet import wide_resnet50_2, wide_resnet101_2
-from models.wresnet import resnet18, resnet34, resnet50, resnet101, resnet152
+from models.resnet import resnet18, resnet34, resnet50, resnet101, resnet152
 
 # dataloader
 from tools.data_loader import MIDIDataset
@@ -66,10 +65,10 @@ class Trainer:
         # save dir
         self.save_dir = save_dir
         print("==> SAVE at {}\n".format(self.save_dir))
-        # if not os.path.exists(self.save_dir):
-        os.makedirs(self.save_dir + "model/")
-        os.makedirs(self.save_dir + "dataset/train/")
-        os.makedirs(self.save_dir + "dataset/valid/")
+        if not os.path.exists(self.save_dir):
+            os.makedirs(self.save_dir + "model/")
+            os.makedirs(self.save_dir + "dataset/train/")
+            os.makedirs(self.save_dir + "dataset/valid/")
 
         self.data_load(self.config.mode)
         self.num_batches = len(self.train_loader)
@@ -123,11 +122,11 @@ class Trainer:
                 in_channels=int(self.input_shape[0]), num_classes=self.label_num
             )
 
-        elif self.config.model_name == "wresnet50":
+        elif self.config.model_name == "resnet50":
             return wide_resnet50_2(
                 in_channels=int(self.input_shape[0]), num_classes=self.label_num
             )
-        elif self.config.model_name == "wresnet101":
+        elif self.config.model_name == "resnet101":
             return wide_resnet101_2(
                 in_channels=int(self.input_shape[0]), num_classes=self.label_num
             )
