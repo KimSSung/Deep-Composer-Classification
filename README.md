@@ -92,7 +92,7 @@ For the usage, please refer to the "Download" section of the official website.
 
 [music21_link]: http://web.mit.edu/music21/
 
-#### input
+#### Input
 > Generated input takes the form of (2, 400, 128), where:   
 > * 2 channel = onset + note
 >   * channel[0] (onset) = binary
@@ -102,23 +102,13 @@ For the usage, please refer to the "Download" section of the official website.
 
 <img src="https://user-images.githubusercontent.com/56469754/91077437-06a48580-e67c-11ea-9769-a5c19470a52e.png" width="40%" height="30%" title="input"></img><br/>
 
-#### Model
-> This dataset was experimented on different model configurations:             
+#### Result
+> **Model: ResNet-50**
 
-|  <center> Model </center> |  <center> Train Acc </center> |  <center> Valid Acc</center> |         
-|:--------:|--------:|--------:|         
-|**Resnet** | <center> % </center> | <center> % </center> |        
-|**Resnet (7,3)** | <center> % </center> | <center> % </center> |        
-|**Wide Resnet** | <center> % </center> | <center> % </center> |         
+![image](https://github.com/KimSSung/Deep-Composer-Classification/assets/39760214/c86d9905-b631-425b-aa90-58d33b07de74)
 
+![image](https://github.com/KimSSung/Deep-Composer-Classification/assets/39760214/934c0176-0252-4d0e-a079-784d04180d60)
 
-#### Adversarial Attack
-
-
-#### Adversarial Training
-
-
-## Similar Works
 
 ## Contact Information
 * hylee817@yonsei.ac.kr
